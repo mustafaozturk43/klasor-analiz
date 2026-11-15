@@ -2,6 +2,30 @@
 
 Tauri v2, Rust, React 19 ve TypeScript tabanlı klasör analizi ve dosya düzenleme uygulaması.
 
+## Kurulum
+
+Uygulama yalnızca Windows 10/11 (x64) için geliştirilir.
+
+**Gereksinimler**
+
+- [Node.js](https://nodejs.org/) 22 veya üzeri (LTS) ve `npm`. Başka paket yöneticisi (pnpm, yarn, bun) kullanılmaz.
+- [Rust](https://rustup.rs/) 1.85 veya üzeri (`edition = "2024"`), MSVC araç zinciriyle (`stable-x86_64-pc-windows-msvc`).
+- Visual Studio Build Tools: "Desktop development with C++" iş yükü ve Windows SDK.
+- Microsoft Edge WebView2 Runtime (Windows 11'de hazır gelir).
+
+**Adımlar**
+
+```powershell
+git clone https://github.com/mustafaozturk43/klasor-analiz.git
+cd klasor-analiz
+npm install
+npm run tauri dev
+```
+
+İlk çalıştırmada Rust bağımlılıkları derlendiği için birkaç dakika sürebilir. `npm run tauri dev` Vite'ı `http://localhost:1420` adresinde başlatır; bu port doluysa önce onu boşaltın. Üretim paketi için aşağıdaki "Windows paketleri" bölümüne bakın.
+
+Antivirüs yazılımı yeni derlenen build-script `.exe` dosyalarını kilitleyip derlemeyi durdurabilir (`os error 32` veya `os error 5`). Böyle olursa korumayı kısa süre duraklatıp derlemeyi yeniden deneyin.
+
 ## Çalıştırma
 
 ```powershell
