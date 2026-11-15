@@ -1,0 +1,22 @@
+/* SweetAlert2 pencereleri ve bildirimleri: renk, yazi ve kose tokens.css'ten gelir (acik ve koyu tema). */
+.swal2-container.swal2-backdrop-show { background: var(--color-scrim); }
+.swal2-popup.sfo-alert { border: 1px solid var(--color-rule); border-radius: var(--radius-card); background: var(--color-paper-2); color: var(--color-ink);
+  box-shadow: var(--shadow-overlay); font-family: var(--font-body); }
+.sfo-alert .swal2-title { font-family: var(--font-display); font-size: var(--text-xl); font-weight: 800; letter-spacing: -0.02em; color: var(--color-ink-2); }
+.sfo-alert .swal2-html-container { font-size: var(--text-sm); line-height: 1.5; color: var(--color-ink); text-align: left; white-space: pre-line; overflow-wrap: anywhere; }
+.sfo-alert .swal2-actions { gap: var(--space-xs); }
+.sfo-alert .swal2-actions .btn { min-height: 44px; padding-inline: var(--space-lg); font-size: var(--text-sm); }
+.sfo-alert .swal2-close { color: var(--color-muted); }
+.sfo-alert .swal2-close:hover { color: var(--color-ink); }
+.sfo-alert .swal2-timer-progress-bar { background: var(--color-accent); }
+.sfo-alert .swal2-icon.swal2-warning { border-color: var(--color-action); color: var(--color-warn-ink); }
+.sfo-alert .swal2-icon.swal2-info { border-color: var(--color-accent); color: var(--color-accent); }
+.sfo-alert .swal2-icon.swal2-error { border-color: var(--color-bin); color: var(--color-bin); }
+.sfo-alert .swal2-icon.swal2-error [class^="swal2-x-mark-line"] { background-color: var(--color-bin); }
+.sfo-alert .swal2-icon.swal2-success { border-color: var(--color-keep); color: var(--color-keep); }
+.sfo-alert .swal2-icon.swal2-success [class^="swal2-success-line"] { background-color: var(--color-keep); }
+.sfo-alert .swal2-icon.swal2-success .swal2-success-ring { border-color: var(--color-keep-tint); }
+
+/* Bildirim (sag ust): tek satir baslik, dar kutu. */
+.swal2-popup.swal2-toast.sfo-alert { padding: var(--space-sm) var(--space-md); max-width: min(30rem, calc(100vw - 2 * var(--space-md))); }
+.sfo-alert.swal2-toast .swal2-title { font-family: var(--font-body); font-size: var(--text-sm); font-weight: 600; letter-spacing: 0; color: var(--color-ink); overflow-wrap: anywhere; }

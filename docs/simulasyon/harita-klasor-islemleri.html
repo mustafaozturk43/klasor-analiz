@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Harita ve Kopyalar simülasyonu</title>
+<style>
+:root{--nav:#1d3a30;--nav-2:#29503f;--amber:#e6a420;--bg:#f4f6f2;--card:#fff;--ink:#1c2a25;--muted:#66756f;--line:#dde4de;--ok:#2f7d5b;--warn:#b7791f}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#111a17;--card:#17241f;--ink:#e6efe9;--muted:#93a69c;--line:#2b3d35}}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Hanken Grotesk",system-ui,sans-serif;background:var(--bg);color:var(--ink);height:100vh;display:flex;overflow:hidden;font-size:14px}
+button,select,input{font:inherit;color:inherit}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:6px 12px;cursor:pointer}
+.btn.primary{background:var(--amber);border-color:var(--amber);color:#1c1505;font-weight:600}
+.btn:disabled{opacity:.5;cursor:default}
+nav{width:232px;background:var(--nav);color:#e9f2ed;display:flex;flex-direction:column;padding:16px 10px;gap:4px}
+.wordmark{font-weight:700;letter-spacing:.2px;padding:0 8px 14px;line-height:1.2}
+nav .item{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;color:inherit;padding:9px 10px;border-radius:8px;cursor:pointer;text-align:left}
+nav .item:hover{background:var(--nav-2)}
+nav .item[aria-current=page]{background:var(--nav-2);box-shadow:inset 3px 0 0 var(--amber)}
+nav .sub{display:none;flex-direction:column;padding-left:22px;gap:2px}
+nav .sub.open{display:flex}
+nav .sub button{background:none;border:0;color:#cfe0d6;text-align:left;padding:6px 10px;border-radius:6px;cursor:pointer}
+nav .sub button:hover{background:var(--nav-2)}
+nav .sub button[aria-current=page]{color:#fff;font-weight:600}
+.chev{margin-left:auto;opacity:.7;font-size:12px}
+.note{margin:auto 8px 0;font-size:12px;opacity:.75;line-height:1.4}
+main{flex:1;display:flex;flex-direction:column;min-width:0}
+header{display:flex;align-items:center;gap:8px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--card)}
+header .path{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.content{flex:1;overflow:auto;padding:20px}
+h1{font-size:20px;margin:0 0 4px}
+.sub-h{color:var(--muted);margin:0 0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
+.green{background:#e4f1ea;border-color:#b9dcc8;color:#17402e}
+.green .btn{background:#fff}
+table{width:100%;border-collapse:collapse}
+td,th{padding:8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:12px}
+.badge{font-size:12px;padding:2px 8px;border-radius:99px;background:var(--line)}
+.badge.ok{background:#d7efe2;color:#17553b}.badge.warn{background:#fbeccd;color:#7a4d08}.badge.same{background:var(--line);color:var(--muted)}
+.inpage{position:sticky;bottom:0;display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:16px;padding:12px 14px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+.inpage small{color:var(--muted);display:block}
+.grp{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.grp input{margin:0}
+.grp .meta{flex:1}
+.panel-ov{position:fixed;inset:0;background:rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .2s}
+.panel-ov.open{opacity:1;pointer-events:auto}
+.panel{position:fixed;top:0;right:0;height:100%;width:min(640px,100%);background:var(--card);border-left:1px solid var(--line);box-shadow:-8px 0 24px rgba(0,0,0,.15);transform:translateX(105%);transition:transform .25s;display:flex;flex-direction:column;z-index:10}
+.panel.open{transform:none}
+.panel-head{display:flex;align-items:center;gap:8px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.panel-head h2{margin:0;font-size:17px;flex:1}
+.panel-sec{padding:14px 18px;border-bottom:1px solid var(--line)}
+.panel-sec h3{margin:0 0 10px;font-size:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.row label{display:flex;gap:6px;align-items:center;font-size:13px}
+.row select,.row input[type=number]{padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--card)}
+.row input[type=number]{width:70px}
+.tabs{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap}
+.tabs button{border:1px solid var(--line);background:none;border-radius:99px;padding:4px 12px;cursor:pointer;font-size:13px}
+.tabs button[aria-pressed=true]{background:var(--amber);border-color:var(--amber);color:#1c1505;font-weight:600}
+.pane{display:none}.pane.on{display:block}
+.prev{flex:1;overflow:auto;padding:0 18px}
+.prev td{font-size:13px}
+.newname{font-weight:600;word-break:break-all}
+.oldname{color:var(--muted);word-break:break-all}
+.foot{display:flex;gap:8px;justify-content:flex-end;align-items:center;padding:12px 18px;border-top:1px solid var(--line)}
+.foot .hint{margin-right:auto;color:var(--muted);font-size:12px}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--nav);color:#fff;padding:10px 14px;border-radius:10px;display:none;gap:12px;align-items:center;z-index:20}
+.toast.on{display:flex}
+.toast button{background:var(--amber);border:0;border-radius:6px;padding:4px 10px;cursor:pointer;font-weight:600}
+.sim-tag{position:fixed;top:6px;right:8px;font-size:11px;background:var(--amber);color:#1c1505;padding:2px 8px;border-radius:99px;z-index:30}
+.picker{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.picker .path{flex:1;min-width:160px;color:var(--muted);font-size:13px;word-break:break-all}
+.toggle{display:flex;gap:6px;align-items:center;font-size:13px}
+@media (max-width:760px){nav{width:100%;max-height:44vh;overflow:auto}body{flex-direction:column}}
+</style>
+</head>
+<body>
+<span class="sim-tag">Simülasyon</span>
+<nav aria-label="Ana gezinme">
+  <div class="wordmark">Smart File<br>Organizer</div>
+  <button class="item" data-dest="today"><span>Bugün</span></button>
+  <button class="item" data-dest="kopya" aria-expanded="true"><span>Kopyalar</span><span class="chev">▾</span></button>
+  <div class="sub open" id="sub-kopya">
+    <button data-view="groups">Dosya grupları</button>
+    <button data-view="compare">İki klasör karşılaştırma</button>
+    <button data-view="quarantine">Karantina</button>
+  </div>
+  <button class="item" data-dest="harita" aria-expanded="true"><span>Harita</span><span class="chev">▾</span></button>
+  <div class="sub open" id="sub-harita">
+    <button data-view="analysis">Klasör analizi</button>
+    <button data-view="files">Klasördeki dosyalar</button>
+    <button data-view="health">Klasör sağlığı</button>
+    <button data-panel="fileops">Dosya-Klasör işlemleri ›</button>
+  </div>
+  <button class="item" data-dest="rules"><span>Kurallar</span></button>
+  <button class="item" data-dest="history"><span>Geçmiş</span></button>
+  <p class="note">Simülasyon: veriler örnektir. Kuralların çalışması gerçek uygulamadaki gibi taklit edilir.</p>
+</nav>
+
+<main>
+  <header>
+    <div class="path" id="rootPath">C:\Users\Ornek\Belgeler\Proje</div>
+    <button class="btn" id="undoBtn" disabled>↶ Son işlemi geri al</button>
+    <button class="btn">•••</button>
+  </header>
+  <div class="content" id="content"></div>
+</main>
+
+<div class="panel-ov" id="ov"></div>
+<aside class="panel" id="panel" aria-label="Dosya-Klasör işlemleri">
+  <div class="panel-head"><h2>Dosya-Klasör işlemleri</h2><button class="btn" id="closePanel">Kapat ✕</button></div>
+
+  <section class="panel-sec">
+    <h3>Klasör seçimi</h3>
+    <div class="picker">
+      <button class="btn" id="pickA">📁 Klasör A</button>
+      <select id="recent" aria-label="Son klasörler"><option>Son klasörler</option><option>C:\Users\Ornek\Belgeler\Proje</option><option>D:\Arsiv\2026</option></select>
+      <label class="toggle"><input type="checkbox" id="compareT"> İki klasör karşılaştır</label>
+      <button class="btn primary" id="scanBtn">Taramayı başlat</button>
+    </div>
+    <div class="picker" style="margin-top:8px"><span class="path" id="pathB" hidden>Klasör B: seçilmedi</span></div>
+  </section>
+
+  <section class="panel-sec">
+    <h3>Klasör işlemleri</h3>
+    <div class="tabs" id="tabs" role="group" aria-label="Klasör işlemleri alt menüsü">
+      <button aria-pressed="true" data-tab="ad">Ad biçimi</button>
+      <button aria-pressed="false" data-tab="sira">Sıra ve tarih</button>
+      <button aria-pressed="false" data-tab="uzun">Uzunluk</button>
+      <button aria-pressed="false" data-tab="kapsam">Kapsam</button>
+    </div>
+
+    <div class="pane on" data-pane="ad">
+      <div class="row"><label>Profil
+        <select id="preset"><option value="">Özel</option><option value="web">Web (küçük, tire)</option><option value="arsiv">Arşiv (sıra + ay-Yıl)</option><option value="serbest">Serbest</option></select></label></div>
+      <div class="row"><label>Harf biçimi
+        <select id="caseMode"><option value="title">Baş harfler büyük</option><option value="lower">hepsi küçük</option><option value="upper">HEPSİ BÜYÜK</option><option value="none">olduğu gibi</option></select></label></div>
+      <div class="row"><label>Ayraç
+        <select id="sep"><option value="-">tire (-)</option><option value="_">alt çizgi (_)</option><option value="">boşluğu kaldır</option></select></label></div>
+      <div class="row"><label><input type="checkbox" id="tr" checked> Türkçe karakterleri dönüştür (ç→c, ğ→g, ı→i, ö→o, ş→s, ü→u)</label></div>
+    </div>
+
+    <div class="pane" data-pane="sira">
+      <div class="row"><label><input type="checkbox" id="seqOn" checked> Sıra numarası ekle (ön ek)</label>
+        <label>Başlangıç <input type="number" id="start" value="1" min="0"></label>
+        <label>Basamak <select id="pad"><option value="1">1</option><option value="2" selected>01</option><option value="3">001</option><option value="4">0001</option></select></label>
+        <label>Sıra <select id="seqSort"><option value="date">tarihe göre</option><option value="name">ada göre</option></select></label></div>
+      <div class="row"><label><input type="checkbox" id="dateOn"> Tarih ekle (son ek)</label>
+        <label>Biçim <select id="dateFmt"><option value="ay-yil">ay-Yıl (08-2026)</option><option value="yil-ay">yıl-ay (2026-08)</option><option value="gg">gg-aa-yyyy (15-08-2026)</option></select></label></div>
+    </div>
+
+    <div class="pane" data-pane="uzun">
+      <div class="row"><label>En fazla <input type="number" id="maxLen" value="80" min="5" max="255"> karakter</label>
+        <span class="hint" style="color:var(--muted);font-size:12px">Uzantı sayılmaz. Uzun ad sona kesilir; sıra ve tarih korunur.</span></div>
+    </div>
+
+    <div class="pane" data-pane="kapsam">
+      <div class="row"><label>Kapsam <select id="scope"><option value="both">dosyalar ve klasörler</option><option value="files">yalnız dosyalar</option><option value="folders">yalnız klasörler</option></select></label></div>
+      <div class="row"><label><input type="checkbox" id="keepExt" checked> Uzantıyı koru</label></div>
+    </div>
+  </section>
+
+  <section class="panel-sec" style="border-bottom:0;padding-bottom:0"><h3>Önizleme (eski → yeni)</h3></section>
+  <div class="prev"><table><thead><tr><th>Eski ad</th><th>Yeni ad</th><th>Durum</th></tr></thead><tbody id="prevBody"></tbody></table></div>
+  <div class="foot">
+    <span class="hint" id="prevHint"></span>
+    <button class="btn" id="resetBtn">Sıfırla</button>
+    <button class="btn primary" id="applyBtn">Adlandır</button>
+  </div>
+</aside>
+
+<div class="toast" id="toast" role="status"><span id="toastText"></span><button id="toastUndo">Geri al</button></div>
+
+<script>
+// Simülasyon verisi: seçili klasörün içindeki örnek öğeler.
+const SEED = [
+  { name: "Ağustos Raporu final.docx", date: "2026-08-14" },
+  { name: "fatura_ocak 2026.pdf", date: "2026-01-09" },
+  { name: "Proje  Sunumu ÖZET.pptx", date: "2026-05-02" },
+  { name: "Çalışma_notları-v2.txt", date: "2025-11-30" },
+  { name: "Fotoğraf Düğün 3.jpg", date: "2026-03-21" },
+  { name: "Yeni Klasör", date: "2026-06-10", folder: true },
+  { name: "Ev ve İş", date: "2026-02-17", folder: true },
+];
+const GROUPS = [
+  { id: "g1", name: "Ağustos Raporu", files: 3, bytes: "4,2 MB", kind: "Birebir kopya" },
+  { id: "g2", name: "Fatura 2026", files: 2, bytes: "1,1 MB", kind: "Benzer ad" },
+  { id: "g3", name: "Düğün fotoğrafları", files: 4, bytes: "38 MB", kind: "Birebir kopya" },
+];
+const PRESETS = {
+  web: { caseMode: "lower", sep: "-", tr: true, seqOn: false, dateOn: false, maxLen: 60, scope: "both", keepExt: true },
+  arsiv: { caseMode: "title", sep: "_", tr: true, seqOn: true, start: 1, pad: "2", seqSort: "date", dateOn: true, dateFmt: "ay-yil", maxLen: 80, scope: "both", keepExt: true },
+  serbest: { caseMode: "none", sep: "-", tr: false, seqOn: false, dateOn: false, maxLen: 120, scope: "both", keepExt: true },
+};
+const TR = { "ç": "c", "Ç": "C", "ğ": "g", "Ğ": "G", "ı": "i", "İ": "I", "ö": "o", "Ö": "O", "ş": "s", "Ş": "S", "ü": "u", "Ü": "U" };
+
+let items = SEED.map(i => ({ ...i }));
+let history = null;      // son uygulama için eski adlar
+let view = "groups", panelOpen = false;
+
+// ---- Ad kuralları (gerçek uygulamada Rust tarafında çalışır) ----
+const trChars = s => s.replace(/[çÇğĞıİöÖşŞüÜ]/g, c => TR[c]);
+const applyCase = (s, mode) => {
+  if (mode === "lower") return s.toLocaleLowerCase("tr");
+  if (mode === "upper") return s.toLocaleUpperCase("tr");
+  if (mode === "title") return s.split(" ").map(w => w ? w[0].toLocaleUpperCase("tr") + w.slice(1).toLocaleLowerCase("tr") : w).join(" ");
+  return s;
+};
+const splitExt = it => {
+  if (it.folder) return [it.name, ""];
+  const i = it.name.lastIndexOf(".");
+  return i > 0 ? [it.name.slice(0, i), it.name.slice(i)] : [it.name, ""];
+};
+const formatDate = (iso, fmt) => {
+  const [y, m, d] = iso.split("-");
+  return fmt === "yil-ay" ? `${y}-${m}` : fmt === "gg" ? `${d}-${m}-${y}` : `${m}-${y}`;
+};
+function readOpts() {
+  const v = id => document.getElementById(id);
+  return {
+    caseMode: v("caseMode").value, sep: v("sep").value, tr: v("tr").checked,
+    seqOn: v("seqOn").checked, start: Math.max(0, +v("start").value || 0), pad: +v("pad").value, seqSort: v("seqSort").value,
+    dateOn: v("dateOn").checked, dateFmt: v("dateFmt").value,
+    maxLen: Math.min(255, Math.max(5, +v("maxLen").value || 80)),
+    scope: v("scope").value, keepExt: v("keepExt").checked,
+  };
+}
+function plan(o) {
+  const order = items.map((it, i) => ({ it, i }));
+  if (o.seqOn && o.seqSort === "date") order.sort((a, b) => a.it.date.localeCompare(b.it.date));
+  if (o.seqOn && o.seqSort === "name") order.sort((a, b) => a.it.name.localeCompare(b.it.name, "tr"));
+  const seqNo = new Map(order.map((x, n) => [x.i, n]));
+  const taken = new Set(); const rows = [];
+  items.forEach((it, i) => {
+    const skip = (o.scope === "files" && it.folder) || (o.scope === "folders" && !it.folder);
+    if (skip) { rows.push({ old: it.name, neu: it.name, state: "skip" }); return; }
+    let [stem, ext] = splitExt(it);
+    if (!o.keepExt && !it.folder) { stem = it.name; ext = ""; }
+    let body = stem.replace(/[\s_-]+/g, " ").trim();
+    if (o.tr) body = trChars(body);
+    body = applyCase(body, o.caseMode).replace(/[<>:"/\\|?*]/g, "");
+    body = body.split(" ").join(o.sep);
+    const seq = o.seqOn ? String(seqNo.get(i) + o.start).padStart(o.pad, "0") : null;
+    const date = o.dateOn ? formatDate(it.date, o.dateFmt) : null;
+    const reserve = (seq ? seq.length + o.sep.length : 0) + (date ? date.length + o.sep.length : 0);
+    const maxBody = Math.max(1, o.maxLen - reserve);
+    if (body.length > maxBody) body = body.slice(0, maxBody).replace(/[-_]+$/, "");
+    let neu = [seq, body, date].filter(Boolean).join(o.sep) + ext;
+    if (neu === it.name) { rows.push({ old: it.name, neu, state: "same" }); return; }
+    let base = neu, n = 2;
+    while (taken.has(neu.toLowerCase())) { neu = ext ? `${base.slice(0, -ext.length)}_${n++}${ext}` : `${base}_${n++}`; }
+    taken.add(neu.toLowerCase());
+    rows.push({ old: it.name, neu, state: "change", warn: neu !== base ? "Çakıştı, numaralandı" : "" });
+  });
+  return rows;
+}
+
+// ---- Görünüm ----
+function renderPreview() {
+  const rows = plan(readOpts());
+  const changing = rows.filter(r => r.state === "change").length;
+  document.getElementById("prevBody").innerHTML = rows.map(r => {
+    const badge = r.state === "change" ? `<span class="badge ok">Yeni ad</span>` : r.state === "same" ? `<span class="badge same">Aynı kalır</span>` : `<span class="badge same">Kapsam dışı</span>`;
+    const warn = r.warn ? `<br><span class="badge warn">${r.warn}</span>` : "";
+    return `<tr><td class="oldname">${esc(r.old)}</td><td class="newname">${esc(r.state === "change" ? r.neu : "—")}</td><td>${badge}${warn}</td></tr>`;
+  }).join("");
+  document.getElementById("prevHint").textContent = `${changing} öğenin adı değişecek. Dosyalar bulundukları klasörde kalır.`;
+  document.getElementById("applyBtn").disabled = changing === 0;
+  document.getElementById("applyBtn").textContent = `${changing} öğeyi adlandır`;
+}
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function renderContent() {
+  const c = document.getElementById("content");
+  if (view === "groups") {
+    c.innerHTML = `<h1>Dosya grupları</h1><p class="sub-h">Birebir kopya ve benzer ad grupları. Ana dosya yerinde kalır, kopyalar karantinaya gider.</p>
+      <div class="card green"><strong>Grup işlemleri</strong>
+        <div class="row" style="margin-top:8px"><input id="tagIn" placeholder="Ortak etiket / klasör adı" style="padding:6px 8px;border-radius:6px;border:1px solid #b9dcc8"><button class="btn">Otomatik ad</button><button class="btn primary" id="moveBtn">Taşımayı incele</button></div></div>
+      <div class="card">${GROUPS.map(g => `<label class="grp"><input type="checkbox" class="gsel" data-f="${g.files}" checked><div class="meta"><strong>${g.name}</strong><small style="color:var(--muted);display:block">${g.kind} · ${g.files} dosya · ${g.bytes}</small></div></label>`).join("")}</div>
+      <div class="inpage"><div style="flex:1"><strong id="selSum"></strong><small>Taşımalar grup kurallarına göre uygulanır</small></div>
+        <details><summary>Saklama politikası</summary><div class="row" style="margin-top:8px"><select><option>İlk dosyayı tut</option><option>En yeniyi tut</option><option>En kısa yolu tut</option></select></div></details></div>`;
+    const sum = () => { const s = [...document.querySelectorAll(".gsel:checked")]; document.getElementById("selSum").textContent = `${s.length} grup seçildi · ${s.reduce((t, x) => t + +x.dataset.f, 0)} dosya`; };
+    document.querySelectorAll(".gsel").forEach(x => x.onchange = sum); sum();
+    document.getElementById("moveBtn").onclick = () => toast("Taşıma önizlemesi açılır (simülasyon)");
+  } else if (view === "analysis") {
+    c.innerHTML = `<h1>Klasör analizi</h1><p class="sub-h">Harita: kutular klasörlerin boyutunu gösterir. Kutuya tıklayıp içine girersin.</p>
+      <div class="card">${[["Belgeler", 62], ["Fotoğraflar", 24], ["İndirilenler", 9], ["Diğer", 5]].map(([n, p]) => `<div style="margin:8px 0"><div class="row" style="margin:0"><strong>${n}</strong><span style="margin-left:auto;color:var(--muted)">%${p}</span></div><div style="height:10px;border-radius:99px;background:var(--line)"><div style="width:${p}%;height:100%;border-radius:99px;background:var(--amber)"></div></div></div>`).join("")}</div>`;
+  } else if (view === "compare") {
+    c.innerHTML = `<h1>İki klasör karşılaştırma</h1><p class="sub-h">Klasör B seçimi için sağdaki "Dosya-Klasör işlemleri" panelini aç.</p><div class="card">Klasör B seçilmedi.</div>`;
+  } else if (view === "quarantine") {
+    c.innerHTML = `<h1>Karantina</h1><p class="sub-h">Taşınan kopyalar burada bekler. Hiçbiri silinmez.</p><div class="card">3 dosya karantinada.</div>`;
+  } else if (view === "files") {
+    c.innerHTML = `<h1>Klasördeki dosyalar</h1><p class="sub-h">Seçili klasörün içeriği. Adları düzeltmek için "Dosya-Klasör işlemleri" kullan.</p><div class="card"><table><thead><tr><th>Ad</th><th>Tarih</th></tr></thead><tbody>${items.map(i => `<tr><td>${esc(i.name)}</td><td>${i.date}</td></tr>`).join("")}</tbody></table></div>`;
+  } else if (view === "health") {
+    c.innerHTML = `<h1>Klasör sağlığı</h1><p class="sub-h">Adlandırma sorunları: büyük harf karışımı, boşluk, Türkçe karakter, uzun ad.</p><div class="card">4 dosya adında boşluk, 3 dosya adında Türkçe karakter var.</div>`;
+  } else {
+    c.innerHTML = `<h1>${view}</h1><div class="card">Bu ekran simülasyonda yok.</div>`;
+  }
+  document.getElementById("undoBtn").disabled = !history;
+}
+
+// ---- Gezinme ----
+function setView(v) {
+  view = v;
+  document.querySelectorAll("nav [data-view]").forEach(b => b.setAttribute("aria-current", b.dataset.view === v ? "page" : "false"));
+  document.querySelectorAll("nav [data-dest]").forEach(b => b.removeAttribute("aria-current"));
+  renderContent();
+}
+document.querySelectorAll("nav [data-dest]").forEach(b => b.onclick = () => {
+  const d = b.dataset.dest;
+  if (d === "kopya" || d === "harita") {
+    const sub = document.getElementById("sub-" + d);
+    sub.classList.toggle("open");
+    b.setAttribute("aria-expanded", sub.classList.contains("open"));
+    if (sub.classList.contains("open")) setView(d === "kopya" ? "groups" : "analysis");
+    return;
+  }
+  document.querySelectorAll("nav .item").forEach(x => x.removeAttribute("aria-current"));
+  b.setAttribute("aria-current", "page");
+  view = d; document.getElementById("content").innerHTML = `<h1>${b.textContent}</h1><div class="card">Bu ekran simülasyonda yok.</div>`;
+});
+document.querySelectorAll("nav [data-view]").forEach(b => b.onclick = () => setView(b.dataset.view));
+document.querySelectorAll("nav [data-panel]").forEach(b => b.onclick = () => openPanel(true));
+
+// ---- Panel ----
+function openPanel(open) {
+  panelOpen = open;
+  document.getElementById("panel").classList.toggle("open", open);
+  document.getElementById("ov").classList.toggle("open", open);
+  if (open) renderPreview();
+}
+document.getElementById("closePanel").onclick = () => openPanel(false);
+document.getElementById("ov").onclick = () => openPanel(false);
+document.getElementById("pickA").onclick = () => toast("Klasör seçici açılır (simülasyon)");
+document.getElementById("scanBtn").onclick = () => toast("Tarama başlatılır (simülasyon)");
+document.getElementById("compareT").onchange = e => { document.getElementById("pathB").hidden = !e.target.checked; renderContent(); };
+document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("#tabs button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  document.querySelectorAll(".pane").forEach(p => p.classList.toggle("on", p.dataset.pane === b.dataset.tab));
+});
+document.getElementById("preset").onchange = e => {
+  const p = PRESETS[e.target.value]; if (!p) return;
+  const set = (id, val) => { const el = document.getElementById(id); if (el.type === "checkbox") el.checked = val; else el.value = val; };
+  set("caseMode", p.caseMode); set("sep", p.sep); set("tr", p.tr); set("seqOn", p.seqOn); set("start", p.start ?? 1);
+  set("pad", p.pad ?? "2"); set("seqSort", p.seqSort ?? "date"); set("dateOn", p.dateOn); set("dateFmt", p.dateFmt ?? "ay-yil");
+  set("maxLen", p.maxLen); set("scope", p.scope); set("keepExt", p.keepExt);
+  renderPreview();
+};
+document.querySelectorAll("#panel input, #panel select").forEach(el => {
+  el.addEventListener("input", () => { if (el.id !== "preset") document.getElementById("preset").value = ""; renderPreview(); });
+});
+document.getElementById("resetBtn").onclick = () => {
+  document.getElementById("preset").value = "";
+  Object.entries({ caseMode: "title", sep: "-", tr: true, seqOn: true, start: 1, pad: "2", seqSort: "date", dateOn: false, dateFmt: "ay-yil", maxLen: 80, scope: "both", keepExt: true })
+    .forEach(([id, val]) => { const el = document.getElementById(id); if (el.type === "checkbox") el.checked = val; else el.value = val; });
+  renderPreview();
+};
+document.getElementById("applyBtn").onclick = () => {
+  const rows = plan(readOpts()).filter(r => r.state === "change");
+  const before = items.map(i => i.name);
+  rows.forEach(r => { const it = items.find(x => x.name === r.old); if (it) it.name = r.neu; });
+  history = before;
+  toast(`${rows.length} öğe adlandırıldı. İşlem geçmişinden geri alınabilir.`);
+  document.getElementById("undoBtn").disabled = false;
+  renderPreview(); renderFiles();
+};
+function renderFiles() { if (view === "files") renderContent(); }
+
+// ---- Geri al ve bildirim ----
+function undo() {
+  if (!history) return;
+  items.forEach((it, i) => it.name = history[i]);
+  history = null;
+  toast("Son adlandırma geri alındı.");
+  renderPreview(); renderContent();
+}
+document.getElementById("undoBtn").onclick = undo;
+document.getElementById("toastUndo").onclick = () => { undo(); document.getElementById("toast").classList.remove("on"); };
+let tt;
+function toast(text) {
+  document.getElementById("toastText").textContent = text;
+  const t = document.getElementById("toast"); t.classList.add("on");
+  clearTimeout(tt); tt = setTimeout(() => t.classList.remove("on"), 4000);
+}
+// Profil ve alanlar değişince yerel durumu güncelle
+["caseMode", "sep", "tr", "seqOn", "start", "pad", "seqSort", "dateOn", "dateFmt", "maxLen", "scope", "keepExt"].forEach(id => document.getElementById(id).addEventListener("change", renderPreview));
+
+setView("groups");
+// İlk açılış: panel kapalı; kullanıcı Harita > Dosya-Klasör işlemleri ile açar.
+</script>
+</body>
+</html>

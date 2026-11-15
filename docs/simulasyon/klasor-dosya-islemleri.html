@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Klasör-Dosya İşlemleri simülasyonu</title>
+<style>
+/* Renkler, aralıklar ve yarıçaplar src/styles/tokens.css ile aynıdır. */
+:root{
+  --paper:oklch(96.5% .012 170);--paper-2:oklch(99.2% .005 170);--paper-3:oklch(93.5% .02 170);
+  --ink:oklch(24% .03 178);--ink-2:oklch(28% .04 178);--muted:oklch(44% .03 178);--rule:oklch(88% .015 170);
+  --accent:oklch(47% .12 160);--focus:oklch(60% .2 255);
+  --chrome:oklch(27% .055 178);--chrome-2:oklch(35% .06 178);--chrome-ink:oklch(95% .02 170);--chrome-mute:oklch(78% .04 175);
+  --action:oklch(82% .15 85);--action-ink:oklch(25% .05 85);
+  --keep:oklch(47% .12 160);--keep-tint:oklch(92% .05 160);--keep-ink:oklch(99% .005 100);
+  --move:oklch(82% .15 85);--move-ink:oklch(25% .05 85);
+  --warn:oklch(94% .07 90);--warn-ink:oklch(40% .1 80);--bad:oklch(93% .04 30);--bad-ink:oklch(42% .15 30);
+  --ok:oklch(92% .05 160);--ok-ink:oklch(38% .1 160);
+  --c1:oklch(81% .08 220);--c2:oklch(82% .13 125);--c3:oklch(79% .08 305);--c4:oklch(80% .02 170);--chart-ink:oklch(22% .03 178);
+  --display:"Rethink Sans Variable","Rethink Sans","Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;
+  --body:"Hanken Grotesk Variable","Hanken Grotesk","Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;
+  --code:"JetBrains Mono Variable","JetBrains Mono","Cascadia Mono",Consolas,monospace;
+  --r-card:14px;--r-ctl:10px;--xs:8px;--sm:12px;--md:16px;--lg:24px;--xl:40px;
+  --shadow-card:0 1px 2px oklch(20% .03 178 / .06),0 10px 28px oklch(20% .03 178 / .09);
+}
+:root.dark{--shadow-card:0 1px 2px oklch(5% .01 175 / .4),0 10px 28px oklch(5% .01 175 / .35)}
+:root.dark{
+  --paper:oklch(17% .015 175);--paper-2:oklch(21.5% .018 175);--paper-3:oklch(27% .03 175);
+  --ink:oklch(92% .02 170);--ink-2:oklch(96% .02 170);--muted:oklch(76% .03 172);--rule:oklch(34% .03 175);
+  --accent:oklch(76% .13 160);--focus:oklch(72% .17 255);--chrome:oklch(21% .045 178);--chrome-2:oklch(29% .05 178);
+  --keep:oklch(66% .13 160);--keep-tint:oklch(30% .06 160);--keep-ink:oklch(16% .03 175);
+  --warn:oklch(33% .07 85);--warn-ink:oklch(86% .1 85);--bad:oklch(30% .08 30);--bad-ink:oklch(82% .1 32);
+  --ok:oklch(30% .06 160);--ok-ink:oklch(84% .09 160);
+  --c1:oklch(70% .08 220);--c2:oklch(72% .12 125);--c3:oklch(66% .08 305);--c4:oklch(62% .02 170);--chart-ink:oklch(14% .03 175);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--body);font-size:14px;line-height:1.45;background:var(--paper);color:var(--ink)}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0;padding:0}
+button:disabled{cursor:not-allowed;opacity:.55}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+h1,h2,h3,p{margin:0}
+svg{flex-shrink:0}
+[hidden]{display:none!important}
+.shell{height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr)}
+.body{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:0}
+.width{width:100%;max-width:1366px;margin-inline:auto;padding-inline:var(--lg);min-width:0}
+
+/* Üst çubuk: yalnızca genel araçlar kalır */
+.top{background:var(--paper-2);border-bottom:1px solid var(--rule)}
+.top .width{display:flex;align-items:center;gap:var(--xs);padding-block:var(--sm)}
+.top .demo{flex:1;font-size:12px;color:var(--muted)}
+
+/* Kenar çubuğu */
+.nav{display:flex;flex-direction:column;gap:var(--lg);padding:var(--lg) var(--md);background:var(--chrome);color:var(--chrome-ink);overflow-y:auto}
+.wordmark{font-family:var(--display);font-weight:800;font-size:1.44rem;line-height:1.05;letter-spacing:-.02em;padding-inline:var(--sm)}
+.nav-list{display:flex;flex-direction:column;gap:4px}
+.nav button{display:flex;align-items:center;gap:var(--sm);width:100%;min-height:44px;padding:var(--xs) var(--sm);border-radius:var(--r-ctl);
+  color:var(--chrome-ink);font-size:1rem;font-weight:600;text-align:left;line-height:1.2}
+.nav button:hover{background:var(--chrome-2)}
+.nav button[aria-current=page]{background:var(--paper);color:var(--ink);font-weight:700}
+.nav .chev{margin-left:auto;transition:transform 220ms}
+.nav button[aria-expanded=false] .chev{transform:rotate(-90deg)}
+.nav-sub{display:flex;flex-direction:column;gap:4px;margin:0 0 4px 22px;padding-left:var(--xs);border-left:1px solid var(--chrome-2)}
+.nav-sub button{min-height:40px;font-size:.875rem}
+.nav .count{margin-left:auto;font-variant-numeric:tabular-nums}
+.nav-status{margin-top:auto;display:flex;flex-direction:column;gap:var(--xs);padding:var(--md) var(--sm) 0;border-top:1px solid var(--chrome-2)}
+.nav-status strong{font-size:.875rem}.nav-status span{font-size:.75rem;color:var(--chrome-mute)}
+
+/* Çalışma alanı */
+.scroll{overflow-y:auto;min-height:0;scrollbar-gutter:stable;padding-block:var(--lg) var(--xl)}
+.work{display:flex;flex-direction:column;gap:var(--md)}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--sm);flex-wrap:wrap}
+.head h1{font-family:var(--display);font-weight:800;font-size:clamp(2rem,4.2vw,3.5rem);line-height:1.02;letter-spacing:-.03em;max-width:18ch;color:var(--ink-2)}
+.head p{margin-top:var(--sm);max-width:56ch;font-size:1.2rem;color:var(--muted)}
+.panel{border:1px solid var(--rule);border-radius:var(--r-card);background:var(--paper-2);min-width:0;overflow:hidden}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:var(--sm);padding:var(--md) var(--lg);border-bottom:1px solid var(--rule);flex-wrap:wrap}
+.panel-head h2{display:flex;align-items:center;gap:var(--xs);font-size:1rem;font-weight:650;color:var(--ink-2)}
+.hint{font-size:.75rem;color:var(--muted)}
+.row{display:flex;align-items:center;gap:var(--xs);flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--xs);min-height:36px;padding:var(--xs) var(--sm);border:1px solid var(--rule);border-radius:var(--r-ctl);
+  background:var(--paper-2);color:var(--ink-2);font-size:.75rem;font-weight:600;white-space:nowrap;transition:background-color 120ms,border-color 120ms}
+.btn:hover:not(:disabled){background:var(--paper);border-color:var(--muted)}
+.btn.primary{background:var(--action);color:var(--action-ink);border-color:var(--action);font-weight:700}
+.btn.primary:hover:not(:disabled){background:var(--action-ink);border-color:var(--action-ink);color:var(--action)}
+.btn.big{min-height:52px;padding-inline:var(--lg);font-size:1rem}
+input[type=text],input[type=number],select{min-height:36px;border:1px solid var(--muted);border-radius:var(--r-ctl);padding:var(--xs) var(--sm);background:var(--paper-2);color:var(--ink);font-size:.75rem;min-width:0}
+input[type=number]{width:4.5rem}
+input[type=checkbox]{accent-color:var(--accent);width:18px;height:18px;margin:0}
+.badge{display:inline-flex;align-items:center;padding:2px var(--xs);border-radius:5px;font-size:.75rem;font-weight:600;white-space:nowrap;background:var(--paper-3);color:var(--ink-2)}
+.badge.ok{background:var(--ok);color:var(--ok-ink)}.badge.warn{background:var(--warn);color:var(--warn-ink)}.badge.bad{background:var(--bad);color:var(--bad-ink)}
+.switch{position:relative;width:36px;height:20px;border-radius:999px;background:var(--muted);flex-shrink:0;transition:background-color 120ms}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--paper-2);transition:transform 120ms}
+.switch[aria-checked=true]{background:var(--accent)}.switch[aria-checked=true]::after{transform:translateX(16px)}
+.seg{display:flex;gap:4px;flex-wrap:wrap}
+.seg button,.tabs button{min-height:36px;padding:0 var(--sm);border:1.5px solid var(--rule);border-radius:8px;color:var(--muted);font-size:.75rem;font-weight:600}
+.seg button:hover,.tabs button:hover{color:var(--ink);border-color:var(--muted)}
+.seg button[aria-pressed=true],.tabs button[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:var(--paper-2)}
+.tabs{display:flex;flex-wrap:wrap;gap:4px}
+.tabs button{min-height:40px;padding:0 var(--md);border-radius:var(--r-ctl);font-size:.875rem}
+.banner{display:flex;align-items:center;gap:var(--sm);padding:var(--sm) var(--md);border-radius:12px;background:var(--keep-tint);font-size:.875rem}
+.banner span{flex:1}
+.empty{padding:var(--xl) var(--lg);text-align:center;color:var(--muted)}
+
+/* Klasör seçimi: üst çubuktan sayfanın başına taşındı */
+.picker{display:flex;align-items:center;gap:var(--sm) var(--md);flex-wrap:wrap;padding:var(--sm) var(--lg)}
+.picker .paths{flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:2px}
+.picker .paths small{font-size:.75rem;color:var(--muted)}
+.picker .paths b{font-family:var(--code);font-weight:500;font-size:.8125rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.picker label{display:inline-flex;align-items:center;gap:var(--xs);font-size:.75rem;white-space:nowrap}
+.scope{display:flex;align-items:center;gap:var(--lg);flex-wrap:wrap;padding:var(--xs) var(--lg);border-top:1px solid var(--rule);font-size:.75rem}
+.scope label{display:inline-flex;align-items:center;gap:var(--xs);min-height:36px}
+.strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:0;border-block:1px solid var(--rule)}
+.strip div{padding:var(--sm) var(--md);border-left:1px solid var(--rule)}.strip div:first-child{border-left:0;padding-left:0}
+.strip dt{font-size:.75rem;color:var(--muted)}.strip dd{margin:2px 0 0;font-size:1.44rem;font-weight:650;font-variant-numeric:tabular-nums}
+
+/* Kopyalar */
+.dup{display:flex;flex-wrap:wrap;gap:var(--xl);align-items:flex-start}
+.dup{gap:var(--lg)}
+/* Grup listesi: tek kart, satırlar çizgiyle ayrılır; açık grup solda kalın vurgu çizgisi ve yeşil zemin alır */
+.dup-list{flex:1 1 300px;max-width:380px;min-width:0;border:1px solid var(--rule);border-radius:var(--r-card);background:var(--paper-2);box-shadow:var(--shadow-card);overflow:hidden}
+.dup-item{display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--xs);align-items:center;padding:var(--xs) var(--md);border-top:1px solid var(--rule);box-shadow:inset 5px 0 transparent;transition:background-color 120ms}
+.dup-item:first-child{border-top:0}
+.dup-item:hover{background:var(--paper)}
+.dup-item[data-selected]{box-shadow:inset 5px 0 var(--keep-tint)}
+.dup-item[data-active]{background:var(--keep-tint);box-shadow:inset 5px 0 var(--accent)}
+.dup-item button{display:flex;flex-direction:column;gap:6px;padding:var(--sm) var(--xs);text-align:left;min-width:0}
+.dup-item b{font-size:1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dup-item small{font-size:.75rem;color:var(--muted)}
+.dup-cmp{flex:999 1 480px;min-width:0;display:flex;flex-direction:column;gap:var(--lg);padding:var(--lg);border:1px solid var(--rule);border-radius:var(--r-card);background:var(--paper-2);box-shadow:var(--shadow-card)}
+.dup-cmp .card{background:var(--paper)}
+.dup-cmp h2{font-family:var(--display);font-size:1.728rem;font-weight:800;letter-spacing:-.02em}
+.cards{display:flex;flex-wrap:wrap;gap:var(--md)}
+.card{flex:1 1 280px;min-width:0;border:2px solid var(--move);border-radius:var(--r-card);background:var(--paper-2);overflow:hidden}
+.card[data-kind=keep]{border-color:var(--keep)}
+.card-head{display:flex;align-items:center;gap:var(--xs);padding:var(--sm) var(--md);background:var(--move);color:var(--move-ink);font-weight:700}
+.card[data-kind=keep] .card-head{background:var(--keep);color:var(--keep-ink)}
+.card p{padding:var(--md);font-family:var(--code);font-size:.75rem;color:var(--muted);overflow-wrap:anywhere}.card p b{color:var(--ink);font-weight:500}
+.note{padding:var(--md) var(--lg);border-radius:12px;background:var(--keep-tint);font-size:1rem}
+.sel{display:flex;flex-direction:column;gap:var(--xs);padding-top:var(--md);border-top:1px solid var(--rule)}
+.sel strong{font-size:.875rem;color:var(--ink-2)}.sel small{display:block;font-size:.75rem;color:var(--muted)}
+.sel summary{cursor:pointer;font-size:.75rem;color:var(--ink-2)}
+.move{display:flex;flex-wrap:wrap;align-items:flex-end;gap:var(--md) var(--lg);padding:var(--md) var(--lg);border-radius:var(--r-card);background:var(--chrome);color:var(--chrome-ink)}
+.move-field{flex:1 1 240px;display:flex;flex-direction:column;gap:var(--xs);font-size:.875rem;font-weight:600}
+.move-field input{min-height:48px;border:1.5px solid var(--chrome-mute);background:var(--chrome-2);color:var(--chrome-ink);font-size:1rem}
+.move>p{flex:2 1 280px;font-size:.875rem;color:var(--chrome-mute)}
+.move code{font-family:var(--code);font-size:.75rem;color:var(--chrome-ink)}
+
+/* Harita */
+.tree{display:grid;grid-template-columns:5fr 3fr 2fr;grid-template-rows:150px 90px;gap:4px;padding:var(--lg)}
+.tree div{display:flex;flex-direction:column;justify-content:flex-end;padding:var(--sm);border-radius:8px;color:var(--chart-ink);font-weight:700;font-size:.875rem;min-width:0}
+.tree small{font-weight:500;font-size:.75rem}
+
+/* Adlandırma */
+.rn{display:flex;flex-wrap:wrap;gap:var(--lg);align-items:flex-start}
+.rn-opts{flex:1 1 340px;max-width:440px}
+.rn-prev{flex:999 1 520px}
+.opt{display:flex;flex-direction:column;gap:var(--xs);padding:var(--md) var(--lg);border-top:1px solid var(--rule)}
+.opt:first-of-type{border-top:0}
+.opt>b{font-size:.75rem;font-weight:700;color:var(--ink-2)}
+.opt label{display:inline-flex;align-items:center;gap:var(--xs);font-size:.75rem}
+.rn-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 3.5rem 6.5rem;align-items:center;gap:var(--sm);padding:var(--xs) var(--lg);border-top:1px solid var(--rule);font-size:.875rem}
+.rn-row.th{border-top:0;font-size:.75rem;font-weight:600;color:var(--muted)}
+.rn-row .nm{display:flex;align-items:center;gap:var(--xs);min-width:0}
+.rn-row .nm span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rn-row .old{color:var(--muted)}.rn-row .old svg{color:var(--muted)}
+.rn-row .new{font-weight:600;color:var(--ink-2)}
+.rn-row[data-same] .new{font-weight:400;color:var(--muted)}
+.rn-row .len{font-family:var(--code);font-size:.75rem;color:var(--muted);text-align:right}
+.rn-foot{display:flex;align-items:center;gap:var(--sm);flex-wrap:wrap;padding:var(--md) var(--lg);border-top:1px solid var(--rule)}
+.rn-foot span{flex:1 1 200px;font-size:.875rem}
+
+/* Sayfa başlığı kartı: menü çubuğu, başlık, sayı şeridi aynı sol hizada (24px) */
+.hero{border:1px solid var(--rule);border-radius:var(--r-card);background:var(--paper-2);box-shadow:var(--shadow-card);overflow:hidden}
+.hero .tabs{gap:4px;padding:var(--xs) var(--lg);background:var(--chrome)}
+.hero .tabs button{display:inline-flex;align-items:center;gap:var(--xs);border:0;color:var(--chrome-ink);transition:background-color 120ms}
+.hero .tabs button:hover{background:var(--chrome-2);color:var(--chrome-ink)}
+.hero .tabs button[aria-pressed=true]{background:var(--action);color:var(--action-ink);font-weight:700}
+.hero .head{align-items:flex-start;flex-wrap:nowrap;padding:var(--lg)}
+.hero .head h1{font-size:clamp(1.75rem,3.4vw,2.75rem)}
+.hero .head p{font-size:1rem}
+.hero .badge{gap:4px;min-height:28px;padding-inline:var(--sm);border-radius:999px}
+.hero .strip{border-bottom:0}
+.hero .strip div,.hero .strip div:first-child{padding:var(--sm) var(--lg)}
+
+/* Dar kenar çubuğu: yalnızca ikonlar. 60rem altında kendiliğinden, geniş ekranda üst çubuktaki düğmeyle. */
+.shell.rail .body{grid-template-columns:64px minmax(0,1fr)}
+.shell.rail .nav{padding:var(--md) var(--xs)}
+.shell.rail .lbl,.shell.rail .wordmark,.shell.rail .nav-status,.shell.rail .chev,.shell.rail .count{display:none}
+.shell.rail .nav button{justify-content:center;padding:var(--xs)}
+.shell.rail .nav-sub{margin:0 0 4px;padding:0;border-left:0}
+.shell.rail #ops-sub{display:flex!important}
+.shell.rail #ops-toggle{pointer-events:none;opacity:.6;min-height:28px}
+
+@media (max-width:60rem){
+  #rail{display:none}
+  .width{padding-inline:var(--md)}
+  .strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .strip div:nth-child(3){border-left:0}.strip div:nth-child(n+3){border-top:1px solid var(--rule)}
+  .dup-list,.rn-opts{max-width:none}
+  .head p{font-size:1rem}
+}
+@media (max-width:44rem){
+  .rn-row{grid-template-columns:minmax(0,1fr) auto}.rn-row .old,.rn-row .len,.rn-row.th{display:none}
+  .rn-row .new{padding-left:0!important}
+  .dup-cmp,.opt,.panel-head,.rn-foot,.rn-row{padding-inline:var(--md)}
+  .picker,.scope{padding-inline:var(--md)}.picker .btn.primary{flex:1 1 100%}
+  .hero .head{flex-wrap:wrap;padding:var(--md)}.hero .strip div,.hero .strip div:first-child{padding-inline:var(--md)}.hero .tabs{padding-inline:var(--md)}
+  .tabs{flex-wrap:nowrap;overflow-x:auto}.tabs button{white-space:nowrap}
+  .move .btn.big,.rn-foot .btn.big{flex:1 1 100%}
+  .top .demo{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .tree{grid-template-columns:1fr 1fr;grid-template-rows:auto;padding:var(--md)}.tree div{grid-row:auto!important;grid-column:auto!important;min-height:80px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="top"><div class="width">
+    <button class="btn" id="rail" title="Kenar çubuğunu daralt veya genişlet" aria-pressed="false"><i data-ic="panel"></i></button>
+    <span class="demo">Simülasyon · örnek veriler · hiçbir dosyaya dokunulmaz</span>
+    <button class="btn" title="Son işlemi geri al"><i data-ic="undo"></i></button>
+    <button class="btn">•••</button>
+    <button class="btn" id="theme"><i data-ic="moon"></i> Tema</button>
+  </div></div>
+  <div class="body">
+    <nav class="nav" aria-label="Ana gezinme">
+      <div class="wordmark">Smart File<br>Organizer</div>
+      <div class="nav-list">
+        <button data-go="today" title="Bugün"><i data-ic="inbox" data-s="20"></i><span class="lbl">Bugün</span></button>
+        <button id="ops-toggle" aria-expanded="true" title="Klasör-Dosya İşlemleri"><i data-ic="folders" data-s="20"></i><span class="lbl">Klasör-Dosya İşlemleri</span><i data-ic="chev" class="chev"></i></button>
+        <div class="nav-sub" id="ops-sub">
+          <button data-go="dup" title="Kopyalar"><i data-ic="copy" data-s="18"></i><span class="lbl">Kopyalar</span><span class="count">3</span></button>
+          <button data-go="map" title="Harita"><i data-ic="grid" data-s="18"></i><span class="lbl">Harita</span></button>
+          <button data-go="rename" title="Adlandırma"><i data-ic="pen" data-s="18"></i><span class="lbl">Adlandırma</span></button>
+        </div>
+        <button data-go="rules" title="Kurallar"><i data-ic="sliders" data-s="20"></i><span class="lbl">Kurallar</span></button>
+        <button data-go="history" title="Geçmiş"><i data-ic="history" data-s="20"></i><span class="lbl">Geçmiş</span></button>
+      </div>
+      <div class="nav-status"><strong>Otomasyon açık</strong><span>2 kaynak izleniyor</span></div>
+    </nav>
+    <main class="scroll"><div class="width work">
+      <!-- Klasör seçimi: yalnızca Klasör-Dosya İşlemleri sayfalarında görünür -->
+      <section class="panel" id="picker" aria-label="Klasör seçimi">
+        <div class="picker">
+          <div class="paths"><small>Seçili klasör</small><b id="path-a">D:\Arşiv\Proje Belgeleri</b><b id="path-b" hidden>E:\Yedek\Proje Belgeleri</b></div>
+          <button class="btn"><i data-ic="folder"></i> Klasör A</button>
+          <select aria-label="Son klasörler"><option>Son klasörler</option><option>D:\Arşiv\Proje Belgeleri</option><option>C:\Users\Lenovo\Downloads</option></select>
+          <label><button class="switch" role="switch" aria-checked="false" id="cmp"></button> İki klasör karşılaştır</label>
+          <button class="btn" id="btn-b" hidden><i data-ic="folder"></i> Klasör B değiştir</button>
+          <button class="btn primary" id="scan"><i data-ic="scan"></i> <span>Taramayı başlat</span></button>
+        </div>
+        <div class="scope" id="scope">
+          <b>Tarama kapsamı</b>
+          <label><button class="switch" role="switch" aria-checked="true" data-sw></button> Alt klasörler</label>
+          <label><button class="switch" role="switch" aria-checked="false" data-sw></button> Diğer dosyalar</label>
+          <span class="hint">Yasaklı uzantılar ve karantina taranmaz.</span>
+        </div>
+      </section>
+      <!-- Sayfa başlığı kartı: üstte menü çubuğu, ortada başlık ve durum, altta sayı şeridi -->
+      <section class="hero">
+        <div class="tabs" id="tabs" role="group" aria-label="Sayfa menüsü"></div>
+        <div class="head"><div><h1 id="title"></h1><p id="sub"></p></div><span class="badge ok" id="state"><i data-ic="check" data-s="14"></i> <span>Tarama tamamlandı</span></span></div>
+        <dl class="strip" id="strip"></dl>
+      </section>
+      <div class="banner" id="banner" hidden><span></span><button class="btn" id="banner-undo">Geri al</button><button class="btn" id="banner-x">Kapat</button></div>
+
+      <!-- Kopyalar -->
+      <section id="p-dup" hidden>
+        <div class="dup">
+          <section class="dup-list" aria-label="Gruplar">
+            <div class="panel-head"><h2><i data-ic="copy"></i> Gruplar</h2><span class="hint">Kutularla birden çok grup seçilir</span></div>
+            <div id="dup-list"></div>
+          </section>
+          <div class="dup-cmp">
+            <h2 id="dup-name"></h2>
+            <div class="cards" id="dup-cards"></div>
+            <p class="note" id="dup-note"></p>
+            <!-- Eski sabit alt çubuk: seçim özeti ve saklama politikası artık sayfanın içinde -->
+            <div class="sel">
+              <div><strong id="sel-count"></strong><small id="sel-files"></small></div>
+              <details><summary>Saklama politikası ve doğrulama</summary><div class="row" style="margin-top:var(--xs)">
+                <select aria-label="Tutulacak ana dosya"><option>İlk dosyayı tut</option><option>En yeniyi tut</option><option>En eskiyi tut</option><option>En kısa yolu tut</option></select>
+                <label class="row hint"><button class="switch" role="switch" aria-checked="false" data-sw></button> 500 MiB+ tam hash doğrulaması</label>
+                <span class="hint">Exact: ana dosya etikete, kopyalar karantinaya. Similar: tüm üyeler etikete.</span>
+              </div></details>
+            </div>
+            <div class="move">
+              <label class="move-field">Etiket, yani klasör adı<input type="text" id="dup-tag"></label>
+              <p id="dup-desc"></p>
+              <button class="btn primary big" id="dup-go"><i data-ic="folderin"></i> <span></span></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Harita -->
+      <section id="p-map" class="panel" hidden>
+        <div class="panel-head"><h2><i data-ic="grid"></i> Proje Belgeleri</h2><span class="hint">Kutuya tıklayıp içine girebilirsin.</span></div>
+        <div class="tree">
+          <div style="background:var(--c1);grid-row:span 2">FATURALAR 2026<small>1,4 GB · 612 dosya</small></div>
+          <div style="background:var(--c2)">müşteri sözleşmeleri<small>820 MB · 344 dosya</small></div>
+          <div style="background:var(--c3)">toplantı notları<small>310 MB</small></div>
+          <div style="background:var(--c4);grid-column:span 2">Diğer<small>270 MB · 328 dosya</small></div>
+        </div>
+      </section>
+
+      <!-- Adlandırma -->
+      <section id="p-rename" class="rn" hidden>
+        <div class="panel rn-opts">
+          <div class="panel-head"><h2><i data-ic="sliders"></i> Ad kuralları</h2></div>
+          <div class="opt"><b>Hazır kalıplar</b><div class="row" id="presets">
+            <button class="btn" data-preset="web">Web uyumlu</button><button class="btn" data-preset="archive">Arşiv</button><button class="btn" data-preset="plain">Sade</button></div></div>
+          <div class="opt"><b>Kapsam</b><div class="seg" data-opt="scope"><button data-v="both">Klasör ve dosya</button><button data-v="dirs">Yalnız klasörler</button><button data-v="files">Yalnız dosyalar</button></div>
+            <label><button class="switch" role="switch" data-flag="sub"></button> Alt klasörlerin içi de</label></div>
+          <div class="opt"><b>Harf biçimi</b><div class="seg" data-opt="case"><button data-v="keep">Olduğu gibi</button><button data-v="title">İlk Harfler Büyük</button><button data-v="sentence">Yalnız ilk harf</button><button data-v="lower">küçük</button><button data-v="upper">BÜYÜK</button></div></div>
+          <div class="opt"><b>Boşluk yerine</b><div class="seg" data-opt="space"><button data-v="keep">Boşluk kalsın</button><button data-v="-">Tire (-)</button><button data-v="_">Alt çizgi (_)</button><button data-v="">Bitişik</button></div></div>
+          <div class="opt"><b>Türkçe harfler</b><div class="seg" data-opt="tr"><button data-v="keep">Kullan (ç ğ ı ö ş ü)</button><button data-v="ascii">Kullanma (c g i o s u)</button></div>
+            <label><button class="switch" role="switch" data-flag="clean"></button> Parantez ve noktalama işaretlerini kaldır</label></div>
+          <div class="opt"><b>Başa sıra numarası</b>
+            <label><button class="switch" role="switch" data-flag="seqDirs"></button> Klasörlere</label>
+            <label><button class="switch" role="switch" data-flag="seqFiles"></button> Dosyalara</label>
+            <div class="row"><label>Başlangıç <input type="number" min="0" data-num="start"></label>
+              <label>Basamak <select data-num="pad"><option value="1">1</option><option value="2">01</option><option value="3">001</option></select></label></div></div>
+          <div class="opt"><b>Sona tarih</b><div class="seg" data-opt="date"><button data-v="none">Yok</button><button data-v="my">Ay-Yıl (11-2026)</button><button data-v="ym">Yıl-Ay (2026-11)</button></div>
+            <span class="hint">Tarih, öğenin son değişiklik tarihidir.</span></div>
+          <div class="opt"><b>Uzunluk sınırı</b><label>En fazla <input type="number" min="0" max="255" data-num="max"> karakter</label>
+            <span class="hint">0 = sınır yok. Uzantı sayılmaz; sıra numarası ve tarih korunur, ad gövdesi kısalır.</span></div>
+        </div>
+        <div class="panel rn-prev">
+          <div class="panel-head"><h2><i data-ic="pen"></i> Önizleme</h2><span class="hint">Kök klasörün kendi adı değişmez. Uzantılar korunur.</span></div>
+          <div class="rn-row th"><span>Şimdiki ad</span><span>Yeni ad</span><span style="text-align:right">Uzunluk</span><span>Durum</span></div>
+          <div id="rn-rows"></div>
+          <div class="rn-foot"><span id="rn-sum"></span><button class="btn" id="rn-reset">Kuralları sıfırla</button><button class="btn primary big" id="rn-apply"></button></div>
+        </div>
+      </section>
+
+      <section id="p-other" class="panel" hidden><div class="empty" id="other-text"></div></section>
+    </div></main>
+  </div>
+</div>
+
+<script>
+const IC = {
+  folder:'<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
+  folders:'<path d="M20 17a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3.9a2 2 0 0 1-1.69-.9l-.81-1.2a2 2 0 0 0-1.67-.9H8a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2Z"/><path d="M2 8v11a2 2 0 0 0 2 2h14"/>',
+  folderin:'<path d="M2 9V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-1"/><path d="M2 13h10"/><path d="m9 16 3-3-3-3"/>',
+  file:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>',
+  copy:'<rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+  grid:'<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>',
+  inbox:'<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+  sliders:'<path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/>',
+  history:'<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
+  chev:'<path d="m6 9 6 6 6-6"/>',
+  undo:'<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
+  scan:'<path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/><path d="m16 16-1.9-1.9"/>',
+  pen:'<path d="M12 20h9"/><path d="M16.4 3.6a2.1 2.1 0 0 1 3 3L7.4 18.6l-4 1 1-4z"/>',
+  arrow:'<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+  moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+  panel:'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/>',
+  columns:'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M12 3v18"/>',
+  shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
+  pulse:'<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>',
+};
+const svg = (n, s = 16) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
+const icons = root => root.querySelectorAll("i[data-ic]").forEach(i => { i.outerHTML = svg(i.dataset.ic, i.dataset.s || 16).replace("<svg", `<svg class="${i.className}"`); });
+const $ = id => document.getElementById(id);
+const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+/* ---------- Gezinme ---------- */
+const PAGES = {
+  dup: { title: "54,3 MB geri kazanılabilir", sub: "2 birebir kopya, 1 benzer ad. Ana dosya yerinde kalır, kopyalar silinmez, karantinaya gider.",
+    tabs: [["copy", "Dosya grupları"], ["columns", "İki klasör karşılaştırma"], ["shield", "Karantina"]],
+    stats: () => [["Taranan dosya", "1.284"], ["Bulunan grup", "3"], ["Kopya alanı", "54,3 MB"], ["Seçili grup", String(selected.size)]] },
+  map: { title: "3,1 GB, 1.284 dosya", sub: "FATURALAR 2026 ve müşteri sözleşmeleri, alanın yüzde 72’sini tutuyor.",
+    tabs: [["grid", "Klasör analizi"], ["file", "Klasördeki dosyalar"], ["pulse", "Klasör sağlığı"]],
+    stats: () => [["Toplam boyut", "3,1 GB"], ["Dosya", "1.284"], ["Klasör", "46"], ["En büyük klasör", "1,4 GB"]] },
+  rename: { title: "Adları tek kurala bağla", sub: "Seçili klasörün içindeki klasör ve dosya adları aşağıdaki kurallara göre düzenlenir. Önce önizlersin; onaylamadan hiçbir ad değişmez.", tabs: [] },
+  today: { title: "Bugün", other: "Akşam Kontrolü burada. Klasör seçimi bu menüde görünmez." },
+  rules: { title: "Kurallar", other: "Kurallar ve otomasyon durumu burada. Klasör seçimi bu menüde görünmez." },
+  history: { title: "Geçmiş", other: "İşlem geçmişi burada. Adlandırma işlemleri de buraya tek kayıt olarak düşer ve geri alınabilir." },
+};
+let page = "rename";
+function go(p) {
+  page = p;
+  const def = PAGES[p], ops = !def.other;
+  document.querySelectorAll(".nav [data-go]").forEach(b => b.toggleAttribute("aria-current", false));
+  document.querySelector(`.nav [data-go="${p}"]`).setAttribute("aria-current", "page");
+  if (ops) { $("ops-sub").hidden = false; $("ops-toggle").setAttribute("aria-expanded", "true"); }
+  $("picker").hidden = !ops;
+  $("scope").hidden = p === "rename";
+  $("scan").hidden = p === "rename";
+  $("state").hidden = !ops || p === "rename";
+  $("title").textContent = def.title;
+  $("sub").textContent = def.sub || ""; $("sub").hidden = !def.sub;
+  $("tabs").innerHTML = (def.tabs || []).map(([ic, t], i) => `<button aria-pressed="${i === 0}">${svg(ic)} ${t}</button>`).join("");
+  $("tabs").hidden = !(def.tabs || []).length;
+  renderStrip();
+  for (const id of ["dup", "map", "rename"]) $("p-" + id).hidden = p !== id;
+  $("p-other").hidden = ops; $("other-text").textContent = def.other || "";
+  $("banner").hidden = true;
+}
+function renderStrip() {
+  const stats = PAGES[page].stats ? PAGES[page].stats() : [];
+  $("strip").hidden = !stats.length;
+  $("strip").innerHTML = stats.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("");
+}
+document.querySelectorAll(".nav [data-go]").forEach(b => b.onclick = () => go(b.dataset.go));
+$("ops-toggle").onclick = () => { const open = $("ops-sub").hidden; $("ops-sub").hidden = !open; $("ops-toggle").setAttribute("aria-expanded", String(open)); };
+$("tabs").onclick = e => { const t = e.target.closest("button"); if (t) [...$("tabs").children].forEach(b => b.setAttribute("aria-pressed", String(b === t))); };
+$("theme").onclick = () => document.documentElement.classList.toggle("dark");
+/* Kenar çubuğu: dar ekranda kendiliğinden ikon şeridi, geniş ekranda kullanıcının tercihi. */
+const narrow = matchMedia("(max-width:60rem)");
+let userRail = false;
+const syncRail = () => { document.querySelector(".shell").classList.toggle("rail", narrow.matches || userRail); $("rail").setAttribute("aria-pressed", String(userRail)); };
+narrow.addEventListener("change", syncRail);
+$("rail").onclick = () => { userRail = !userRail; syncRail(); };
+syncRail();
+document.addEventListener("click", e => { const s = e.target.closest("[data-sw]"); if (s) s.setAttribute("aria-checked", String(s.getAttribute("aria-checked") !== "true")); });
+$("cmp").onclick = () => {
+  const on = $("cmp").getAttribute("aria-checked") !== "true";
+  $("cmp").setAttribute("aria-checked", String(on)); $("btn-b").hidden = !on; $("path-b").hidden = !on;
+  $("scan").querySelector("span").textContent = on ? "Karşılaştır" : "Taramayı başlat";
+};
+$("scan").onclick = () => { const s = $("state").lastElementChild; s.textContent = "Tarama sürüyor"; setTimeout(() => { s.textContent = "Tarama tamamlandı"; }, 900); };
+
+/* ---------- Kopyalar ---------- */
+const GROUPS = [
+  { id: "g1", name: "Sunum_Final.pptx", type: "Birebir", size: "48,2 MB", tag: "Sunum", files: ["D:\\Arşiv\\Proje Belgeleri\\Sunum_Final.pptx", "D:\\Arşiv\\Proje Belgeleri\\eski\\Sunum_Final (1).pptx"] },
+  { id: "g2", name: "IMG_2041.jpg", type: "Birebir", size: "6,1 MB", tag: "Fotoğraflar", files: ["D:\\Arşiv\\Proje Belgeleri\\IMG_2041.jpg", "D:\\Arşiv\\Proje Belgeleri\\yedek\\IMG_2041.jpg", "D:\\Arşiv\\Proje Belgeleri\\gelen\\IMG_2041 kopya.jpg"] },
+  { id: "g3", name: "rapor taslak.docx", type: "Benzer", size: "1,2 MB", tag: "Rapor", files: ["D:\\Arşiv\\Proje Belgeleri\\rapor taslak.docx", "D:\\Arşiv\\Proje Belgeleri\\rapor taslak v2.docx"] },
+];
+const selected = new Set(["g1"]);
+let picked = "g1";
+function renderDup() {
+  const g = GROUPS.find(x => x.id === picked), exact = g.type === "Birebir";
+  $("dup-list").innerHTML = GROUPS.map(x => `<div class="dup-item" ${x.id === picked ? "data-active" : ""} ${selected.has(x.id) ? "data-selected" : ""}>
+    <input type="checkbox" data-sel="${x.id}" ${selected.has(x.id) ? "checked" : ""} aria-label="${esc(x.name)} grubunu seç">
+    <button data-pick="${x.id}"><b>${esc(x.name)}</b><small><span class="badge ${x.type === "Birebir" ? "ok" : "warn"}">${x.type}</span> ${x.files.length} dosya · ${x.size}</small></button></div>`).join("");
+  $("dup-name").textContent = g.name;
+  $("dup-cards").innerHTML = g.files.map((f, i) => {
+    const keep = exact && i === 0, cut = f.lastIndexOf("\\") + 1;
+    return `<article class="card" data-kind="${keep ? "keep" : "move"}"><div class="card-head">${svg(keep ? "check" : "arrow", 20)} ${!exact ? "Etikete taşınır" : keep ? "Ana dosya, yerinde kalır" : "Kopya, karantinaya gider"}</div>
+      <p>${esc(f.slice(0, cut))}<b>${esc(f.slice(cut))}</b></p></article>`;
+  }).join("");
+  $("dup-note").innerHTML = exact ? "<strong>İçerik doğrulandı.</strong> Boyut ve tam BLAKE3 özeti birebir aynı." : "<strong>Adlar benziyor, içerik farklı.</strong> Hiçbir dosya karantinaya gitmez; hepsi etikete taşınır.";
+  const n = selected.size, files = GROUPS.filter(x => selected.has(x.id)).reduce((s, x) => s + x.files.length, 0);
+  renderStrip();
+  $("sel-count").textContent = `${n} grup seçildi`;
+  $("sel-files").textContent = `${files} dosya · Taşımalar grup kurallarına göre uygulanır`;
+  $("dup-tag").value = g.tag;
+  const tag = esc(g.tag || "Etiket");
+  $("dup-desc").innerHTML = n > 1 ? `Seçili ${n} grubun her biri kendi etiket klasörüne taşınır. Aynı ad varsa dosya (1) olur, hiçbir şeyin üstüne yazılmaz.`
+    : exact ? `Ana dosya <code>Proje Belgeleri\\${tag}\\</code> içine, kopya <code>Proje Belgeleri\\_Kopyalar_Karantina\\${tag}\\</code> içine taşınır.` : `Tüm dosyalar <code>Proje Belgeleri\\${tag}\\</code> içine taşınır.`;
+  $("dup-go").querySelector("span").textContent = n > 1 ? `Seçili ${n} grubu taşı` : "Bu grubu taşı";
+}
+$("dup-list").onclick = e => {
+  const s = e.target.closest("[data-sel]"), p = e.target.closest("[data-pick]");
+  if (s) { s.checked ? selected.add(s.dataset.sel) : selected.delete(s.dataset.sel); renderDup(); }
+  else if (p) { picked = p.dataset.pick; renderDup(); }
+};
+$("dup-tag").oninput = e => { GROUPS.find(x => x.id === picked).tag = e.target.value; };
+$("dup-tag").onchange = renderDup;
+$("dup-go").onclick = () => showBanner("Simülasyon: taşıma önizlemesi burada açılır. Gerçek uygulamada onaydan sonra taşınır ve geri alınabilir.", false);
+
+/* ---------- Adlandırma ---------- */
+const d = (name, m, kids) => ({ name, m, dir: true, kids });
+const f = (name, m) => ({ name, m });
+const TREE = [
+  d("müşteri sözleşmeleri", "2026-03", [f("ACME sözleşme son.docx", "2026-02"), f("acme sözleşme son (2).docx", "2026-03"), f("Teklif  ŞUBAT.pdf", "2026-02")]),
+  d("FATURALAR 2026", "2026-09", [f("fatura ocak.pdf", "2026-01"), f("Fatura Şubat.PDF", "2026-02"), f("ödeme dekontu.png", "2026-09")]),
+  d("toplantı notları", "2026-10", [f("Haftalık özet.txt", "2026-10"), f("çalışma planı ığdır şubesi uzun başlıklı sürüm.xlsx", "2026-10")]),
+  d("yeni klasör", "2026-11", []),
+  f("Okuma Listesi.txt", "2026-06"),
+  f("IŞIK ölçüm sonuçları.csv", "2026-11"),
+];
+const DEFAULTS = { scope: "both", sub: true, case: "title", space: "-", tr: "keep", clean: false, seqDirs: true, seqFiles: false, start: 1, pad: 2, date: "none", max: 0 };
+const PRESETS = {
+  web: { ...DEFAULTS, case: "lower", tr: "ascii", clean: true, seqDirs: false, max: 60 },
+  archive: { ...DEFAULTS, space: "_", seqDirs: true, date: "my", max: 80 },
+  plain: { ...DEFAULTS, case: "sentence", space: "keep", seqDirs: false },
+};
+let O = { ...DEFAULTS }, undo = null;
+const TRMAP = { ç: "c", Ç: "C", ğ: "g", Ğ: "G", ı: "i", İ: "I", ö: "o", Ö: "O", ş: "s", Ş: "S", ü: "u", Ü: "U" };
+
+/** Tek bir adın yeni halini üretir. Gerçek uygulamada bu hat Rust tarafında çalışır. */
+function newName(item, seq) {
+  let stem = item.name, ext = "";
+  const dot = stem.lastIndexOf(".");
+  if (!item.dir && dot > 0) { ext = stem.slice(dot); stem = stem.slice(0, dot); }
+  const numbered = seq !== null;
+  let s = stem.trim().replace(/\s+/g, " ");
+  if (numbered) s = s.replace(/^\d{1,3}[-_ .]+/, "");                       // eski sıra numarası tekrar eklenmez
+  if (O.date !== "none") s = s.replace(/[-_ ](\d{2}-\d{4}|\d{4}-\d{2})$/, ""); // eski tarih eki tekrar eklenmez
+  if (O.clean) s = s.replace(/[()\[\]{}!,;'’`~@#$%^&+=]/g, " ").replace(/\s+/g, " ").trim();
+  if (O.tr === "ascii") s = s.replace(/[çÇğĞıİöÖşŞüÜ]/g, c => TRMAP[c]);
+  const lo = x => O.tr === "ascii" ? x.toLowerCase() : x.toLocaleLowerCase("tr");
+  const up = x => O.tr === "ascii" ? x.toUpperCase() : x.toLocaleUpperCase("tr");
+  if (O.case === "lower") s = lo(s);
+  else if (O.case === "upper") s = up(s);
+  else if (O.case === "sentence") s = up(s.slice(0, 1)) + lo(s.slice(1));
+  else if (O.case === "title") s = s.split(/([ \-_.])/).map(w => up(w.slice(0, 1)) + lo(w.slice(1))).join("");
+  if (O.space !== "keep") s = s.replace(/ /g, O.space);
+  const sep = O.space === "keep" ? " " : O.space === "_" ? "_" : "-";
+  const prefix = numbered ? String(seq).padStart(O.pad, "0") + sep : "";
+  const [y, m] = item.m.split("-");
+  const suffix = O.date === "my" ? `${sep}${m}-${y}` : O.date === "ym" ? `${sep}${y}-${m}` : "";
+  if (O.max > 0) s = s.slice(0, Math.max(1, O.max - prefix.length - suffix.length)).replace(/[-_ .]+$/, "");
+  return { stem: prefix + s + suffix, ext };
+}
+/** Bir klasörün içeriği için plan: sıra numarası her klasörde ada göre, klasör ve dosya ayrı sayılır. */
+function plan(items, depth, rows) {
+  const used = new Set(), sorted = [...items].sort((a, b) => (!!b.dir - !!a.dir) || a.name.localeCompare(b.name, "tr"));
+  let nd = O.start, nf = O.start;
+  for (const it of sorted) {
+    const inScope = O.scope === "both" || (O.scope === "dirs") === !!it.dir;
+    let next = it.name, status = "same";
+    if (inScope) {
+      const seq = it.dir ? (O.seqDirs ? nd++ : null) : (O.seqFiles ? nf++ : null);
+      const { stem, ext } = newName(it, seq);
+      next = stem + ext;
+      for (let n = 1; used.has(next.toLocaleLowerCase("tr")); n++) { next = `${stem} (${n})${ext}`; status = "dup"; }
+      if (status !== "dup") status = next === it.name ? "same" : next.toLocaleLowerCase("tr") === it.name.toLocaleLowerCase("tr") ? "case" : "new";
+    }
+    used.add(next.toLocaleLowerCase("tr"));
+    rows.push({ it, next, status, depth });
+    if (it.dir && O.sub) plan(it.kids, depth + 1, rows);
+  }
+  return rows;
+}
+const BADGE = { new: ["ok", "Yeni ad"], case: ["ok", "Yalnız harf"], dup: ["warn", "Numaralandı"], same: ["", "Aynı kalır"] };
+function renderRename() {
+  document.querySelectorAll("[data-opt]").forEach(g => g.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(String(O[g.dataset.opt]) === b.dataset.v))));
+  document.querySelectorAll("[data-flag]").forEach(s => s.setAttribute("aria-checked", String(O[s.dataset.flag])));
+  document.querySelectorAll("[data-num]").forEach(i => { if (document.activeElement !== i) i.value = O[i.dataset.num]; });
+  const rows = plan(TREE, 0, []);
+  $("rn-rows").innerHTML = rows.map(r => {
+    const [cls, label] = BADGE[r.status], ic = svg(r.it.dir ? "folder" : "file"), stemLen = r.it.dir ? r.next.length : r.next.replace(/\.[^.]+$/, "").length;
+    return `<div class="rn-row" ${r.status === "same" ? "data-same" : ""}>
+      <div class="nm old" style="padding-left:${r.depth * 20}px" title="${esc(r.it.name)}">${ic}<span>${esc(r.it.name)}</span></div>
+      <div class="nm new" style="padding-left:${r.depth * 20}px" title="${esc(r.next)}">${ic}<span>${esc(r.next)}</span></div>
+      <span class="len">${stemLen}</span><span><span class="badge ${cls}">${label}</span></span></div>`;
+  }).join("");
+  const ch = rows.filter(r => r.status !== "same"), dirs = ch.filter(r => r.it.dir).length, dup = ch.filter(r => r.status === "dup").length;
+  $("rn-sum").textContent = ch.length ? `${dirs} klasör ve ${ch.length - dirs} dosyanın adı değişecek${dup ? ` · ${dup} ad dolu olduğu için numaralandı` : ""}.` : "Bu kurallarla değişecek ad yok.";
+  $("rn-apply").textContent = ch.length ? `${ch.length} adı uygula` : "Uygulanacak ad yok";
+  $("rn-apply").disabled = !ch.length;
+  $("rn-apply").onclick = () => {
+    undo = ch.map(r => [r.it, r.it.name]);
+    ch.forEach(r => { r.it.name = r.next; });
+    renderRename();
+    showBanner(`${ch.length} ad değiştirildi. İşlem geçmişine tek kayıt olarak yazıldı.`, true);
+  };
+}
+$("p-rename").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  const g = b.closest("[data-opt]");
+  if (g && b.dataset.v !== undefined) O[g.dataset.opt] = b.dataset.v;
+  else if (b.dataset.flag) O[b.dataset.flag] = !O[b.dataset.flag];
+  else if (b.dataset.preset) O = { ...PRESETS[b.dataset.preset] };
+  else if (b.id === "rn-reset") O = { ...DEFAULTS };
+  else return;
+  renderRename();
+});
+$("p-rename").addEventListener("input", e => {
+  const k = e.target.dataset.num; if (!k) return;
+  O[k] = Math.max(0, Math.min(255, Number(e.target.value) || 0)); renderRename();
+});
+function showBanner(text, canUndo) {
+  $("banner").hidden = false; $("banner").querySelector("span").textContent = text; $("banner-undo").hidden = !canUndo;
+}
+$("banner-x").onclick = () => { $("banner").hidden = true; };
+$("banner-undo").onclick = () => { if (undo) { undo.forEach(([it, old]) => { it.name = old; }); undo = null; renderRename(); showBanner("Adlandırma geri alındı; adlar eski haline döndü.", false); } };
+
+icons(document);
+renderDup(); renderRename(); go("rename");
+</script>
+</body>
+</html>

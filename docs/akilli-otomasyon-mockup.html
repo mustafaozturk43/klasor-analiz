@@ -1,0 +1,501 @@
+<title>Gelen Kutusu Otomasyonu</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Yerlesim: solda adim listesi, sagda o asamanin uygulama mockup'i; dar ekranda alt alta.
+   Mockup penceresi uygulamanin kendi workspace.css token'larini kullanir (--app-*). */
+:root{
+  --bg:#f6f3ef;--panel:#ffffff;--fg:#2b231e;--muted:#6f6158;--line:#e4d9cf;--accent:#b75321;--accent-soft:#f8e6d8;
+  --ok:#2a6b45;--ok-bg:#e1f1e5;--warn:#7c4f0b;--warn-bg:#faedcf;--bad:#9a3426;--bad-bg:#fbe0da;--info:#2f5d8a;--info-bg:#e2ecf6;
+  --app-canvas:#fcf7f1;--app-surface:#fff;--app-soft:#fff8f1;--app-line:#e8cfbb;--app-heading:#805440;--app-ink:#4e372b;--app-muted:#84634e;--app-accent:#b75321;--app-tint:#fae7d6;
+  --shade:#3b281c14;--os:#e9edf2;--os-ink:#1e2329;
+  --display:"Space Grotesk",system-ui,sans-serif;--body:Inter,system-ui,"Segoe UI",sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace;--ui:"Segoe UI Variable","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#161311;--panel:#1f1a17;--fg:#efe4da;--muted:#b4a296;--line:#3d322b;--accent:#ec9c60;--accent-soft:#3e2618;
+  --ok:#8fd3a8;--ok-bg:#1f3a2a;--warn:#f0c877;--warn-bg:#43331a;--bad:#f2a394;--bad-bg:#4a241d;--info:#9cc3ea;--info-bg:#1d3045;
+  --app-canvas:#191512;--app-surface:#251f1b;--app-soft:#2c241f;--app-line:#574333;--app-heading:#edbb95;--app-ink:#f0dfd1;--app-muted:#c2a68f;--app-accent:#ec9c60;--app-tint:#4d3020;
+  --shade:#0006;--os:#23272d;--os-ink:#e8ebef;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#161311;--panel:#1f1a17;--fg:#efe4da;--muted:#b4a296;--line:#3d322b;--accent:#ec9c60;--accent-soft:#3e2618;
+  --ok:#8fd3a8;--ok-bg:#1f3a2a;--warn:#f0c877;--warn-bg:#43331a;--bad:#f2a394;--bad-bg:#4a241d;--info:#9cc3ea;--info-bg:#1d3045;
+  --app-canvas:#191512;--app-surface:#251f1b;--app-soft:#2c241f;--app-line:#574333;--app-heading:#edbb95;--app-ink:#f0dfd1;--app-muted:#c2a68f;--app-accent:#ec9c60;--app-tint:#4d3020;
+  --shade:#0006;--os:#23272d;--os-ink:#e8ebef;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.6 var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 72px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;color:var(--fg)}
+h1{font-size:clamp(28px,4vw,40px);line-height:1.1;letter-spacing:-.01em}
+h2{font-size:24px;line-height:1.2}
+h3{font-size:16px}
+p{margin:0}
+.eyebrow{font:600 12px/1 var(--body);letter-spacing:.09em;text-transform:uppercase;color:var(--accent)}
+.lede{max-width:68ch;color:var(--muted);font-size:16px}
+code,.mono{font-family:var(--mono);font-size:.86em}
+code{background:var(--accent-soft);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+header.top{display:flex;flex-direction:column;gap:14px}
+.facts{display:flex;flex-wrap:wrap;gap:8px}
+.fact{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 12px;font-size:13px;color:var(--muted)}
+.fact b{color:var(--fg);font-weight:600}
+
+/* Kararlar */
+.decisions{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.dec{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.dec .q{display:flex;gap:10px;align-items:baseline}
+.dec .n{font:600 13px var(--mono);color:var(--muted)}
+.dec p{font-size:14px;color:var(--muted)}
+.dec .rec{color:var(--fg)}
+.pill{display:inline-block;font:600 11px/1 var(--body);letter-spacing:.04em;padding:5px 8px;border-radius:6px;white-space:nowrap}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}.pill.warn{background:var(--warn-bg);color:var(--warn)}.pill.bad{background:var(--bad-bg);color:var(--bad)}.pill.info{background:var(--info-bg);color:var(--info)}
+
+/* Asama bolumu */
+.phase{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:32px;align-items:start;border-top:1px solid var(--line);padding-top:32px}
+.phase.full{grid-template-columns:1fr}
+.phase-head{display:flex;flex-direction:column;gap:10px}
+.phase-no{font:500 13px var(--mono);color:var(--accent)}
+.steps{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:10px;counter-reset:s}
+.steps li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;font-size:14px;color:var(--fg)}
+.steps li::before{content:"";width:16px;height:16px;border:1.5px solid var(--line);border-radius:4px;margin-top:3px;background:var(--panel)}
+.steps li.done::before{background:var(--ok);border-color:var(--ok)}
+.steps small{display:block;color:var(--muted);font-size:13px}
+.note{border-left:3px solid var(--warn);background:var(--warn-bg);color:var(--fg);padding:10px 14px;border-radius:0 8px 8px 0;font-size:13.5px}
+.note b{color:var(--warn)}
+.files{font:12.5px/1.7 var(--mono);color:var(--muted)}
+.files span{color:var(--fg)}
+.stack{display:flex;flex-direction:column;gap:16px;min-width:0}
+
+/* ---- Uygulama penceresi (mockup) ---- */
+.win{background:var(--app-canvas);border:1px solid var(--app-line);border-radius:12px;box-shadow:0 2px 6px var(--shade),0 18px 40px var(--shade);overflow:hidden;font:13px/1.45 var(--ui);color:var(--app-ink);min-width:0}
+.titlebar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--app-surface);border-bottom:1px solid var(--app-line);font-size:12px;color:var(--app-muted)}
+.titlebar .ctl{display:flex;gap:14px;font-size:11px}
+.app-head{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--app-surface);border-bottom:1px solid var(--app-line);flex-wrap:wrap}
+.logo{width:28px;height:28px;border-radius:8px;background:var(--app-accent);display:grid;place-items:center;color:var(--app-surface);font-weight:700;font-size:13px}
+.app-head b{color:var(--app-heading);font-size:13px}
+.app-head small{display:block;color:var(--app-muted);font-size:11px}
+.tabs{display:flex;gap:4px;padding:8px 10px;background:var(--app-tint);overflow-x:auto;border-bottom:1px solid var(--app-line)}
+.tab{white-space:nowrap;padding:5px 10px;border-radius:7px;font-size:12px;color:var(--app-muted)}
+.tab.on{background:var(--app-surface);color:var(--app-accent);font-weight:600;box-shadow:0 1px 2px var(--shade)}
+.body{padding:14px;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--app-surface);border:1px solid var(--app-line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card h4{margin:0;font-size:13px;color:var(--app-heading);display:flex;align-items:center;gap:8px}
+.hint{color:var(--app-muted);font-size:11.5px}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.grow{flex:1;min-width:0}
+.input{border:1px solid var(--app-line);background:var(--app-soft);border-radius:7px;padding:6px 9px;font:12px var(--mono);color:var(--app-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn{border:1px solid var(--app-line);background:var(--app-surface);color:var(--app-ink);border-radius:7px;padding:5px 10px;font:600 12px var(--ui);white-space:nowrap;cursor:default}
+.btn.pri{background:var(--app-accent);border-color:var(--app-accent);color:var(--app-surface)}
+.btn.danger{color:var(--bad);border-color:var(--bad-bg);background:var(--bad-bg)}
+.toggle{width:30px;height:17px;border-radius:9px;background:var(--app-accent);position:relative;flex:none}
+.toggle::after{content:"";position:absolute;top:2px;right:2px;width:13px;height:13px;border-radius:50%;background:var(--app-surface)}
+.toggle.off{background:var(--app-line)}.toggle.off::after{right:auto;left:2px}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{display:inline-flex;align-items:center;gap:5px;background:var(--app-tint);color:var(--app-heading);border-radius:6px;padding:2px 7px;font:500 11.5px var(--mono)}
+.chip i{font-style:normal;color:var(--app-muted)}
+.chip.add{background:transparent;border:1px dashed var(--app-line);color:var(--app-muted)}
+.grp{display:grid;grid-template-columns:120px minmax(0,1fr);gap:10px;align-items:start;padding:8px 0;border-top:1px solid var(--app-line)}
+.grp:first-of-type{border-top:0}
+.grp b{font-size:12.5px;color:var(--app-ink)}
+.err{color:var(--bad);font-size:11.5px}
+.okmsg{color:var(--ok);font-size:11.5px}
+
+/* tepsi */
+.desk{position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:linear-gradient(160deg,#47607a,#2a3b4e 60%,#1c2733);min-height:330px;box-shadow:0 18px 40px var(--shade)}
+.taskbar{position:absolute;left:0;right:0;bottom:0;height:40px;background:#1f2329e6;display:flex;align-items:center;justify-content:flex-end;gap:12px;padding:0 12px;color:#dfe5ec;font:11px var(--ui)}
+.tray-ico{width:22px;height:22px;border-radius:6px;background:#b75321;display:grid;place-items:center;color:#fff;font-weight:700;font-size:11px;outline:2px solid #ffffff55}
+.menu{position:absolute;right:56px;bottom:50px;width:250px;background:var(--os);color:var(--os-ink);border-radius:10px;padding:6px;font:12.5px var(--ui);box-shadow:0 12px 30px #0008}
+.menu div{padding:7px 10px;border-radius:6px;display:flex;justify-content:space-between;gap:8px}
+.menu .hi{background:#0000000f}
+.menu .sep{height:1px;padding:0;margin:4px 6px;background:#8884}
+.menu .status{font-size:11px;opacity:.7;display:block}
+.toast{position:absolute;left:14px;top:14px;width:250px;background:var(--os);color:var(--os-ink);border-radius:10px;padding:10px 12px;font:12px var(--ui);box-shadow:0 12px 30px #0008}
+.toast b{display:block;margin-bottom:2px}
+
+/* gezgin agaci */
+.tree{font:12px/1.9 var(--mono);margin:0;white-space:pre;overflow-x:auto;color:var(--app-ink)}
+.tree .d{color:var(--app-heading);font-weight:600}.tree .m{color:var(--app-muted)}.tree .new{color:var(--ok)}
+.log{display:flex;flex-direction:column}
+.log div{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:8px;padding:6px 0;border-top:1px solid var(--app-line);font-size:12px;align-items:center}
+.log div:first-child{border-top:0}
+.log time{font:11px var(--mono);color:var(--app-muted)}
+.log .p{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* aksam paneli */
+.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--app-surface);border:1px solid var(--app-line);border-radius:10px;padding:8px 10px;position:relative}
+.select{border:1px solid var(--app-line);border-radius:7px;padding:5px 9px;font-size:12px;background:var(--app-soft);min-width:0;display:flex;gap:6px;align-items:center}
+.select::after{content:"▾";color:var(--app-muted);font-size:10px}
+.acc{background:var(--app-surface);border:1px solid var(--app-line);border-radius:10px;overflow:hidden}
+.acc-h{display:flex;align-items:center;gap:9px;padding:9px 12px;background:var(--app-soft);border-bottom:1px solid var(--app-line);font-weight:600;font-size:12.5px;color:var(--app-heading)}
+.acc-h.closed{border-bottom:0}
+.acc-h .cnt{margin-left:auto;font:500 11px var(--mono);color:var(--app-muted)}
+.cb{width:14px;height:14px;border:1.5px solid var(--app-muted);border-radius:3px;flex:none;display:grid;place-items:center;font-size:10px;line-height:1;color:var(--app-surface)}
+.cb.on{background:var(--app-accent);border-color:var(--app-accent)}
+.cb.on::before{content:"✓"}
+.cb.part{background:var(--app-accent);border-color:var(--app-accent)}
+.cb.part::before{content:"–"}
+.frow{display:grid;grid-template-columns:14px 48px minmax(0,1fr) auto;gap:10px;align-items:start;padding:9px 12px;border-top:1px solid var(--app-line)}
+.frow:first-of-type{border-top:0}
+.frow.sel{background:var(--app-soft)}
+.thumb{width:48px;height:48px;border-radius:7px;border:1px solid var(--app-line);display:grid;place-items:center;font:700 10px var(--mono);color:var(--app-muted);background:var(--app-tint);overflow:hidden}
+.thumb.img1{background:linear-gradient(135deg,#d99a6c,#8a4f33)}.thumb.img2{background:linear-gradient(160deg,#9cb8c9,#4c6b7f)}.thumb.img3{background:linear-gradient(120deg,#c9c08e,#6f6a3f)}
+.fname{font-weight:600;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meta{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.b{font:500 10.5px var(--ui);padding:1px 6px;border-radius:5px;background:var(--app-tint);color:var(--app-heading);white-space:nowrap}
+.b.dim{background:transparent;border:1px dashed var(--app-line);color:var(--app-muted)}
+.peek{margin-top:6px;border:1px solid var(--app-line);background:var(--app-soft);border-radius:6px;padding:5px 8px;font-size:11.5px;color:var(--app-muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.peek b{color:var(--app-ink)}
+.size{font:11px var(--mono);color:var(--app-muted);white-space:nowrap}
+.pop{position:absolute;z-index:2;top:46px;left:10px;width:230px;background:var(--app-surface);border:1px solid var(--app-line);border-radius:9px;box-shadow:0 10px 26px var(--shade);padding:5px;font-size:12px}
+.pop div{padding:6px 8px;border-radius:6px;display:flex;justify-content:space-between;gap:8px}
+.pop .on{background:var(--app-tint);color:var(--app-accent);font-weight:600}
+.pop small{color:var(--app-muted);font:10.5px var(--mono)}
+
+/* diyalog */
+.dialog-shell{position:relative;background:var(--app-canvas);border:1px solid var(--app-line);border-radius:12px;padding:28px 18px;box-shadow:0 18px 40px var(--shade);overflow:hidden}
+.dialog-shell::before{content:"";position:absolute;inset:0;background:#2b1a1033}
+.dialog{position:relative;margin:0 auto;max-width:470px;background:var(--app-surface);border:1px solid var(--app-line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;font:13px/1.45 var(--ui);color:var(--app-ink);box-shadow:0 20px 50px #0005}
+.dialog h4{margin:0;font-size:15px;color:var(--app-heading)}
+.tokens{display:flex;flex-wrap:wrap;gap:5px}
+.tok{font:500 11px var(--mono);border:1px solid var(--app-line);border-radius:5px;padding:2px 6px;color:var(--app-muted)}
+.tok.use{border-color:var(--app-accent);color:var(--app-accent)}
+.prev{border:1px solid var(--app-line);border-radius:8px;overflow:hidden}
+.prev div{display:grid;grid-template-columns:minmax(0,1fr) 14px minmax(0,1fr);gap:8px;padding:6px 10px;border-top:1px solid var(--app-line);font:11.5px var(--mono);align-items:center}
+.prev div:first-child{border-top:0}
+.prev span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prev .arrow{color:var(--app-muted)}
+.prev .to{color:var(--app-heading);font-weight:500}
+.prev .w{color:var(--warn)}
+.foot{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.dialog-pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+
+/* yol haritasi */
+.road{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.road div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.road b{font:600 13px var(--display)}
+.road small{color:var(--muted);font-size:12px}
+.road .n{font:500 11px var(--mono);color:var(--accent)}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:13.5px}
+th,td{text-align:left;padding:10px 14px;border-top:1px solid var(--line);vertical-align:top}
+th{border-top:0;font:600 12px var(--body);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);background:var(--bg)}
+td:first-child{font-weight:600;white-space:nowrap}
+@media (max-width:860px){.phase{grid-template-columns:1fr}}
+@media (max-width:520px){.grp{grid-template-columns:1fr}.frow{grid-template-columns:14px 40px minmax(0,1fr)}.frow .size{grid-column:3}.thumb{width:40px;height:40px}.menu,.toast{width:220px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">Smart File Organizer · fikir_2026-11-12.md</span>
+    <h1>Gelen Kutusu Otomasyonu: ekranlar ve yapılacaklar</h1>
+    <p class="lede">İndirilenler gibi kaynak klasörlere düşen dosyalar gün içinde yedek klasördeki günlük “Bakılacaklar” klasörüne gruplanarak toplanır. Akşam tek ekrandan bakılır, sonra taşınır, adlandırılır ya da Geri Dönüşüm Kutusu'na gönderilir. Aşağıdaki ekranlar mockup'tır ve örnek verilerle çizildi.</p>
+    <div class="facts">
+      <span class="fact"><b>7</b> aşama</span>
+      <span class="fact"><b>~12</b> yeni Rust dosyası</span>
+      <span class="fact"><b>10–12</b> yeni TS/TSX dosyası</span>
+      <span class="fact">Yeni paketler: <b>notify, tauri-plugin-store, trash, chrono, image</b></span>
+    </div>
+  </header>
+
+  <section class="stack">
+    <span class="eyebrow">Başlamadan önce</span>
+    <h2>Kararlar</h2>
+    <p class="lede">12.11.2026'da konuşuldu. 1, 4, 7 ve 8 numaralı kararlar seçildi. 2, 3, 5 ve 6 numaralı kararlar planda önerildiği gibi kalıyor.</p>
+    <div class="decisions">
+      <div class="dec"><div class="q"><span class="n">1</span><h3>Paket yöneticisi</h3></div><p>Plan pnpm'e geçmeyi öneriyor. <span class="rec">Önerim npm'de kalmak:</span> projenin <code>AGENTS.md</code> dosyası pnpm'i açıkça yasaklıyor, <code>package-lock.json</code> ve <code>release</code>/<code>portable</code> komutları npm'e göre kurulu.</p><span><span class="pill ok">Karar: npm</span></span></div>
+      <div class="dec"><div class="q"><span class="n">2</span><h3>Çakışma biçimi</h3></div><p class="rec">Gelen kutusunda <code>dosya_1.pdf</code>, diğer işlemlerde mevcut <code>dosya (1).pdf</code>. <code>naming::unique_dest</code> fonksiyonuna biçim parametresi eklenir.</p><span><span class="pill ok">Plana katılıyorum</span></span></div>
+      <div class="dec"><div class="q"><span class="n">3</span><h3>Grup adları</h3></div><p class="rec">Ayarlar'daki 5 grup gelen kutusunun tek kaynağı olur. “Türüne Göre Düzenle” kuralları şimdilik ayrı kalır.</p><span><span class="pill ok">Plana katılıyorum</span></span></div>
+      <div class="dec"><div class="q"><span class="n">4</span><h3>shadcn/ui</h3></div><p>Yalnızca yeni ekranlarda kullanılırsa uygulamada iki ayrı görünüm oluşur. <span class="rec">Önerim:</span> Accordion, Popover ve Dialog'u Radix temelli shadcn ile kurup mevcut <code>workspace.css</code> token'larıyla boyamak. Mockup'lar bu görünümle çizildi.</p><span><span class="pill ok">Karar: shadcn + mevcut renkler</span></span></div>
+      <div class="dec"><div class="q"><span class="n">7</span><h3>Watcher geçmişi</h3></div><p class="rec">Aynı dakikada taşınan dosyalar İşlem Geçmişi'nde tek kayıt olur. Geri alma o dakikanın dosyalarını birlikte geri alır.</p><span><span class="pill ok">Karar: dakikalık gruplar</span></span></div>
+      <div class="dec"><div class="q"><span class="n">8</span><h3>Eşleşmeyen dosyalar</h3></div><p class="rec">Hiçbir grupla eşleşmeyen dosya kaynak klasörde kalır. Ayarlar'da bir “Diğer” grubu açılabilir; varsayılan olarak kapalıdır.</p><span><span class="pill ok">Karar: kaynakta kalır</span></span></div>
+      <div class="dec"><div class="q"><span class="n">5</span><h3>Silme kuralı</h3></div><p class="rec">Yalnızca kullanıcı başlatıp onay verdiğinde ve yalnızca gelen kutusundaki dosyalar için Geri Dönüşüm Kutusu'na gönderme. Bu işlem geçmişe “geri alınamaz” notuyla yazılır.</p><span><span class="pill ok">Plana katılıyorum</span></span></div>
+      <div class="dec"><div class="q"><span class="n">6</span><h3>Yerel tarih</h3></div><p class="rec">Klasör tarihi <code>chrono::Local</code> ile belirlenir. Böylece gece 00:30'da gelen dosya doğru güne düşer.</p><span><span class="pill ok">Plana katılıyorum</span></span></div>
+    </div>
+    <div class="decisions">
+      <div class="dec"><div class="q"><h3>Eskimiş: Bölüm 3, ortam engeli</h3><span class="pill info">Güncel değil</span></div><p>Plan, Linux'ta Rust olmadığını söylüyor. Bu Windows makinesinde <code>cargo test</code> çalışıyor (37 test geçiyor) ve setup ile portable derleme alınabiliyor. Linux paketlerine gerek yok.</p></div>
+      <div class="dec"><div class="q"><h3>Eskimiş: tek kopya</h3><span class="pill info">Zaten var</span></div><p><code>single_instance.rs</code> mevcut: pencereyi <code>unminimize</code>, <code>show</code> ve <code>set_focus</code> ile öne getiriyor. Gizlenmiş pencere için ek bir şey yapmak gerekmiyor.</p></div>
+      <div class="dec"><div class="q"><h3>Ek risk: yeni paketler</h3><span class="pill bad">Dikkat</span></div><p>Bu makinede antivirüs, yeni derlenen build-script'leri kilitleyebiliyor. Her yeni paketten sonra ilk derleme ayrı bir adım olarak yapılmalı.</p></div>
+      <div class="dec"><div class="q"><h3>Ek risk: önizleme kapsamı</h3><span class="pill bad">Dikkat</span></div><p>Planda asset kapsamının yedek klasörüyle sınırlanması öneriliyor. Ancak mevcut <code>FilePreview</code> her klasörde kullanılıyor; kapsam daraltılırsa Klasördeki Dosyalar önizlemesi bozulur. Kapsam, seçili kök klasörlerle birlikte genişletilmeli.</p></div>
+    </div>
+  </section>
+
+  <section class="stack">
+    <span class="eyebrow">Sıra</span>
+    <div class="road">
+      <div><span class="n">Aşama 1</span><b>Ayarlar</b><small>Rust'ta saklanır</small></div>
+      <div><span class="n">Aşama 2</span><b>Sistem tepsisi</b><small>Kapatınca gizlenir</small></div>
+      <div><span class="n">Aşama 3</span><b>Watcher</b><small>notify ile anlık</small></div>
+      <div><span class="n">Aşama 4</span><b>Dosya ayrıntısı</b><small>Özet ve küçük resim</small></div>
+      <div><span class="n">Aşama 5</span><b>Toplu işlemler</b><small>Taşı, adlandır, sil</small></div>
+      <div><span class="n">Aşama 6</span><b>Akşam paneli</b><small>Ön yüz</small></div>
+      <div><span class="n">Aşama 7</span><b>Test ve belgeler</b><small>Kapanış</small></div>
+    </div>
+  </section>
+
+  <!-- ASAMA 1 -->
+  <section class="phase">
+    <div class="phase-head">
+      <span class="phase-no">Aşama 1 · Ayarlar ekranı</span>
+      <h2>Ayarlar Rust tarafında saklanır</h2>
+      <p class="lede">Watcher pencere kapalıyken de çalışacağı için ayarlar artık tarayıcı belleğinde değil, <code>tauri-plugin-store</code> ile diskte tutulur. Kayıt yapılınca watcher yeni ayarlarla yeniden başlar.</p>
+      <ol class="steps">
+        <li><span><b>settings.rs:</b> <code>AppSettings</code>, varsayılan 5 grup ve doğrulama<small>Yedek klasörü kaynak klasörün içinde olamaz, kaynak klasör de yedek klasörünün içinde olamaz. Uzantılar küçük harfe çevrilir, tekrarlar temizlenir, aynı uzantı iki gruba bağlanamaz.</small></span></li>
+        <li><span><b>settings_cmds.rs:</b> <code>get_settings</code> ve <code>save_settings</code></span></li>
+        <li><span><b>capabilities:</b> <code>store:default</code> izni</span></li>
+        <li><span><b>Bir kerelik aktarım:</b> <code>sfo-watch-folder</code> içindeki eski izleme ayarı yeni ayarlara taşınır<small>İzleme, aktarımdan sonra her zaman <b>kapalı</b> başlar. Kullanıcı açıkça açmalıdır. Daha önce Downloads'ın istenmeden düzenlenmesi bu yüzden yaşanmıştı.</small></span></li>
+        <li><span><b>SettingsView.tsx</b> ve <b>ExtGroupCard.tsx</b><small>Etiket kutusunda Enter veya virgülle ekleme, × ile silme</small></span></li>
+      </ol>
+      <p class="files">Yeni: <span>settings.rs · settings_cmds.rs · SettingsView.tsx · ExtGroupCard.tsx · settingsCommands.ts</span></p>
+    </div>
+    <div class="win" role="img" aria-label="Ayarlar ekranı mockup'ı">
+      <div class="titlebar"><span>Smart File Organizer</span><span class="ctl"><span>—</span><span>☐</span><span>✕</span></span></div>
+      <div class="app-head"><span class="logo">S</span><div><b>Smart File Organizer</b><small>Otomasyon açık · 2 kaynak izleniyor</small></div></div>
+      <div class="tabs"><span class="tab">Klasör Analizi</span><span class="tab">Türüne Göre Düzenle</span><span class="tab">Akşam Kontrolü</span><span class="tab on">Ayarlar</span><span class="tab">İşlem Geçmişi</span></div>
+      <div class="body">
+        <div class="card">
+          <h4>Otomasyon <span class="toggle" style="margin-left:auto"></span></h4>
+          <p class="hint">Uygulama kapatıldığında sistem tepsisinde çalışmaya devam eder. Yalnızca kaynak klasörlerin ilk seviyesi izlenir.</p>
+          <div class="row"><span class="toggle off"></span><span class="hint">Açılışta bekleyen dosyaları da yerleştir (önce kaç dosya olduğunu sorar)</span></div>
+        </div>
+        <div class="card">
+          <h4>Kaynak klasörler</h4>
+          <div class="row"><span class="input grow">C:\Users\…\Downloads</span><span class="btn">Kaldır</span></div>
+          <div class="row"><span class="input grow">C:\Users\…\Desktop\Taranan</span><span class="btn">Kaldır</span></div>
+          <div class="row"><span class="btn">+ Klasör ekle</span></div>
+        </div>
+        <div class="card">
+          <h4>Yedek (hedef) klasörü</h4>
+          <div class="row"><span class="input grow">D:\Yedek</span><span class="btn">Değiştir</span></div>
+          <p class="okmsg">✓ Gelen kutusu: D:\Yedek\_GelenKutusu\2026-11-12_Bakilacaklar</p>
+        </div>
+        <div class="card">
+          <h4>Uzantı grupları <span class="btn" style="margin-left:auto">+ Grup ekle</span></h4>
+          <div class="grp"><b>Dokümanlar</b><div class="chips"><span class="chip">pdf <i>×</i></span><span class="chip">docx <i>×</i></span><span class="chip">xlsx <i>×</i></span><span class="chip">pptx <i>×</i></span><span class="chip">txt <i>×</i></span><span class="chip">csv <i>×</i></span><span class="chip add">uzantı ekle…</span></div></div>
+          <div class="grp"><b>Görseller</b><div class="chips"><span class="chip">jpg <i>×</i></span><span class="chip">jpeg <i>×</i></span><span class="chip">png <i>×</i></span><span class="chip">webp <i>×</i></span><span class="chip">heic <i>×</i></span><span class="chip add">uzantı ekle…</span></div></div>
+          <div class="grp"><b>Videolar</b><div class="chips"><span class="chip">mp4 <i>×</i></span><span class="chip">mov <i>×</i></span><span class="chip">mkv <i>×</i></span><span class="chip add">uzantı ekle…</span></div></div>
+          <div class="grp"><b>Arşivler</b><div class="chips"><span class="chip">zip <i>×</i></span><span class="chip">rar <i>×</i></span><span class="chip">7z <i>×</i></span><span class="chip add">uzantı ekle…</span></div></div>
+          <div class="grp"><b>Kurulum</b><div class="chips"><span class="chip">exe <i>×</i></span><span class="chip">msi <i>×</i></span><span class="chip">pdf <i>×</i></span><span class="chip add">uzantı ekle…</span></div><p class="err" style="grid-column:2">“.pdf” zaten Dokümanlar grubunda. Bir uzantı yalnızca bir gruba bağlanabilir.</p></div>
+        </div>
+        <div class="row" style="justify-content:flex-end"><span class="btn">Vazgeç</span><span class="btn pri">Kaydet ve izlemeyi yeniden başlat</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ASAMA 2 -->
+  <section class="phase">
+    <div class="phase-head">
+      <span class="phase-no">Aşama 2 · Sistem tepsisi</span>
+      <h2>Kapatınca kapanmaz, tepsiye iner</h2>
+      <p class="lede">Pencere kapatma düğmesi uygulamayı gizler. Watcher arka planda çalışmaya devam eder. Tamamen kapatmak için tepsi menüsündeki “Çıkış” kullanılır.</p>
+      <ol class="steps">
+        <li><span><b>Cargo.toml:</b> <code>tauri</code> için <code>tray-icon</code> ve <code>image-png</code> özellikleri</span></li>
+        <li><span><b>tray.rs:</b> dört menü öğesi<small>“Duraklat / Başlat” metni duruma göre değişir. “Bugünün klasörünü aç” klasör yoksa önce oluşturur ve <code>shell::reveal</code> ile açar. Simgeye sol tıklanınca pencere açılır.</small></span></li>
+        <li><span><b>lib.rs:</b> <code>CloseRequested</code> → <code>prevent_close()</code> + <code>hide()</code><small>İlk gizlemede bir kez “Uygulama tepside çalışıyor” bildirimi gösterilir.</small></span></li>
+        <li class="done"><span><b>single_instance.rs:</b> gizli pencereyi öne getirme<small>Zaten yapılmış: <code>show</code> ve <code>set_focus</code> çağrılıyor.</small></span></li>
+      </ol>
+      <p class="files">Yeni: <span>tray.rs</span> · Değişen: <span>lib.rs · Cargo.toml</span></p>
+    </div>
+    <div class="desk" role="img" aria-label="Windows görev çubuğunda tepsi menüsü mockup'ı">
+      <div class="toast"><b>Smart File Organizer tepside çalışıyor</b>Yeni dosyalar gelen kutusuna yerleştirilmeye devam edecek.</div>
+      <div class="menu">
+        <div><span>Smart File Organizer<span class="status">Otomasyon açık · bugün 14 dosya</span></span></div>
+        <div class="sep"></div>
+        <div class="hi"><span>Paneli aç</span></div>
+        <div><span>Duraklat</span></div>
+        <div><span>Bugünün klasörünü aç</span></div>
+        <div class="sep"></div>
+        <div><span>Çıkış</span></div>
+      </div>
+      <div class="taskbar"><span>⌃</span><span class="tray-ico">S</span><span>TR</span><span>22:14<br>12.11.2026</span></div>
+    </div>
+  </section>
+
+  <!-- ASAMA 3 -->
+  <section class="phase">
+    <div class="phase-head">
+      <span class="phase-no">Aşama 3 · Watcher</span>
+      <h2>Dosya gelir gelmez günün klasörüne</h2>
+      <p class="lede">Yeni dosya kaynak klasöre düşer. Yazımı bittiğinde yedek klasördeki günün “Bakılacaklar” klasörüne, grubunun alt klasörüne taşınır. Her taşıma geçmişe yazılır ve geri alınabilir.</p>
+      <ol class="steps">
+        <li><span><b>watcher.rs:</b> <code>notify-debouncer-full</code>, <code>NonRecursive</code><small>Durum <code>WatcherState { handle, paused }</code> içinde tutulur. Ayarlar kaydedilince watcher yeniden kurulur.</small></span></li>
+        <li><span><b>Yazımın bittiği kontrol edilir:</b> boyut ve değiştirilme zamanı 2 sn sabit kalmalı<small><code>.crdownload</code>, <code>.part</code>, <code>.tmp</code>, <code>~$</code> ile başlayan adlar ve <code>desktop.ini</code> atlanır. Bu kurallar <code>organize_auto.rs</code>'den taşınır.</small></span></li>
+        <li><span><b>inbox_path.rs:</b> <code>&lt;yedek&gt;\_GelenKutusu\&lt;YYYY-MM-DD&gt;_Bakilacaklar\&lt;Grup&gt;\</code><small>Yerel tarih kullanılır. Çakışmada <code>_1</code> eklenir. Hiçbir grupla eşleşmeyen dosya yerinde kalır.</small></span></li>
+        <li><span><b>Olay ve geçmiş:</b> <code>inbox-updated</code> olayı gönderilir, taşıma tek tek değil dakikalık kayıtlar halinde geçmişe yazılır<small>Böylece İşlem Geçmişi yüzlerce satırla dolmaz.</small></span></li>
+        <li><span><b>Koruma:</b> <code>_GelenKutusu</code>, tüm taramalardan <code>_Kopyalar_Karantina</code> gibi hariç tutulur<small>Yedek klasör kaynak klasörün içinde olsaydı watcher kendi taşıdığı dosyayı yeniden yakalardı. Aşama 1'deki doğrulama bunu engeller.</small></span></li>
+        <li><span><b>Kaldırılanlar:</b> <code>useWatchFolder</code>, <code>WatchFolderPanel</code> ve JS zamanlayıcısı</span></li>
+      </ol>
+      <p class="files">Yeni: <span>watcher.rs · inbox_path.rs · watcher_tests.rs</span> · Değişen: <span>naming.rs · organize_auto.rs</span></p>
+    </div>
+    <div class="win" role="img" aria-label="Gelen kutusu klasör yapısı ve hareket günlüğü mockup'ı">
+      <div class="titlebar"><span>D:\Yedek\_GelenKutusu</span><span class="ctl"><span>—</span><span>☐</span><span>✕</span></span></div>
+      <div class="body">
+        <div class="card">
+          <h4>Diskte oluşan yapı</h4>
+<pre class="tree"><span class="d">D:\Yedek\</span>
+├─ <span class="d">_GelenKutusu\</span>
+│  ├─ <span class="d">2026-11-11_Bakilacaklar\</span>   <span class="m">dün · 3 dosya kaldı</span>
+│  └─ <span class="d">2026-11-12_Bakilacaklar\</span>
+│     ├─ <span class="d">Dokümanlar\</span>
+│     │  ├─ Kira_Sozlesmesi.pdf
+│     │  ├─ Kira_Sozlesmesi_1.pdf   <span class="m">aynı ad · numaralandı</span>
+│     │  └─ <span class="new">Teklif_Q4.xlsx</span>          <span class="new">+ az önce</span>
+│     ├─ <span class="d">Görseller\</span>   <span class="m">6 dosya</span>
+│     ├─ <span class="d">Arşivler\</span>    <span class="m">2 dosya</span>
+│     └─ <span class="d">Kurulum\</span>     <span class="m">1 dosya</span>
+├─ <span class="d">_Kopyalar_Karantina\</span>
+└─ <span class="d">Faturalar\</span>  <span class="d">Projeler\</span>  <span class="d">Fotoğraflar\</span>   <span class="m">← akşam hedefleri</span></pre>
+        </div>
+        <div class="card">
+          <h4>Son hareketler <span class="pill ok" style="margin-left:auto">İzleniyor</span></h4>
+          <div class="log">
+            <div><time>22:13</time><span class="p">Teklif_Q4.xlsx → Dokümanlar</span><span class="b">Taşındı</span></div>
+            <div><time>22:13</time><span class="p">kurulum_v2.exe.crdownload</span><span class="b dim">İndiriliyor</span></div>
+            <div><time>22:09</time><span class="p">Kira_Sozlesmesi.pdf → Kira_Sozlesmesi_1.pdf</span><span class="b">Numaralandı</span></div>
+            <div><time>21:58</time><span class="p">film_kaydi.mkv</span><span class="b dim">Grup yok · yerinde</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ASAMA 4 + 6 -->
+  <section class="phase full">
+    <div class="phase-head">
+      <span class="phase-no">Aşama 4 ve 6 · Akşam Kontrolü</span>
+      <h2>Günün dosyalarına tek ekrandan bakış</h2>
+      <p class="lede">Gelen kutusu gruplar halinde listelenir. Her satırda küçük resim, tarihler ve metin dosyalarında ilk 300 karakter görünür. Benzer adlı dosyalar ayrı bir grupta toplanır. Seçim yapılınca üst çubuktaki işlemler etkinleşir.</p>
+    </div>
+    <div class="win" role="img" aria-label="Akşam Kontrolü paneli mockup'ı">
+      <div class="titlebar"><span>Smart File Organizer</span><span class="ctl"><span>—</span><span>☐</span><span>✕</span></span></div>
+      <div class="app-head"><span class="logo">S</span><div><b>Akşam Kontrolü</b><small>D:\Yedek\_GelenKutusu\2026-11-12_Bakilacaklar · 14 dosya · 48,6 MB</small></div><span class="select" style="margin-left:auto">Bugün · 12.11.2026</span></div>
+      <div class="tabs"><span class="tab">Klasör Analizi</span><span class="tab">Türüne Göre Düzenle</span><span class="tab on">Akşam Kontrolü</span><span class="tab">Ayarlar</span><span class="tab">İşlem Geçmişi</span></div>
+      <div class="body">
+        <div class="bar">
+          <span class="cb part"></span><b style="font-size:12px">3 seçili</b><span class="hint">· 2,1 MB</span>
+          <span style="flex:1"></span>
+          <span class="select">Hedef: Faturalar</span><span class="btn pri">Taşı</span><span class="btn">Adlandır…</span><span class="btn danger">Sil…</span>
+          <div class="pop" style="left:auto;right:150px">
+            <div class="on"><span>Faturalar</span><small>D:\Yedek</small></div>
+            <div><span>Projeler</span><small>D:\Yedek</small></div>
+            <div><span>Fotoğraflar</span><small>D:\Yedek</small></div>
+            <div><span>Yeni klasör…</span></div>
+          </div>
+        </div>
+        <div class="acc">
+          <div class="acc-h"><span class="cb part"></span>Dokümanlar<span class="cnt">5 dosya · 2 seçili</span><span>▾</span></div>
+          <div class="frow sel"><span class="cb on"></span><span class="thumb">PDF</span><div style="min-width:0"><div class="fname">Elektrik_Faturasi_Kasim.pdf</div><div class="meta"><span class="b">Geldi 09:42</span><span class="b">Oluşturma 11.11.2026</span><span class="b dim">Son erişim ≈ bugün</span></div><div class="peek"><b>İçerik:</b> Fatura No: 2026-114583 · Son ödeme tarihi 26.11.2026 · Tüketim 212 kWh · Ödenecek tutar 1.384,20 TL…</div></div><span class="size">184 KB</span></div>
+          <div class="frow sel"><span class="cb on"></span><span class="thumb">PDF</span><div style="min-width:0"><div class="fname">Su_Faturasi_Kasim.pdf</div><div class="meta"><span class="b">Geldi 10:05</span><span class="b">Oluşturma 12.11.2026</span></div></div><span class="size">96 KB</span></div>
+          <div class="frow"><span class="cb"></span><span class="thumb">TXT</span><div style="min-width:0"><div class="fname">toplanti_notlari.txt</div><div class="meta"><span class="b">Geldi 14:20</span><span class="b">Değişiklik 14:19</span></div><div class="peek"><b>İçerik:</b> Q4 bütçe toplantısı. Katılanlar: satın alma ve muhasebe. Kararlar: sunucu yenilemesi ocak ayına kaldı; teklifler cuma gününe kadar toplanacak…</div></div><span class="size">3 KB</span></div>
+        </div>
+        <div class="acc">
+          <div class="acc-h"><span class="cb part"></span>Görseller<span class="cnt">6 dosya · 1 seçili</span><span>▾</span></div>
+          <div class="frow sel"><span class="cb on"></span><span class="thumb img1"></span><div style="min-width:0"><div class="fname">IMG_20261112_131544.jpg</div><div class="meta"><span class="b">Geldi 13:16</span><span class="b">4032 × 3024</span><span class="b dim">Büyütmek için üzerine gelin</span></div></div><span class="size">1,8 MB</span></div>
+          <div class="frow"><span class="cb"></span><span class="thumb img2"></span><div style="min-width:0"><div class="fname">ekran_goruntusu_2026-11-12.png</div><div class="meta"><span class="b">Geldi 16:02</span></div></div><span class="size">412 KB</span></div>
+        </div>
+        <div class="acc">
+          <div class="acc-h"><span class="cb"></span>Benzer isimliler<span class="cnt">2 dosya · aynı içerik değil</span><span>▾</span></div>
+          <div class="frow"><span class="cb"></span><span class="thumb">XLSX</span><div style="min-width:0"><div class="fname">Teklif_Q4.xlsx</div><div class="meta"><span class="b">%91 benzer: Teklif_Q4_son.xlsx</span></div></div><span class="size">38 KB</span></div>
+        </div>
+        <div class="acc"><div class="acc-h closed"><span class="cb"></span>Arşivler<span class="cnt">2 dosya</span><span>▸</span></div></div>
+        <div class="acc"><div class="acc-h closed"><span class="cb"></span>Kurulum<span class="cnt">1 dosya</span><span>▸</span></div></div>
+      </div>
+    </div>
+    <div class="decisions">
+      <div class="dec"><h3>Aşama 4: dosya ayrıntısı (Rust)</h3>
+        <ol class="steps">
+          <li><span><b>inspector.rs:</b> <code>FileDetail</code> ve <code>list_inbox(date?)</code><small>Gruplanmış liste döner. “Benzer isimliler” grubu <code>similarity.rs</code> ile hesaplanır.</small></span></li>
+          <li><span><b>İçerik özeti:</b> en fazla 1,5 KB okunur, ilk 300 <b>karakter</b> alınır<small>UTF-8 karakter sınırında kesilir. Yalnızca metin türlerinde gösterilir; PDF ve docx için ileride ayrı bir çıkarıcı gerekir.</small></span></li>
+          <li><span><b>thumbnail.rs:</b> 2 MB altındaki görseller doğrudan, büyükler 96 px önbellekle<small>Önbellek anahtarı yol, mtime ve boyuttan oluşur. Toplu üretim <code>rayon</code> ile yapılır.</small></span></li>
+          <li><span><b>Son erişim:</b> Windows'ta çoğu zaman kapalı olduğu için “≈” ile gösterilir</span></li>
+        </ol>
+        <p class="files">Yeni: <span>inspector.rs · thumbnail.rs · inspector_tests.rs</span></p>
+      </div>
+      <div class="dec"><h3>Aşama 6: ön yüz</h3>
+        <ol class="steps">
+          <li><span><b>EveningPanel.tsx</b>, <b>InboxActionBar.tsx</b>, <b>InboxGroupList.tsx</b>, <b>InboxFileRow.tsx</b><small>Satırlar <code>@tanstack/react-virtual</code> ile sanallaştırılır; grup checkbox'ı kısmi seçimi de gösterir.</small></span></li>
+          <li><span><b>useInbox</b> hook'u: <code>inbox-updated</code> olayıyla yenileme, seçim dosya yolu üzerinden</span></li>
+          <li><span><b>Gün seçici:</b> önceki günlerde kalan dosyalar da görülebilir</span></li>
+          <li><span><b>App.tsx:</b> “Akşam Kontrolü” ve “Ayarlar” sekmeleri; Otomasyon sekmesindeki eski izleme paneli kaldırılır</span></li>
+        </ol>
+        <p class="files">Yeni: <span>inboxCommands.ts · types/inbox.ts · useInbox.ts · 4 bileşen</span></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ASAMA 5 -->
+  <section class="phase full">
+    <div class="phase-head">
+      <span class="phase-no">Aşama 5 · Toplu işlemler</span>
+      <h2>Taşı, adlandır, Geri Dönüşüm Kutusu'na gönder</h2>
+      <p class="lede">Adlandırma, mevcut şablon motorunun seçili dosya listesiyle çalışan hâlidir: önce canlı önizleme, sonra uygulama, geçmişten geri alma. Silme dosyaları kalıcı olarak silmez; Geri Dönüşüm Kutusu'na gönderir.</p>
+    </div>
+    <div class="dialog-pair">
+      <div class="dialog-shell" role="img" aria-label="Toplu adlandırma diyaloğu mockup'ı">
+        <div class="dialog">
+          <h4>3 dosyayı adlandır</h4>
+          <div class="row"><span class="input grow">{OzelMetin}_{Grup}_{tarih}_{sıra}</span></div>
+          <div class="tokens"><span class="tok">{ad}</span><span class="tok use">{OzelMetin}</span><span class="tok use">{Grup}</span><span class="tok use">{tarih}</span><span class="tok use">{sıra}</span><span class="tok">{yıl}</span><span class="tok">{ay}</span></div>
+          <div class="row"><span class="hint">Özel metin</span><span class="input grow">Kasim_Faturalari</span></div>
+          <div class="prev">
+            <div><span>Elektrik_Faturasi_Kasim.pdf</span><span class="arrow">→</span><span class="to">Kasim_Faturalari_Dokümanlar_2026-11-12_01.pdf</span></div>
+            <div><span>Su_Faturasi_Kasim.pdf</span><span class="arrow">→</span><span class="to">Kasim_Faturalari_Dokümanlar_2026-11-12_02.pdf</span></div>
+            <div><span>IMG_20261112_131544.jpg</span><span class="arrow">→</span><span class="to">Kasim_Faturalari_Görseller_2026-11-12_03.jpg</span></div>
+          </div>
+          <p class="hint">Uzantılar korunur. Dosyalar bulundukları klasörde kalır. İşlem Geçmişi'nden geri alınabilir.</p>
+          <div class="foot"><span class="btn">Vazgeç</span><span class="btn pri">3 dosyayı adlandır</span></div>
+        </div>
+      </div>
+      <div class="dialog-shell" role="img" aria-label="Geri Dönüşüm Kutusu onay diyaloğu mockup'ı">
+        <div class="dialog">
+          <h4>3 dosya Geri Dönüşüm Kutusu'na gönderilsin mi?</h4>
+          <div class="prev">
+            <div><span>Elektrik_Faturasi_Kasim.pdf</span><span></span><span class="size">184 KB</span></div>
+            <div><span>Su_Faturasi_Kasim.pdf</span><span></span><span class="size">96 KB</span></div>
+            <div><span>IMG_20261112_131544.jpg</span><span></span><span class="size">1,8 MB</span></div>
+          </div>
+          <p class="note"><b>Bu işlem İşlem Geçmişi'nden geri alınamaz.</b> Dosyaları geri almak için Windows Geri Dönüşüm Kutusu'nu kullanın. Yalnızca gelen kutusundaki dosyalar gönderilebilir.</p>
+          <div class="foot"><span class="btn">Vazgeç</span><span class="btn danger">Geri Dönüşüm Kutusu'na gönder</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="decisions">
+      <div class="dec"><h3>operations.rs</h3>
+        <ol class="steps">
+          <li><span><b>get_target_subfolders:</b> yedek klasörün alt klasörleri; <code>_GelenKutusu</code> ve <code>_Kopyalar_Karantina</code> hariç</span></li>
+          <li><span><b>move_selected_files:</b> kaynak gelen kutusunda, hedef yedek klasörde olmalı (<code>path_guard</code>)<small>Taşıma <code>file_ops::transfer</code> ile yapılır ve geçmişe yazılır. Ardından boşalan grup ve gün klasörleri <code>organize_cleanup</code> ile silinir.</small></span></li>
+          <li><span><b>Hedefte aynı ad varsa:</b> <code>_1</code> eklenir, üzerine yazılmaz</span></li>
+        </ol>
+      </div>
+      <div class="dec"><h3>Adlandırma ve silme</h3>
+        <ol class="steps">
+          <li><span><b>rename_template.rs:</b> dosya listesi girdisi, <code>{Grup}</code> ve <code>{OzelMetin}</code> alanları<small>Mevcut önizle → uygula → geri al akışı aynen kullanılır.</small></span></li>
+          <li><span><b>trash_ops.rs:</b> <code>trash::delete_all</code><small>Yalnızca gelen kutusundaki yollar kabul edilir. Başarılı ve başarısız dosyalar ayrı listelenir.</small></span></li>
+          <li><span><b>Geçmiş kaydı:</b> “Geri Dönüşüm Kutusu'na gönderildi” bilgisi olarak yazılır, “Geri al” düğmesi gösterilmez</span></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ASAMA 7 -->
+  <section class="phase full">
+    <div class="phase-head">
+      <span class="phase-no">Aşama 7 · Test ve belgeler</span>
+      <h2>Kapanış kontrolü</h2>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Konu</th><th>Ne sınanacak</th><th>Nerede</th></tr></thead>
+        <tbody>
+          <tr><td>Yol ve tarih</td><td>Gece 00:30'da gelen dosya yeni günün klasörüne düşüyor mu (yerel saat)</td><td><code>inbox_path.rs</code></td></tr>
+          <tr><td>Çakışma</td><td><code>dosya.pdf</code>, <code>dosya_1.pdf</code>, <code>dosya_2.pdf</code>; büyük/küçük harf farkı</td><td><code>naming.rs</code></td></tr>
+          <tr><td>Uzantı eşleşmesi</td><td>Büyük harfli uzantı, uzantısız dosya, iki gruba bağlı uzantının reddedilmesi</td><td><code>settings.rs</code></td></tr>
+          <tr><td>300 karakter</td><td>Çok baytlı Türkçe metin (ğ, ş, İ) karakter ortasından kesilmiyor</td><td><code>inspector.rs</code></td></tr>
+          <tr><td>Yol koruması</td><td>Gelen kutusu dışından taşıma ve silme reddediliyor</td><td><code>operations.rs</code>, <code>trash_ops.rs</code></td></tr>
+          <tr><td>Watcher döngüsü</td><td>Watcher kendi taşıdığı dosyayı yeniden yakalamıyor; yarım indirilen dosya bekletiliyor</td><td><code>watcher_tests.rs</code></td></tr>
+          <tr><td>Belgeler</td><td><code>AGENTS.md</code> iş kuralları (gelen kutusu, Geri Dönüşüm Kutusu istisnası), <code>README.md</code>, <code>proje_mimarisi.md</code></td><td>Proje kökü</td></tr>
+          <tr><td>Kaynak denetimi</td><td><code>npm run audit:source</code>: kayıtsız komut yok, 250 satır sınırı</td><td><code>scripts/</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

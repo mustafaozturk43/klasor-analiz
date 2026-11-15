@@ -1,0 +1,29 @@
+/* Kenar cubugu: koyu cam yesili; hedefler, "Klasör-Dosya İşlemleri" grubu ve altta otomasyon durumu. */
+.app-nav { display: flex; flex-direction: column; gap: var(--space-lg); padding: var(--space-lg) var(--space-md); background: var(--color-chrome); color: var(--color-chrome-ink); overflow-y: auto; }
+.app-wordmark { font-family: var(--font-display); font-weight: 800; font-size: var(--text-xl); line-height: 1.05; letter-spacing: -0.02em; padding-inline: var(--space-sm); }
+.app-nav-list { display: flex; flex-direction: column; gap: var(--space-2xs); }
+.app-nav button { display: flex; align-items: center; gap: var(--space-sm); width: 100%; min-height: 44px; padding: var(--space-xs) var(--space-sm); border-radius: var(--radius-control);
+  color: var(--color-chrome-ink); font-size: var(--text-md); font-weight: 600; text-align: left; line-height: 1.2; }
+.app-nav button svg { flex-shrink: 0; }
+.app-nav button:hover { background: var(--color-chrome-2); }
+.app-nav button:active { background: var(--color-chrome-2); opacity: 0.85; }
+.app-nav button[aria-current="page"] { background: var(--color-paper); color: var(--color-ink); font-weight: 700; }
+.app-nav-count { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 600; }
+.app-nav-chev { margin-left: auto; transition: transform var(--dur-short) var(--ease-out); }
+.app-nav-group[aria-expanded="false"] .app-nav-chev { transform: rotate(-90deg); }
+.app-nav-sub { display: flex; flex-direction: column; gap: var(--space-2xs); margin: 0 0 var(--space-2xs) 22px; padding-left: var(--space-xs); border-left: 1px solid var(--color-chrome-2); }
+.app-nav-sub button { min-height: 40px; font-size: var(--text-sm); }
+.app-nav-status { margin-top: auto; display: flex; flex-direction: column; gap: var(--space-xs); padding: var(--space-md) var(--space-sm) 0; border-top: 1px solid var(--color-chrome-2); }
+.app-nav-status strong { font-size: var(--text-sm); }
+.app-nav-status span { font-size: var(--text-xs); color: var(--color-chrome-mute); line-height: 1.4; }
+.app-nav-status .btn { background: transparent; color: var(--color-chrome-ink); border-color: var(--color-chrome-mute); }
+.app-nav-status .btn:hover:not(:disabled) { background: var(--color-chrome-2); }
+
+/* Ikon seridi: 60rem altinda kendiliginden, genis ekranda ust cubuktaki dugmeyle (useNavRail). Adlar title ipucunda kalir. */
+.app-shell[data-rail] .app-body { grid-template-columns: 64px minmax(0, 1fr); }
+.app-shell[data-rail] .app-nav { padding: var(--space-md) var(--space-xs); }
+.app-shell[data-rail] :is(.nav-label, .app-wordmark, .app-nav-status, .app-nav-chev, .app-nav-count) { display: none; }
+.app-shell[data-rail] .app-nav button { justify-content: center; padding: var(--space-xs); }
+.app-shell[data-rail] .app-nav-sub { margin: 0 0 var(--space-2xs); padding: 0; border-left: 0; }
+.app-shell[data-rail] .app-nav-group { pointer-events: none; opacity: 0.6; min-height: 28px; }
+@media (prefers-reduced-motion: reduce) { .app-nav-chev { transition: none; } }

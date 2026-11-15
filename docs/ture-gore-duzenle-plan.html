@@ -1,0 +1,328 @@
+<title>Türüne Göre Düzenle Planı</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Yerleşim: tek sütun okuma akışı; ekran taslakları uygulamanın kendi panel diliyle çerçeve içinde. */
+:root{--canvas:#fcf7f1;--surface:#fff;--soft:#fff8f1;--line:#e8cfbb;--heading:#805440;--ink:#4e372b;--muted:#84634e;--accent:#b75321;--tint:#fae7d6;--ok:#2f7a4f;--ok-bg:#e3f2e7;--warn:#8a5a0c;--warn-bg:#faedcf;--bad:#a23a2a;--bad-bg:#fbe0da;
+--sans:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;--mono:ui-monospace,"Cascadia Mono",Consolas,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--canvas:#191512;--surface:#251f1b;--soft:#2c241f;--line:#574333;--heading:#edbb95;--ink:#f0dfd1;--muted:#c2a68f;--accent:#ec9c60;--tint:#4d3020;--ok:#8fd3a8;--ok-bg:#1f3a2a;--warn:#f0c877;--warn-bg:#43331a;--bad:#f2a394;--bad-bg:#4a241d;color-scheme:dark}}
+:root[data-theme="dark"]{--canvas:#191512;--surface:#251f1b;--soft:#2c241f;--line:#574333;--heading:#edbb95;--ink:#f0dfd1;--muted:#c2a68f;--accent:#ec9c60;--tint:#4d3020;--ok:#8fd3a8;--ok-bg:#1f3a2a;--warn:#f0c877;--warn-bg:#43331a;--bad:#f2a394;--bad-bg:#4a241d;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6;padding-block:40px 72px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:980px;margin-inline:auto;display:flex;flex-direction:column;gap:44px}
+h1,h2,h3{color:var(--heading);letter-spacing:-.02em;text-wrap:balance;margin:0;line-height:1.25}
+h1{font-size:30px}h2{font-size:21px}h3{font-size:15px}
+p{margin:0;max-width:68ch}.lead{font-size:16px;color:var(--muted)}
+section{display:flex;flex-direction:column;gap:16px;min-width:0}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--accent)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:22px 32px}
+.cols ul,.plain{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px;font-size:14px}
+.cols h3{margin-bottom:8px}
+code,.mono{font-family:var(--mono);font-size:.88em}
+code{background:var(--tint);padding:1px 5px;border-radius:4px;color:var(--heading)}
+.scroll{overflow-x:auto;min-width:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:620px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.tree{font-family:var(--mono);font-size:12.5px;line-height:1.75;white-space:pre;margin:0;color:var(--ink)}
+.tree b{color:var(--heading)}.tree i{font-style:normal;color:var(--muted)}.tree u{text-decoration:none;color:var(--accent);font-weight:600}
+/* ekran taslağı çerçevesi */
+figure{margin:0;display:flex;flex-direction:column;gap:10px;min-width:0}
+figcaption{font-size:13px;color:var(--muted)}figcaption b{color:var(--heading)}
+.screen{border:1px solid var(--line);border-radius:14px;background:var(--canvas);overflow:hidden;box-shadow:0 3px 10px #75432312,0 10px 24px #75432309}
+.chrome{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--line);font-size:12px;color:var(--muted);flex-wrap:wrap}
+.chrome .ico{width:26px;height:26px;border-radius:8px;background:var(--accent);flex-shrink:0}
+.chrome strong{color:var(--heading)}.chrome .path{margin-left:auto;font-family:var(--mono);font-size:11px}
+.body{padding:14px;display:flex;flex-direction:column;gap:12px}
+.tabs{display:flex;gap:4px;background:var(--tint);padding:5px;border-radius:12px;overflow-x:auto}
+.tabs span{white-space:nowrap;padding:8px 12px;border-radius:8px;color:var(--muted);font-size:12px;font-weight:600}
+.tabs .on{background:var(--surface);color:var(--accent)}
+.panel{border:1px solid var(--line);border-radius:12px;background:var(--surface);min-width:0;overflow:hidden}
+.ph{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.ph small{display:block;font-size:11.5px;color:var(--muted);font-weight:400;margin-top:2px}
+.pb{padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+.row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;font-size:12.5px}
+.btn{display:inline-flex;align-items:center;border:1px solid var(--line);background:var(--surface);color:var(--heading);padding:7px 12px;border-radius:9px;font-size:12px;font-weight:600;white-space:nowrap}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.sel{border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px;background:var(--surface);color:var(--ink);white-space:nowrap}
+.sel::after{content:" ▾";color:var(--muted)}
+.sw{display:inline-block;width:30px;height:17px;border-radius:9px;background:var(--line);position:relative;flex-shrink:0;vertical-align:middle}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:var(--surface)}
+.sw.on{background:var(--accent)}.sw.on::after{left:15px}
+.opt{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px 22px;font-size:12.5px}
+.opt label{display:flex;align-items:center;gap:8px;color:var(--ink)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px}
+.kpi{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:10px 12px}
+.kpi span{font-size:11px;color:var(--muted);display:block}.kpi strong{font-size:20px;color:var(--heading);font-variant-numeric:tabular-nums}
+.bar{display:grid;grid-template-columns:92px minmax(40px,1fr) 44px;gap:10px;align-items:center;font-size:12px;font-variant-numeric:tabular-nums}
+.bar div{height:8px;border-radius:8px;background:var(--tint);overflow:hidden}.bar div span{display:block;height:100%;background:var(--accent);border-radius:8px}
+.bar em{font-style:normal;text-align:right;color:var(--muted)}
+.grp{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.split{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.badge{display:inline-block;padding:3px 7px;border-radius:6px;font-size:10.5px;font-weight:700;white-space:nowrap;background:var(--tint);color:var(--heading)}
+.badge.ok{background:var(--ok-bg);color:var(--ok)}.badge.warn{background:var(--warn-bg);color:var(--warn)}.badge.bad{background:var(--bad-bg);color:var(--bad)}
+.dr{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 16px;border-top:1px solid var(--line);font-size:12.5px}
+.dr small{display:block;color:var(--muted);font-family:var(--mono);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dr .to{font-family:var(--mono);font-size:12px;color:var(--heading);overflow-wrap:anywhere}
+.note{border-left:3px solid var(--accent);background:var(--soft);padding:10px 14px;font-size:13.5px;border-radius:0 8px 8px 0}
+.banner{background:var(--ok-bg);color:var(--ok);padding:10px 14px;border-radius:10px;font-size:13px;font-weight:600}
+.phase{display:grid;grid-template-columns:120px minmax(0,1fr);gap:6px 20px;padding-block:14px;border-top:1px solid var(--line)}
+.phase>strong{color:var(--accent);font-size:13px}
+@media(max-width:560px){.phase{grid-template-columns:1fr}.dr{grid-template-columns:1fr}h1{font-size:25px}}
+</style>
+
+<div class="wrap">
+<header style="display:flex;flex-direction:column;gap:10px">
+  <span class="eyebrow">Smart File Organizer · tasarım planı · 11 Kasım 2026</span>
+  <h1>Türüne Göre Düzenle</h1>
+  <p class="lead">Seçilen klasördeki dosyaları kategori ve uzantıya göre otomatik klasörleyen yeni sekmenin planı. Önce projede bugün neyin çalıştığı, sonra yeni sekmenin davranışı, ekran taslakları, uç senaryolar ve uygulama adımları.</p>
+</header>
+
+<section>
+  <span class="eyebrow">Mevcut durum</span>
+  <h2>Projede bugüne kadar yapılanlar</h2>
+  <p>Tauri v2 + React 19 uygulaması beş sekmeyle çalışır durumda. Rust tarafında 20, React tarafında 40 kaynak dosya var; hepsi 250 satır sınırının altında.</p>
+  <div class="cols">
+    <div><h3>Tarama ve gruplama</h3><ul>
+      <li><code>jwalk</code> ile çok çekirdekli tarama, alt klasör aç/kapat, hariç klasör listesi</li>
+      <li>Huni hash: 4 KB hızlı hash → tam BLAKE3; 500 MB üstü için baş/orta/son 1 MB</li>
+      <li>Birebir kopya (Exact) ve Jaro-Winkler isim benzerliği (Similar) grupları, eşik %70–95 ayarlanabilir</li>
+      <li>Hash önbelleği, canlı ilerleme, taramayı iptal etme</li>
+      <li>Yasaklı uzantı listesi ve “Diğer dosyalar” seçeneği</li></ul></div>
+    <div><h3>Taşıma ve güvenlik</h3><ul>
+      <li>Etiket klasörüne taşıma, kopyaları <code>_Kopyalar_Karantina</code> altına alma</li>
+      <li>Tutulacak dosya politikası: ilk, en yeni, en eski, en kısa yol</li>
+      <li>Ad çakışmasında <code>dosya (1).pdf</code> numaralandırma</li>
+      <li>Büyük dosyalarda taşıma öncesi tam hash doğrulaması</li>
+      <li>Kalıcı işlem geçmişi, son işlemi geri alma, karantinadan geri yükleme</li></ul></div>
+    <div><h3>Sekmeler ve araçlar</h3><ul>
+      <li>Klasör Analizi: alt klasör boyutları, kategori dağılımı grafiği</li>
+      <li>İki Klasör Karşılaştırma (A/B)</li>
+      <li>Klasördeki Dosyalar: gezinme, arama, sıralama, ön izleme</li>
+      <li>Dosya Grupları: seçim, etiket önerisi, toplu taşıma, CSV rapor</li>
+      <li>Oluşturulma tarihini ada ekleyen toplu yeniden adlandırma</li>
+      <li>Koyu/açık tema, klavye kısayolları, son klasörler</li></ul></div>
+  </div>
+  <p class="note"><b>Eksik kalan:</b> uygulama kopyaları ve benzer adları buluyor ama klasörü baştan sona <em>düzenlemiyor</em>. Dağınık bir klasörü tek tıkla “PDF’ler bir yerde, Excel’ler bir yerde” haline getiren akış yok. Ayrıca proje git deposu değil ve React tarafında otomatik test bulunmuyor.</p>
+</section>
+
+<section>
+  <span class="eyebrow">Yeni sekme</span>
+  <h2>Nasıl çalışacak</h2>
+  <p>Altıncı sekme olarak “Türüne Göre Düzenle” eklenir. Akış dört adımdır: tara, önizle, uygula, gerekirse geri al. Önizleme onaylanmadan diskte hiçbir şey değişmez.</p>
+  <div class="split">
+    <div class="panel"><div class="ph"><h3>Hedef klasör yapısı<small>Ana klasörün hemen içinde oluşur</small></h3></div><div class="pb scroll"><pre class="tree"><b>Ana Klasör/</b>
+├─ <b>Dokümanlar/</b>
+│  ├─ PDF/          <i>pdf</i>
+│  ├─ Word/         <i>doc, docx, odt</i>
+│  ├─ Excel/        <i>xls, xlsx</i>
+│  ├─ PowerPoint/   <i>ppt, pptx</i>
+│  ├─ Metin/        <i>txt</i>
+│  └─ CSV/          <i>csv</i>
+├─ <b>Resimler/</b>
+│  ├─ JPG/          <i>jpg, jpeg</i>
+│  ├─ PNG/  WEBP/  BMP/  TIFF/  GIF/
+├─ <b>Arşivler/</b>
+│  ├─ ZIP/  RAR/  7Z/  ISO/
+│  └─ TAR/          <i>tar, gz</i>
+└─ <b>_Kopyalar_Karantina/</b>
+   └─ Dokümanlar/PDF/ …  <i>birebir kopyalar</i></pre></div></div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <h3>Temel kurallar</h3>
+      <ul class="plain">
+        <li><b>Alt klasörler açıksa</b> tüm alt klasörlerdeki dosyalar toplanır; kapalıysa yalnızca ana klasörün doğrudan dosyaları düzenlenir.</li>
+        <li><b>Aynı içerik</b> (boyut + BLAKE3 aynı): biri tür klasörüne gider, diğerleri karantinaya taşınır. Hiçbir dosya silinmez.</li>
+        <li><b>Aynı ad, farklı içerik</b>: farklı klasörlerden gelen <code>Rapor.pdf</code> dosyaları <code>Rapor.pdf</code>, <code>Rapor (1).pdf</code>, <code>Rapor (2).pdf</code> olarak sıralanır.</li>
+        <li><b>Zaten yerinde olan</b> dosyaya dokunulmaz; sekme tekrar çalıştırıldığında yalnızca yeni gelenler taşınır.</li>
+        <li><b>Tek geri alma kaydı</b>: tüm düzenleme İşlem Geçmişi’nde tek satırdır ve tek tıkla geri alınır.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Ekran taslakları · örnek verilerle</span>
+  <h2>Sekmenin beş durumu</h2>
+
+  <figure><div class="screen">
+    <div class="chrome"><span class="ico"></span><strong>Smart File Organizer</strong><span class="path">D:\Arşiv\Ofis_Ortak</span></div>
+    <div class="body">
+      <div class="tabs"><span>Klasör Analizi</span><span>İki Klasör Karşılaştırma</span><span>Klasördeki Dosyalar</span><span>Dosya Grupları</span><span class="on">Türüne Göre Düzenle</span><span>İşlem Geçmişi</span></div>
+      <div class="panel"><div class="ph"><h3>Düzenleme ayarları<small>Önizleme oluşturulana kadar hiçbir dosya taşınmaz.</small></h3><span class="btn pri">Tara ve önizle</span></div>
+        <div class="pb">
+          <div class="row"><span>Klasör yapısı</span><span class="sel">Kategori › Tür (Dokümanlar/PDF)</span><span>Aynı adlı dosyalar</span><span class="sel">Numaralandır: ad (1).uzantı</span></div>
+          <div class="opt">
+            <label><span class="sw on"></span> Alt klasörleri de düzenle</label>
+            <label><span class="sw on"></span> Birebir kopyaları karantinaya al</label>
+            <label><span class="sw on"></span> Proje klasörlerini koru</label>
+            <label><span class="sw"></span> Boş kalan klasörleri kaldır</label>
+            <label><span class="sw"></span> Diğer dosyaları da düzenle</label>
+            <label><span class="sw"></span> Yıla göre alt klasör aç (PDF/2026)</label>
+          </div>
+        </div></div>
+      <div class="panel"><div class="ph"><h3>Bulunan türler<small>1.284 dosya tarandı · 9’u korunan ya da kilitli olduğu için kapsam dışı</small></h3></div>
+        <div class="pb">
+          <span class="grp">Dokümanlar · 828</span>
+          <div class="bar"><span>PDF</span><div><span style="width:100%"></span></div><em>412</em></div>
+          <div class="bar"><span>Word</span><div><span style="width:45.4%"></span></div><em>187</em></div>
+          <div class="bar"><span>Excel</span><div><span style="width:23.3%"></span></div><em>96</em></div>
+          <div class="bar"><span>Metin</span><div><span style="width:14.8%"></span></div><em>61</em></div>
+          <div class="bar"><span>PowerPoint</span><div><span style="width:10.7%"></span></div><em>44</em></div>
+          <div class="bar"><span>CSV</span><div><span style="width:6.8%"></span></div><em>28</em></div>
+          <span class="grp">Resimler · 393</span>
+          <div class="bar"><span>JPG</span><div><span style="width:58.3%"></span></div><em>240</em></div>
+          <div class="bar"><span>PNG</span><div><span style="width:31.8%"></span></div><em>131</em></div>
+          <div class="bar"><span>Diğer resim</span><div><span style="width:5.3%"></span></div><em>22</em></div>
+          <span class="grp">Arşivler · 54</span>
+          <div class="bar"><span>ZIP</span><div><span style="width:9.5%"></span></div><em>39</em></div>
+          <div class="bar"><span>RAR · 7Z</span><div><span style="width:3.6%"></span></div><em>15</em></div>
+        </div></div>
+    </div></div>
+    <figcaption><b>1 · Ayarlar ve tarama özeti.</b> Seçenekler tek panelde; tarama bittiğinde hangi türden kaç dosya bulunduğu görünür.</figcaption>
+  </figure>
+
+  <figure><div class="screen"><div class="body">
+    <div class="kpis">
+      <div class="kpi"><span>Taşınacak</span><strong>1.196</strong></div>
+      <div class="kpi"><span>Zaten yerinde</span><strong>41</strong></div>
+      <div class="kpi"><span>Karantinaya</span><strong>38</strong></div>
+      <div class="kpi"><span>Numaralanacak</span><strong>23</strong></div>
+      <div class="kpi"><span>Atlanacak</span><strong>9</strong></div>
+    </div>
+    <div class="split">
+      <div class="panel"><div class="ph"><h3>Şimdi<small>14 alt klasöre dağılmış</small></h3></div><div class="pb scroll"><pre class="tree"><b>Ofis_Ortak/</b>
+├─ 2024 Teklifler/
+│  ├─ Rapor.pdf
+│  ├─ Fiyat Listesi.xlsx
+│  └─ logo.png
+├─ Muhasebe/Eski/
+│  ├─ Rapor.pdf        <i>farklı içerik</i>
+│  └─ Bordro_Mart.xls
+├─ Yedek/
+│  ├─ Fiyat Listesi.xlsx <i>birebir kopya</i>
+│  └─ arsiv_2023.zip
+├─ web-sitesi/         <i>package.json var</i>
+└─ sözleşme taslak.docx</pre></div></div>
+      <div class="panel"><div class="ph"><h3>Sonra<small>3 kategori, 13 tür klasörü</small></h3></div><div class="pb scroll"><pre class="tree"><b>Ofis_Ortak/</b>
+├─ <b>Dokümanlar/</b>
+│  ├─ PDF/  <i>412</i>
+│  │  ├─ Rapor.pdf
+│  │  └─ <u>Rapor (1).pdf</u>
+│  ├─ Excel/  <i>96</i>
+│  │  ├─ Fiyat Listesi.xlsx
+│  │  └─ Bordro_Mart.xls
+│  └─ Word/  <i>187</i>
+├─ <b>Resimler/</b>PNG/logo.png
+├─ <b>Arşivler/</b>ZIP/arsiv_2023.zip
+├─ <b>_Kopyalar_Karantina/</b> <i>38</i>
+└─ web-sitesi/         <i>korundu</i></pre></div></div>
+    </div>
+    <div class="row" style="justify-content:flex-end"><span class="btn">CSV olarak dışa aktar</span><span class="btn">Vazgeç</span><span class="btn pri">1.234 dosyayı düzenle</span></div>
+  </div></div>
+    <figcaption><b>2 · Önizleme.</b> Solda bugünkü hali, sağda oluşacak yapı. Sayılar ve ağaç, uygulanacak planın birebir kendisidir.</figcaption>
+  </figure>
+
+  <figure><div class="screen"><div class="body">
+    <div class="panel"><div class="ph"><h3>Dikkat gerektirenler<small>70 dosya · filtre: tümü</small></h3><div class="row"><span class="sel">Tüm durumlar</span></div></div>
+      <div class="dr"><div>Rapor.pdf<small>2024 Teklifler\Rapor.pdf · 14.02.2024</small></div><div class="to">PDF\Rapor.pdf</div><span class="badge">Adı korur</span></div>
+      <div class="dr"><div>Rapor.pdf<small>Muhasebe\Eski\Rapor.pdf · 03.09.2025</small></div><div class="to">PDF\Rapor (1).pdf</div><span class="badge warn">Numaralandı</span></div>
+      <div class="dr"><div>Fiyat Listesi.xlsx<small>Yedek\Fiyat Listesi.xlsx · içerik aynı</small></div><div class="to">_Kopyalar_Karantina\…\Excel\</div><span class="badge">Birebir kopya</span></div>
+      <div class="dr"><div>Butce_2026_v2.xlsx<small>Planlama\Butce_2026_v2.xlsx · “Butce_2026_v1” ile %94 benzer</small></div><div class="to">Excel\Butce_2026_v2.xlsx</div><span class="badge ok">Benzer ad · ikisi de kalır</span></div>
+      <div class="dr"><div>~$sözleşme taslak.docx<small>Word geçici dosyası</small></div><div class="to">yerinde kalır</div><span class="badge bad">Atlandı</span></div>
+      <div class="dr"><div>index.png<small>web-sitesi\img\index.png · proje klasörü</small></div><div class="to">yerinde kalır</div><span class="badge bad">Korunan klasör</span></div>
+    </div>
+  </div></div>
+    <figcaption><b>3 · Çakışmalar ve istisnalar.</b> Numara alan, karantinaya giden ve atlanan her dosya nedeniyle birlikte listelenir; satırdan dosya ön izlenebilir.</figcaption>
+  </figure>
+
+  <figure><div class="screen"><div class="body">
+    <div class="banner">Düzenleme tamamlandı: 1.196 dosya tür klasörlerine, 38 kopya karantinaya taşındı.</div>
+    <div class="panel"><div class="ph"><h3>İşlem özeti<small>11.11.2026 14:32 · 48 saniye</small></h3><div class="row"><span class="btn">Klasörü aç</span><span class="btn pri">Tümünü geri al</span></div></div>
+      <div class="dr"><div>Tür klasörlerine taşınan</div><div class="to">1.196 dosya · 6,4 GB</div><span class="badge ok">Tamam</span></div>
+      <div class="dr"><div>Karantinaya alınan kopya</div><div class="to">38 dosya · 412 MB kazanç</div><span class="badge ok">Tamam</span></div>
+      <div class="dr"><div>Kilitli olduğu için taşınamayan</div><div class="to">2 dosya · Excel’de açık</div><span class="badge warn">Yeniden dene</span></div>
+      <div class="dr"><div>Boşalan klasör</div><div class="to">11 klasör · kaldırılmadı</div><span class="badge">Seçenek kapalı</span></div>
+    </div>
+  </div></div>
+    <figcaption><b>4 · Sonuç.</b> Kilitli dosyalar işlemi durdurmaz; ayrı satırda raporlanır ve yeniden denenebilir.</figcaption>
+  </figure>
+
+  <figure><div class="screen"><div class="body">
+    <div class="panel"><div class="ph"><h3>Tür klasörü kuralları<small>Her uzantı yalnızca bir klasöre bağlanabilir.</small></h3><div class="row"><span class="btn">Varsayılana dön</span><span class="btn pri">Klasör ekle</span></div></div>
+      <div class="dr"><div>Dokümanlar › <b>Excel</b></div><div class="to">xls · xlsx</div><span class="btn">Düzenle</span></div>
+      <div class="dr"><div>Dokümanlar › <b>Word</b></div><div class="to">doc · docx · odt</div><span class="btn">Düzenle</span></div>
+      <div class="dr"><div>Resimler › <b>JPG</b></div><div class="to">jpg · jpeg</div><span class="btn">Düzenle</span></div>
+      <div class="dr"><div>Videolar › <b>MP4</b> <span class="badge">özel</span></div><div class="to">mp4 · mov</div><span class="btn">Düzenle</span></div>
+    </div>
+  </div></div>
+    <figcaption><b>5 · Kural düzenleyici (ikinci aşama).</b> Klasör adları ve uzantı eşleşmeleri değiştirilebilir; yeni kategori eklenebilir.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <span class="eyebrow">Senaryolar</span>
+  <h2>Uç durumlar ve verilecek karar</h2>
+  <div class="scroll"><table>
+    <tr><th>Durum</th><th>Davranış</th></tr>
+    <tr><td>Farklı klasörlerde aynı ad, farklı içerik</td><td>Değişiklik tarihi en eski olan adı korur; diğerleri tarih sırasıyla <code>(1)</code>, <code>(2)</code> alır. Sıra önizlemede görünür.</td></tr>
+    <tr><td>Aynı ad, aynı içerik</td><td>Biri tür klasörüne, diğerleri karantinaya. Mevcut “tutulacak dosya” politikası geçerli.</td></tr>
+    <tr><td>Adlar benzer ama aynı değil (v1, v2, son)</td><td>Adlara dokunulmaz, hepsi aynı tür klasörüne gider; listede “benzer ad” rozetiyle gösterilir.</td></tr>
+    <tr><td>Hedefte o adla dosya zaten var</td><td>Üzerine yazılmaz; sıradaki boş numara verilir.</td></tr>
+    <tr><td>Sekme ikinci kez çalıştırılır</td><td>Doğru klasördeki dosyalar “zaten yerinde” sayılır, taşınmaz ve yeniden numaralanmaz.</td></tr>
+    <tr><td>Yazılım projesi ya da program klasörü</td><td><code>.git</code>, <code>package.json</code>, <code>node_modules</code>, <code>.sln</code> gibi işaretler taşıyan klasörler bütün olarak korunur; içindeki resimler toplanmaz.</td></tr>
+    <tr><td>Dosya başka programda açık / izin yok</td><td>O dosya atlanır, işlem sürer, sonuç ekranında listelenir.</td></tr>
+    <tr><td>Geçici ve sistem dosyaları</td><td><code>~$…</code>, <code>.tmp</code>, <code>desktop.ini</code>, <code>Thumbs.db</code> ve yasaklı uzantılar hiç taşınmaz.</td></tr>
+    <tr><td>Uzantısız ya da tanınmayan uzantı</td><td>Varsayılan olarak yerinde kalır; “Diğer dosyalar” açıksa <code>Diğer/&lt;UZANTI&gt;/</code> altına gider.</td></tr>
+    <tr><td>Büyük/küçük harf farkı (<code>.PDF</code>)</td><td>Uzantı küçük harfe çevrilerek eşleştirilir; dosya adı değişmez.</td></tr>
+    <tr><td>Önizlemeden sonra dosya değişti</td><td>Uygulamadan önce boyut ve tarih yeniden doğrulanır; uyuşmazlıkta “yeniden tarayın” uyarısı çıkar.</td></tr>
+    <tr><td>İşlem ortasında uygulama kapanır</td><td>Her taşıma yapılmadan önce geçmişe yazılır; açılışta yarım kalan işlem geri alınabilir.</td></tr>
+    <tr><td>260 karakteri aşan hedef yol</td><td>Önizlemede uyarı verilir, dosya atlanır.</td></tr>
+    <tr><td>Alt klasörler kapalı</td><td>Yalnızca ana klasörün doğrudan dosyaları düzenlenir; alt klasörlere girilmez.</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <span class="eyebrow">Yol haritası</span>
+  <h2>Aşamalar</h2>
+  <div>
+    <div class="phase"><strong>Aşama 1 · çekirdek</strong><div>Yeni sekme, varsayılan tür haritası, tarama → önizleme → uygulama, numaralandırma, karantina, korunan klasörler, tek kayıtla geri alma. Taslak 1–4.</div></div>
+    <div class="phase"><strong>Aşama 2 · esneklik</strong><div>Kural düzenleyici (taslak 5), yıla göre alt klasör, boş klasör temizliği, önizlemenin CSV raporu, kaydedilebilir düzen profilleri.</div></div>
+    <div class="phase"><strong>Aşama 3 · analiz</strong><div>En büyük ve en uzun süredir dokunulmamış dosyalar raporu, boş klasör ve 0 bayt dosya bulucu, karantina yönetim ekranı, geçmişten herhangi bir işlemi geri alma.</div></div>
+    <div class="phase"><strong>Aşama 4 · otomasyon</strong><div>İzlenen klasör: İndirilenler gibi bir klasöre düşen yeni dosyaları kurallara göre kendiliğinden yerleştirme; şablonlu toplu yeniden adlandırma.</div></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Uygulama</span>
+  <h2>Aşama 1 için dosya planı</h2>
+  <div class="cols">
+    <div><h3>Rust · <span class="mono">src-tauri/src/</span></h3><ul>
+      <li><code>organize_rules.rs</code> uzantı → kategori/tür klasörü haritası, geçici dosya ve proje işareti listeleri</li>
+      <li><code>organize_plan.rs</code> taramadan plan üretir: yerinde olanı ayıkla, kopyaları bul, adları numarala</li>
+      <li><code>organize.rs</code> <code>preview_organize</code> ve <code>apply_organize</code> komutları; plan sunucuda bekletilir (yeniden adlandırmadaki desen)</li>
+      <li><code>organize_tests.rs</code> yukarıdaki senaryoların her biri için test</li>
+      <li><code>lib.rs</code> 249 satırda; iki komut eklemeden önce karantina komutları ayrı modüle alınır</li></ul></div>
+    <div><h3>React · <span class="mono">src/</span></h3><ul>
+      <li><code>types/organize.ts</code>, <code>lib/organizeCommands.ts</code></li>
+      <li><code>hooks/useOrganizer.ts</code> ayarlar, plan, uygulama durumu</li>
+      <li><code>components/OrganizeView.tsx</code> sekme kabuğu ve ayar paneli</li>
+      <li><code>OrganizeSummary.tsx</code> tür çubukları ve sayaçlar</li>
+      <li><code>OrganizeTree.tsx</code> önce/sonra ağaçları</li>
+      <li><code>OrganizeIssues.tsx</code> sanallaştırılmış çakışma listesi (<code>VirtualRows</code>)</li>
+      <li><code>App.tsx</code> ve <code>types/app.ts</code> yeni modül kaydı</li></ul></div>
+  </div>
+  <p>Mevcut <code>scanner</code>, <code>hasher</code>, <code>naming::unique_dest</code>, <code>file_ops::transfer</code> ve <code>history</code> modülleri aynen kullanılır; yeni bağımlılık gerekmez.</p>
+</section>
+
+<section>
+  <span class="eyebrow">Onayınızı bekleyen kararlar</span>
+  <h2>Varsaydıklarım</h2>
+  <ul class="plain" style="font-size:14.5px;max-width:72ch">
+    <li><b>Numara biçimi:</b> <code>Rapor (1).pdf</code>. Projenin mevcut kuralı bu; <code>Rapor_1.pdf</code> ya da <code>Rapor 1.pdf</code> isterseniz tek satırlık değişiklik.</li>
+    <li><b>Adı kim korur:</b> en eski tarihli dosya numarasız kalır.</li>
+    <li><b>Excel klasörü</b> yalnızca xls ve xlsx içerir; csv ve txt kendi klasörlerinde, odt Word klasöründe.</li>
+    <li><b>Klasör düzeni:</b> iki kademe (<code>Dokümanlar/PDF</code>). Tek kademe (<code>PDF</code>) seçenek olarak sunulur.</li>
+    <li><b>Boş kalan klasörler</b> varsayılan olarak yerinde bırakılır.</li>
+    <li><b>İki klasör (A/B) modu</b> bu sekmede yok; yalnızca Klasör A düzenlenir.</li>
+  </ul>
+</section>
+</div>

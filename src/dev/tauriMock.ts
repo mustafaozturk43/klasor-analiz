@@ -1,0 +1,101 @@
+/**
+ * Yalnizca gelistirme: uygulama Tauri disinda (duz tarayicida) acildiginda
+ * `window.__TAURI_INTERNALS__` yerine gecer ve komutlara ornek veri dondurur.
+ * Boylece arayuz tarayicida incelenebilir ve ekran goruntusu alinabilir.
+ * main.tsx bunu yalnizca `import.meta.env.DEV` ve Tauri yokken yukler; uretim paketine girmez.
+ * Dosya sistemine dokunmaz: tasima/silme gibi komutlar yalnizca basari doner.
+ */
+import * as data from "./mockData";
+import { mockNamePlan } from "./mockNaming";
+import type { NameRuleOptions } from "../lib/namingCommands";
+
+type Args = Record<string, unknown>;
+const today = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+const root = (a: Args) => String(a.rootPath ?? a.rootA ?? data.ROOT);
+const paths = (a: Args) => (a.paths as string[] | undefined) ?? [];
+let settings = data.settings;
+let paused = false;
+const uiPrefs: Record<string, unknown> = {};
+
+const status = () => ({
+  enabled: settings.automationEnabled, paused, running: settings.automationEnabled && !paused, sources: settings.sourceFolders.length,
+  label: !settings.automationEnabled ? "Otomasyon kapalı" : paused ? "Otomasyon duraklatıldı" : `Otomasyon açık · ${settings.sourceFolders.length} kaynak izleniyor`,
+});
+
+const delay = <T,>(ms: number, v: T) => new Promise<T>(r => setTimeout(() => r(v), ms));
+const base = (p: string) => p.split("\\").pop() ?? p;
+const moveRequest = (a: Args) => a.request as { paths: string[]; targetBase: string; group: string };
+const mockMovePlan = (a: Args) => {
+  const r = moveRequest(a);
+  const segs = r.group.split(/[\\/]/).map(s => s.trim()).filter(Boolean);
+  const targetDir = [r.targetBase, ...segs].join("\\");
+  return { id: "mock-move", targetDir, createdDirs: segs.length ? [targetDir] : [], renamed: 0, entries: r.paths.map(p => ({ from: p, to: `${targetDir}\\${base(p)}` })) };
+};
+
+const handlers: Record<string, (a: Args) => unknown> = {
+  "plugin:dialog|open": () => data.ROOT,
+  "plugin:dialog|save": () => `${data.ROOT}\\rapor.csv`,
+  scan_and_group: a => data.scanResult(root(a)),
+  compare_folders: a => data.scanResult(root(a)),
+  get_folder_stats: a => data.folderStats(root(a)),
+  list_files: () => data.folderFiles,
+  get_move_history: () => data.history,
+  undo_last_move: () => data.history[0],
+  undo_history_entry: () => data.history[0],
+  folder_health: a => data.health(root(a)),
+  list_quarantine: a => data.quarantine(root(a)),
+  remove_empty_folders: a => paths(a).length,
+  quarantine_files: a => ({ done: paths(a).length, failed: [] }),
+  restore_quarantined: a => ({ done: paths(a).length, failed: [] }),
+  delete_quarantined: a => paths(a).length,
+  get_settings: () => ({ ...settings, uiPrefs }),
+  save_settings: a => (settings = a.settings as typeof settings),
+  set_ui_pref: a => { uiPrefs[String(a.key)] = a.value; return null; },
+  default_ext_groups: () => data.settings.extGroups,
+  get_automation_status: status,
+  set_automation_paused: a => { paused = Boolean(a.paused); return status(); },
+  list_inbox: a => data.inbox(String(a.date ?? today())),
+  get_target_subfolders: () => [{ name: "Faturalar", path: `${data.BACKUP}\\Faturalar` }, { name: "Projeler", path: `${data.BACKUP}\\Projeler` }],
+  create_target_folder: a => ({ name: String(a.name), path: `${data.BACKUP}\\${String(a.name)}` }),
+  move_selected_files: a => ({ moved: paths(a).map(p => ({ from: p, to: [a.target, a.group].filter(Boolean).join("\\") })), failed: [], removedDirs: 0 }),
+  delete_files_to_trash: a => ({ trashed: paths(a), failed: [] }),
+  preview_inbox_rename: a => ({ id: "mock-plan", entries: paths(a).map((p, i) => ({ from: p, to: p.replace(/[^\\]+$/, `dosya_${i + 1}`), warning: null })) }),
+  apply_rename_plan: () => 0,
+  preview_name_rules: a => mockNamePlan(root(a), a.options as NameRuleOptions),
+  apply_name_rules: () => 9,
+  list_subfolders: a => ({ paths: ["Arsiv", "Faturalar", "Faturalar\\Nisan", "Fotograflar", "Notlar", "Projeler"].map(n => `${String(a.root)}\\${n}`), truncated: false }),
+  get_shell_thumbnails: a => paths(a).map(() => null),
+  read_media_dates: a => delay(300, paths(a).map(p => (/\.jpe?g$/i.test(p) ? 1718366400 : null))),
+  preview_selection_move: mockMovePlan,
+  apply_selection_move: a => {
+    const moves = [{ from: "mock", to: String(a.planId) }];
+    data.history.unshift({ id: String(a.planId), timestamp: Date.now(), tag: "Seçilenleri taşı · mock", moves });
+    return { moved: moves, failed: [], removedDirs: 0 };
+  },
+  preview_selection_rename: a => ({ id: "mock-plan", entries: paths(a).map((p, i) => ({ from: p, to: p.replace(/[^\\]+$/, `Grup_${String(i + 1).padStart(2, "0")}${p.match(/\.[^.\\]+$/)?.[0] ?? ""}`), warning: null })) }),
+};
+
+let next = 1;
+const callbacks = new Map<number, (v: unknown) => void>();
+
+async function invoke(cmd: string, args: Args = {}) {
+  if (cmd.startsWith("plugin:event|")) return next++;
+  const h = handlers[cmd];
+  if (h) return structuredClone(await h(args));
+  return cmd.startsWith("get_") || cmd.startsWith("list_") ? [] : null;
+}
+
+Object.assign(window, {
+  __TAURI_INTERNALS__: {
+    invoke,
+    transformCallback: (cb: (v: unknown) => void) => { const id = next++; callbacks.set(id, cb); return id; },
+    unregisterCallback: (id: number) => callbacks.delete(id),
+    convertFileSrc: (p: string) => p,
+    metadata: { currentWindow: { label: "main" }, currentWebview: { label: "main", windowLabel: "main" } },
+  },
+  __TAURI_EVENT_PLUGIN_INTERNALS__: { unregisterListener: () => undefined },
+});
+console.info("[dev] Tauri taklidi etkin: komutlar örnek veri döndürüyor.");

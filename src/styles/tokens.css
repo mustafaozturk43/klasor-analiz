@@ -1,0 +1,117 @@
+@theme static {
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.2rem;
+  --text-xl: 1.44rem;
+  --text-2xl: 1.728rem;
+  --text-3xl: 2.074rem;
+  --text-display-s: 1.44rem;
+  --text-display: 1.728rem;
+  --text-section: 1.2rem;
+  --text-title: 1rem;
+  --text-lead: 1rem;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --color-error: oklch(52% 0.19 27);
+  --color-success: oklch(50% 0.12 150);
+  /* Zemin ve murekkep: yesile cekilmis notrler */
+  --color-paper: oklch(96.5% 0.012 170);
+  --color-paper-2: oklch(99.2% 0.005 170);
+  --color-paper-3: oklch(93.5% 0.02 170);
+  --color-ink: oklch(24% 0.03 178);
+  --color-ink-2: oklch(28% 0.04 178);
+  --color-muted: oklch(44% 0.03 178);
+  --color-rule: oklch(88% 0.015 170);
+  /* Vurgu: secili durum, baglanti, onay kutusu. Birincil dugme amber (--color-action). */
+  --color-accent: oklch(47% 0.12 160);
+  --color-accent-ink: oklch(99% 0.005 100);
+  --color-focus: oklch(60% 0.2 255);
+  --font-display: "Rethink Sans Variable", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Hanken Grotesk Variable", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --font-outlier: var(--font-body);
+  --font-code: "JetBrains Mono Variable", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius-card: 14px;
+  --radius-control: 10px;
+  --radius-pill: 999px;
+  /* Yalnizca ekran basligi ve Kopyalar kartlari kullanir; diger paneller golgesizdir. */
+  --shadow-card: 0 1px 2px oklch(20% 0.03 178 / 0.06), 0 10px 28px oklch(20% 0.03 178 / 0.09);
+  --tracking-display: -0.02em;
+}
+:root {
+  --space-3xs: 2px;
+  --space-2xs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 40px;
+  --space-2xl: 64px;
+  --space-3xl: 96px;
+  --dur-micro: 120ms;
+  --dur-short: 220ms;
+  --dur-long: 420ms;
+  --container: 1366px;
+  --gutter: 48px;
+  --z-base: 1;
+  --z-raised: 10;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal: 400;
+  --z-toast: 500;
+  --z-tooltip: 600;
+  --rule-hair: 1px;
+  --display-weight: 800;
+}
+@media (max-width: 60rem) { :root { --gutter: 24px; } }
+@media (max-width: 40rem) { :root { --gutter: 16px; } }
+
+/* Kenar cubugu (koyu cam yesili), birincil dugme (amber) ve uc karar: Tut, Tasi, At. */
+:root {
+  --color-chrome: oklch(27% 0.055 178);
+  --color-chrome-2: oklch(35% 0.06 178);
+  --color-chrome-ink: oklch(95% 0.02 170);
+  --color-chrome-mute: oklch(78% 0.04 175);
+  --color-action: oklch(82% 0.15 85);
+  --color-action-ink: oklch(25% 0.05 85);
+  --color-keep: oklch(47% 0.12 160);  --color-keep-tint: oklch(92% 0.05 160);
+  --color-move: oklch(82% 0.15 85);   --color-move-ink: oklch(25% 0.05 85);  --color-move-tint: oklch(94% 0.07 90);
+  --color-bin: oklch(52% 0.19 30);    --color-bin-tint: oklch(93% 0.04 30);
+  --color-on: oklch(99% 0.005 100);
+  --color-keep-ink: var(--color-on);  --color-bin-ink: var(--color-on);
+  --color-warn: oklch(94% 0.07 90);    --color-warn-ink: oklch(40% 0.1 80);
+  --color-bad: oklch(93% 0.04 30);     --color-bad-ink: oklch(42% 0.15 30);
+  --color-ok: oklch(92% 0.05 160);     --color-ok-ink: oklch(38% 0.1 160);
+  --color-exact: oklch(92% 0.05 160);  --color-exact-ink: oklch(38% 0.1 160);
+  /* Grafik: Dokuman, Resim, Arsiv, Diger sirasiyla */
+  --color-chart-1: oklch(81% 0.08 220); --color-chart-2: oklch(82% 0.13 125);
+  --color-chart-3: oklch(79% 0.08 305); --color-chart-4: oklch(80% 0.02 170);
+  --color-chart-ink: oklch(22% 0.03 178);
+  --color-scrim: oklch(18% 0.03 178 / 0.55);
+  --shadow-raised: none;
+  --shadow-overlay: 0 18px 48px oklch(20% 0.03 178 / 0.28);
+}
+
+/* Koyu tema: html.dark (useTheme). Turetilir, ters cevrilmez. */
+:root.dark {
+  --color-paper: oklch(17% 0.015 175);  --color-paper-2: oklch(21.5% 0.018 175); --color-paper-3: oklch(27% 0.03 175);
+  --color-ink: oklch(92% 0.02 170);     --color-ink-2: oklch(96% 0.02 170);       --color-muted: oklch(76% 0.03 172);
+  --color-rule: oklch(34% 0.03 175);
+  --color-accent: oklch(76% 0.13 160);  --color-accent-ink: oklch(20% 0.02 175);
+  --color-focus: oklch(72% 0.17 255);
+  --color-chrome: oklch(21% 0.045 178); --color-chrome-2: oklch(29% 0.05 178);
+  --color-keep: oklch(66% 0.13 160);    --color-keep-tint: oklch(30% 0.06 160);  --color-keep-ink: oklch(16% 0.03 175);
+  --color-bin-ink: oklch(16% 0.03 30);
+  --color-move-tint: oklch(33% 0.07 85); --color-bin: oklch(64% 0.19 30); --color-bin-tint: oklch(30% 0.08 30);
+  --color-warn: oklch(33% 0.07 85);     --color-warn-ink: oklch(86% 0.1 85);
+  --color-bad: oklch(30% 0.08 30);      --color-bad-ink: oklch(82% 0.1 32);
+  --color-ok: oklch(30% 0.06 160);      --color-ok-ink: oklch(84% 0.09 160);
+  --color-exact: oklch(30% 0.06 160);   --color-exact-ink: oklch(84% 0.09 160);
+  --color-chart-1: oklch(70% 0.08 220); --color-chart-2: oklch(72% 0.12 125);
+  --color-chart-3: oklch(66% 0.08 305); --color-chart-4: oklch(62% 0.02 170);
+  --color-chart-ink: oklch(14% 0.03 175);
+  --color-scrim: oklch(8% 0.02 175 / 0.6);
+  --shadow-overlay: 0 18px 48px oklch(5% 0.01 175 / 0.5);
+  --shadow-card: 0 1px 2px oklch(5% 0.01 175 / 0.4), 0 10px 28px oklch(5% 0.01 175 / 0.35);
+}

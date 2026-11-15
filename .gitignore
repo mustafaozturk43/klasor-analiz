@@ -1,0 +1,39 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Bagimliliklar ve derleme ciktilari
+node_modules
+dist
+dist-ssr
+*.local
+
+# Surum paketleri (portable/kurulum zip ve exe; scripts/package-*.mjs uretir)
+artifacts/
+
+# Gizli bilgiler
+.env
+.env.*
+!.env.example
+
+# Arac ve oturum cikti klasorleri (yerel, makineye ozgu)
+.superpowers/
+.claude/settings.local.json
+.claude/worktrees/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
