@@ -9,6 +9,8 @@ export interface AppSettings {
   backupRoot: string;
   extGroups: ExtGroup[];
   automationEnabled: boolean;
+  /** Yeni dosyalar gelen kutusuna otomatik tasinsin mi? Kapaliysa yerinde kalir, Bugun'de listelenir. */
+  autoMove: boolean;
   /** Hicbir gruba uymayan dosyalar "Diğer" grubuna gitsin mi? */
   includeOther: boolean;
   /** Uygulama acilinca kaynakta bekleyen dosyalar da yerlestirilsin mi? */

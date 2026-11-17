@@ -27,7 +27,7 @@ fn detail(name: &str) -> FileDetail {
     FileDetail {
         path: name.into(), name: name.into(), ext: String::new(), size: 1, group: "G".into(), arrived_ms: None, created_ms: None,
         modified_ms: None, accessed_ms: None, content_preview: None, thumbnail_path: None, similar_to: None, similarity: None,
-        duplicate_of: None, duplicate_in: None, suggestion: None,
+        duplicate_of: None, duplicate_in: None, suggestion: None, pending: false,
     }
 }
 
@@ -58,7 +58,7 @@ fn lists_a_day_by_group_with_arrival_times_previews_and_days() {
 
     let note: PathBuf = dir.join("Dokümanlar").join("notlar.txt");
     let history = vec![UndoRecord { id: "IN-1".into(), timestamp: 1_000, tag: HISTORY_TAG.into(), moves: vec![MoveRecord { from: "x".into(), to: note.to_string_lossy().into() }] }];
-    let l = list_core(&base, day, &history, &base.join("cache"));
+    let l = list_core(&base, day, &history, &base.join("cache"), Vec::new());
 
     assert!(l.exists);
     assert_eq!(l.total_files, 4);

@@ -2,11 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { applyRenamePlan } from "../lib/automationCommands";
 import {
-  createTargetFolder, deleteFilesToTrash, getTargetSubfolders, listInbox, moveSelectedFiles, previewInboxRename,
+  deleteFilesToTrash, getTargetSubfolders, listInbox, moveSelectedFiles, previewInboxRename,
   type FailedItem, type ListRenameOptions, type TargetFolder,
 } from "../lib/inboxCommands";
 import { formatCount } from "../lib/format";
-import { splitGroup } from "../lib/groupPath";
+import { leafName, splitGroup } from "../lib/groupPath";
+import { getSettings, setAutoMove } from "../lib/settingsCommands";
+import type { AppSettings } from "../types/settings";
 import type { RenamePlan } from "../lib/fileOperations";
 import type { OrganizerState } from "../types/app";
 import type { InboxListing } from "../types/inbox";
@@ -30,7 +32,8 @@ export function useInbox(app: OrganizerState, active: boolean) {
   const [targets, setTargets] = useState<TargetFolder[]>([]);
   const [busy, setBusy] = useState(false);
   const [group, setGroup] = useState(""); // hedefin icinde acilacak alt klasor ("" = dogrudan hedefe)
-  const [defaultPath, setDefaultPath] = useState<string | null>(null);
+  const [defaultPath, setDefaultPath] = useState<string | null>(null); // null = her dosyanin onerilen klasoru
+  const [settings, setSettings] = useState<AppSettings | null>(null);
   const seeded = useRef(new Set<string>()); // onerisi bir kez uygulanmis dosyalar: kullanicinin "Tut"u bozulmaz
   const { refreshHistory } = app;
 
@@ -59,6 +62,7 @@ export function useInbox(app: OrganizerState, active: boolean) {
 
   const loadTargets = useCallback(async () => {
     try { setTargets(await getTargetSubfolders()); } catch { setTargets([]); }
+    try { setSettings(await getSettings()); } catch { setSettings(null); }
   }, []);
 
   useEffect(() => { if (active) { void load(); void loadTargets(); } }, [active, load, loadTargets]);
@@ -78,7 +82,7 @@ export function useInbox(app: OrganizerState, active: boolean) {
   const binPaths = useMemo(() => ordered.filter(p => verdicts[p] === "bin"), [ordered, verdicts]);
   const counts = useMemo(() => ({ keep: ordered.length - movePaths.length - binPaths.length, move: movePaths.length, bin: binPaths.length }), [ordered, movePaths, binPaths]);
 
-  const defaultTarget = useMemo(() => targets.find(t => t.path === defaultPath) ?? null, [targets, defaultPath]);
+  const defaultTarget = useMemo<TargetFolder | null>(() => (defaultPath ? { name: leafName(defaultPath), path: defaultPath } : null), [defaultPath]);
   const suggested = useMemo(() => {
     const m: Record<string, string> = {};
     for (const g of listing?.groups ?? []) for (const f of g.files) if (f.suggestion?.target) m[f.path] = f.suggestion.target;
@@ -144,19 +148,20 @@ export function useInbox(app: OrganizerState, active: boolean) {
     await Promise.all([load(), refreshHistory()]);
   }), [load, refreshHistory, run]);
 
-  const createTarget = useCallback(async (name: string) => {
-    const t = await createTargetFolder(name);
-    await loadTargets();
-    return t;
-  }, [loadTargets]);
+  /** "Otomatik taşı": kapaliyken yeni dosyalar izlenen klasorde kalir ve burada listelenir. */
+  const toggleAutoMove = useCallback((enabled: boolean) => run(async () => {
+    setSettings(await setAutoMove(enabled));
+    setNotice({ type: "ok", text: enabled ? "Otomatik taşıma açık: yeni dosyalar gelen kutusuna taşınır." : "Otomatik taşıma kapalı: yeni dosyalar yerinde kalır, burada listelenir." });
+    await load();
+  }), [load, run]);
 
   const pickDate = useCallback((d: string | null) => { setDate(d); setVerdicts({}); }, []);
 
   return {
     listing, date, loading, error, notice, setNotice, verdicts, movePaths, binPaths, counts, targets, busy,
-    defaultTarget, setDefaultTarget: (t: TargetFolder | null) => setDefaultPath(t?.path ?? null),
+    defaultTarget, defaultPath, setDefaultPath, settings, toggleAutoMove,
     targetOf, missingTarget, group, setGroup, groupParts,
-    reload: () => load(), pickDate, setVerdict, applyAll, previewRename, applyRename, createTarget,
+    reload: () => load(), pickDate, setVerdict, applyAll, previewRename, applyRename,
   };
 }
 

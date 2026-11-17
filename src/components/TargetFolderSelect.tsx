@@ -15,6 +15,13 @@ interface Props {
   external: string[];
   onChange: (path: string | null) => void;
   onPickExternal: (path: string) => void;
+  /** Tetik kimligi (etiketin `htmlFor`u). */
+  id?: string;
+  /** Verilirse null secenegi bu adla her zaman secilebilir; "Bu klasör" ayri secenek olur (`currentDir` yolu). */
+  nullLabel?: string;
+  /** Kok seceneginin adi; varsayilan "Klasör A kökü · ad". */
+  rootLabel?: (r: RootOption) => string;
+  disabled?: boolean;
 }
 
 interface Item { value: string | null; label: string; disabled?: boolean }
@@ -33,14 +40,21 @@ function moveFocus(e: KeyboardEvent<HTMLDivElement>) {
   opts[next]?.focus();
 }
 
+/** Ilk grup: `nullLabel` varsa null secenegi + (varsa) "Bu klasör"; yoksa null = "Bu klasör". */
+function firstItems(currentDir: string | null, nullLabel?: string): Item[] {
+  const here = currentDir ? `Bu klasör · ${leafName(currentDir)}` : null;
+  if (nullLabel) return [{ value: null, label: nullLabel }, ...(currentDir && here ? [{ value: currentDir, label: here }] : [])];
+  return [here ? { value: null, label: here } : { value: null, label: "Hedef klasör seçin…", disabled: true }];
+}
+
 /** Hedef klasor: bu klasor, kokler, kok icindeki klasorler, diger konumlar, "Başka bir klasör seç…".
  *  Yerel `<select>` yerine acilir liste: ekranin altinda kalinca yukari acilir. */
-export default function TargetFolderSelect({ value, currentDir, roots, folders, external, onChange, onPickExternal }: Props) {
+export default function TargetFolderSelect({ value, currentDir, roots, folders, external, onChange, onPickExternal, id = "selection-target", nullLabel, rootLabel, disabled }: Props) {
   const [isOpen, setOpen] = useState(false);
   const isCurrent = (p: string) => !!currentDir && lower(p) === lower(currentDir);
   const groups: Group[] = [
-    { label: null, items: [currentDir ? { value: null, label: `Bu klasör · ${leafName(currentDir)}` } : { value: null, label: "Hedef klasör seçin…", disabled: true }] },
-    { label: "Kökler", items: roots.filter(r => !isCurrent(r.path)).map(r => ({ value: r.path, label: `${r.label} kökü · ${leafName(r.path)}` })) },
+    { label: null, items: firstItems(currentDir, nullLabel) },
+    { label: "Kökler", items: roots.filter(r => !isCurrent(r.path)).map(r => ({ value: r.path, label: rootLabel ? rootLabel(r) : `${r.label} kökü · ${leafName(r.path)}` })) },
     ...roots.map(r => ({
       label: `${leafName(r.path)} içindeki klasörler`,
       items: folders.filter(f => lower(f).startsWith(lower(r.path.replace(/[\\/]+$/, "")) + "\\") && !isCurrent(f)).map(f => ({ value: f, label: rel(r.path, f) })),
@@ -57,7 +71,7 @@ export default function TargetFolderSelect({ value, currentDir, roots, folders, 
   };
 
   return <Popover open={isOpen} onOpenChange={setOpen}>
-    <PopoverTrigger id="selection-target" className="target-trigger" aria-label="Hedef klasör" aria-haspopup="listbox">
+    <PopoverTrigger id={id} className="target-trigger" aria-label="Hedef klasör" aria-haspopup="listbox" disabled={disabled}>
       <span className="truncate">{selectedLabel}</span><ChevronDown size={15} aria-hidden />
     </PopoverTrigger>
     <PopoverContent collisionPadding={8} className="target-list" onKeyDown={moveFocus}

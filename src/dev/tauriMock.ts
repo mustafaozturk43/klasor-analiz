@@ -57,14 +57,22 @@ const handlers: Record<string, (a: Args) => unknown> = {
   default_ext_groups: () => data.settings.extGroups,
   get_automation_status: status,
   set_automation_paused: a => { paused = Boolean(a.paused); return status(); },
-  list_inbox: a => data.inbox(String(a.date ?? today())),
+  list_inbox: a => data.inbox(String(a.date ?? today()), !settings.autoMove),
+  set_auto_move: a => (settings = { ...settings, autoMove: Boolean(a.enabled) }),
   get_target_subfolders: () => [{ name: "Faturalar", path: `${data.BACKUP}\\Faturalar` }, { name: "Projeler", path: `${data.BACKUP}\\Projeler` }],
-  create_target_folder: a => ({ name: String(a.name), path: `${data.BACKUP}\\${String(a.name)}` }),
   move_selected_files: a => ({ moved: paths(a).map(p => ({ from: p, to: [a.target, a.group].filter(Boolean).join("\\") })), failed: [], removedDirs: 0 }),
   delete_files_to_trash: a => ({ trashed: paths(a), failed: [] }),
   preview_inbox_rename: a => ({ id: "mock-plan", entries: paths(a).map((p, i) => ({ from: p, to: p.replace(/[^\\]+$/, `dosya_${i + 1}`), warning: null })) }),
   apply_rename_plan: () => 0,
   preview_name_rules: a => mockNamePlan(root(a), a.options as NameRuleOptions),
+  preview_date_group: a => {
+    const r = String(a.root);
+    const b = (folder: string, names: string[]) => ({ folder, count: names.length, samples: names.slice(0, 3) });
+    const buckets = [b("2025\\12", ["IMG_0412.jpg", "IMG_0413.jpg"]), b("2026\\01", ["IMG_0501.jpg", "IMG_0502.jpg", "ekran.png", "IMG_0503.jpg"]), b("2026\\11", ["IMG_1101.heic"]), b("Tarihsiz", ["eski.bmp"])];
+    const entries = buckets.flatMap(x => x.samples.map(n => ({ from: `${r}\\${n}`, to: `${r}\\${x.folder}\\${n}` })));
+    return { id: "DG-mock", root: r, entries, buckets, inPlace: 3, fromTaken: 6, renamed: 0, createdDirs: [] };
+  },
+  apply_date_group: () => ({ moved: [], failed: [], removedDirs: 0 }),
   apply_name_rules: () => 9,
   list_subfolders: a => ({ paths: ["Arsiv", "Faturalar", "Faturalar\\Nisan", "Fotograflar", "Notlar", "Projeler"].map(n => `${String(a.root)}\\${n}`), truncated: false }),
   get_shell_thumbnails: a => paths(a).map(() => null),

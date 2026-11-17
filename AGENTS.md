@@ -22,6 +22,6 @@ Uygulama klasörleri tarar, birebir kopya (`Exact`) ve isim benzerliği (`Simila
 - 250 satırı aşan, 300 karakterden uzun satır içeren veya birden fazla sorumluluğu olan dosya yazma (Rust ve React için geçerli; `npm run audit:source` denetler).
 - Küçük değişiklik için dosyayı baştan yazma; yalnızca ilgili modülü güncelle.
 - Hedefte aynı adlı dosyanın üzerine yazma; otomatik numaralandır.
-- Kalıcı silme yapma (`fs::remove_file` / `remove_dir_all` kullanıcı dosyalarında kullanılmaz). Tek istisna: kullanıcı onayıyla Gelen Kutusu ve Karantina dosyalarının Windows Geri Dönüşüm Kutusu'na gönderilmesi.
+- Kalıcı silme yapma (`fs::remove_file` / `remove_dir_all` kullanıcı dosyalarında kullanılmaz). Tek istisna: kullanıcı onayıyla Gelen Kutusu, izlenen klasörlerde bekleyen ("Otomatik taşı" kapalıyken) ve Karantina dosyalarının Windows Geri Dönüşüm Kutusu'na gönderilmesi.
 - Kullanıcı onayı olmadan hiçbir dosyayı taşıma veya silme; öneriler yalnızca başlangıç değeridir.
 - Ayarlar için `settings.json` dışında ikinci bir kaynak oluşturma. Arayüz tercihleri (tema, son klasörler, yasaklı uzantılar, düzenleme profilleri) de oradadır (`uiPrefs`, `src/lib/prefs.ts`); `localStorage` yalnızca temanın ilk boyama önbelleğidir.

@@ -10,6 +10,7 @@ import InboxDetail from "./InboxDetail";
 import InboxGroupList from "./InboxGroupList";
 import InboxRenameDialog from "./InboxRenameDialog";
 import InboxVerdictSummary from "./InboxVerdictSummary";
+import Switch from "./Switch";
 
 const label = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long" });
 const short = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString("tr-TR", { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric" });
@@ -37,7 +38,10 @@ export default function EveningPanel({ app, active, onOpenSettings }: Props) {
   }
 
   const has = !!l && l.totalFiles > 0;
+  const autoMove = inbox.settings?.autoMove ?? true;
   const actions = <div className="inbox-head-actions">
+    {inbox.settings && <label className="inbox-auto-move" title="Kapalıyken yeni dosyalar izlenen klasörde kalır, burada listelenir; siz seçip taşırsınız.">
+      Otomatik taşı <Switch checked={autoMove} onChange={v => void inbox.toggleAutoMove(v)} label="Otomatik taşı" /></label>}
     {l?.exists && <button type="button" className="btn" onClick={() => void app.reveal(l.dir)}><FolderOpen size={15} /> Klasörü aç</button>}
     <button type="button" className="btn" onClick={() => void inbox.reload()} disabled={inbox.loading}><RefreshCw size={15} className={inbox.loading ? "animate-spin" : ""} /> Yenile</button>
   </div>;
@@ -45,7 +49,8 @@ export default function EveningPanel({ app, active, onOpenSettings }: Props) {
     {has && l
       ? <InboxVerdictSummary inbox={inbox} dateLabel={label(l.date)} actions={actions} />
       : <section className="inbox-summary"><div className="inbox-summary-head"><div><h1>Bakılacak dosya yok</h1>
-        <p>{l ? (inbox.date ? "Bu günde bakılacak dosya kalmadı." : "Bugün henüz gelen dosya yok. Otomasyon açıkken kaynak klasörlere düşen dosyalar burada toplanır.") : "Yükleniyor…"}</p></div>{actions}</div></section>}
+        <p>{l ? (inbox.date ? "Bu günde bakılacak dosya kalmadı." : autoMove ? "Bugün henüz gelen dosya yok. Otomasyon açıkken kaynak klasörlere düşen dosyalar burada toplanır."
+          : "Bugün izlenen klasörlere yeni dosya gelmedi. Gelen dosyalar yerinde kalır ve burada listelenir.") : "Yükleniyor…"}</p></div>{actions}</div></section>}
 
     <div className="inbox-toolbar">
       <p className="break-all">{l ? `${l.dir}${has ? `, ${formatCount(l.totalFiles)} dosya, ${formatBytes(l.totalBytes)}` : ""}` : ""}</p>

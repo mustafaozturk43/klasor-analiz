@@ -30,6 +30,9 @@ pub struct AppSettings {
     /// Kaynak klasorler izlensin mi? Her zaman kapali baslar; kullanici acar.
     #[serde(default)]
     pub automation_enabled: bool,
+    /// Yeni dosyalar gelen kutusuna otomatik tasinsin mi? Kapaliysa yerinde kalir, Bugun'de listelenir.
+    #[serde(default = "yes")]
+    pub auto_move: bool,
     /// Hicbir gruba uymayan dosyalar `Diğer` grubuna gitsin mi? (kapaliysa yerinde kalir)
     #[serde(default)]
     pub include_other: bool,
@@ -55,6 +58,7 @@ impl Default for AppSettings {
             backup_root: String::new(),
             ext_groups: default_groups(),
             automation_enabled: false,
+            auto_move: true,
             include_other: false,
             scan_pending_on_start: false,
             start_with_windows: false,
@@ -62,6 +66,10 @@ impl Default for AppSettings {
             ui_prefs: BTreeMap::new(),
         }
     }
+}
+
+fn yes() -> bool {
+    true
 }
 
 pub const OTHER_GROUP: &str = "Diğer";

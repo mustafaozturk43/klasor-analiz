@@ -40,6 +40,8 @@ export default function AutomationCard({ draft: d, update, pickFolder, onReveal 
       <dd className="rules-path-act"><button type="button" className="btn" disabled={!today} onClick={() => onReveal(today)}>Aç</button></dd>
     </dl>
     <div className="rules-toggles">
+      <label><span>Otomatik taşı<small>Kapalıyken yeni dosyalar izlenen klasörde kalır; Bugün sayfasında listelenir, siz seçip taşır ya da silersiniz.</small></span>
+        <Switch checked={d.autoMove} onChange={v => update({ autoMove: v })} label="Otomatik taşı" /></label>
       <label><span>Hiçbir gruba uymayanlar “Diğer” klasörüne gitsin<small>Kapalıyken hiçbir gruba uymayan dosyalar kaynak klasörde kalır.</small></span>
         <Switch checked={d.includeOther} onChange={v => update({ includeOther: v })} label="Diğer grubu" /></label>
       <label><span>Uygulama açılınca bekleyen dosyaları da yerleştir<small>Kapalıyken yalnızca otomasyon açıldıktan sonra gelen dosyalar taşınır.</small></span>

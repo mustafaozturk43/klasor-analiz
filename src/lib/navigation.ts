@@ -21,6 +21,7 @@ export const DESTINATIONS: DestinationDef[] = [
     { id: "analysis", label: "Klasör analizi" }, { id: "files", label: "Klasördeki dosyalar" }, { id: "health", label: "Klasör sağlığı" },
   ] },
   { id: "rename", label: "Adlandırma", group: "ops", views: [{ id: "naming", label: "Adlandırma" }] },
+  { id: "dates", label: "Tarihe Göre", group: "ops", views: [{ id: "dateGroup", label: "Yıl\\Ay gruplama" }] },
   { id: "rules", label: "Kurallar", views: [
     { id: "settings", label: "Kurallar" }, { id: "automation", label: "Otomasyon durumu" },
   ] },

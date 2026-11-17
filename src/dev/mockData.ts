@@ -69,7 +69,7 @@ export const quarantine = (rootPath: string): QuarantineListing => ({
 });
 
 export const settings: AppSettings = {
-  sourceFolders: ["C:\\Kullanicilar\\Ornek\\Indirilenler"], backupRoot: BACKUP, automationEnabled: true, includeOther: false, scanPendingOnStart: true,
+  sourceFolders: ["C:\\Kullanicilar\\Ornek\\Indirilenler"], backupRoot: BACKUP, automationEnabled: true, autoMove: true, includeOther: false, scanPendingOnStart: true,
   startWithWindows: false, notifyMoves: true,
   extGroups: [
     { name: "Dokümanlar", extensions: ["pdf", "docx", "xlsx", "pptx", "txt"] }, { name: "Görseller", extensions: ["jpg", "png", "webp", "bmp"] },
@@ -77,18 +77,21 @@ export const settings: AppSettings = {
   ],
 };
 
-export const inbox = (date: string): InboxListing => {
+export const inbox = (date: string, withPending = false): InboxListing => {
   const dir = `${BACKUP}\\_GelenKutusu\\${date}_Bakilacaklar`;
   const ms = Date.now();
   const f = (group: string, name: string, size: number, extra: Partial<InboxListing["groups"][number]["files"][number]> = {}) => ({ path: `${dir}\\${group}\\${name}`, name, ext: name.split(".").pop()!, size, group, arrivedMs: ms - 3_600_000, createdMs: ms - day * 1000, modifiedMs: ms - 7_200_000,
     accessedMs: ms - 600_000, contentPreview: null, thumbnailPath: null, similarTo: null, similarity: null, duplicateOf: null, duplicateIn: null,
-    suggestion: { verdict: "keep" as const, target: null, reason: "Yeni bir dosya, benzeri yok. Yerinde kalması yeterli." }, ...extra });
+    suggestion: { verdict: "keep" as const, target: null, reason: "Yeni bir dosya, benzeri yok. Yerinde kalması yeterli." }, pending: false, ...extra });
   const groupsIn = [
     { name: "Dokümanlar", files: [f("Dokümanlar", "toplanti_notlari.txt", 812, { contentPreview: "Toplantı notları: Q4 bütçe görüşmesi ve süreç güncellemesi." }),
       f("Dokümanlar", "Teklif_Q4.xlsx", 22_011, { similarTo: "Teklif_Q4_son.xlsx", similarity: 95, suggestion: { verdict: "move" as const, target: "Projeler", reason: "Projeler klasöründeki Teklif_Q3.xlsx ile adı %89 benzer." } }),
       f("Dokümanlar", "Teklif_Q4_son.xlsx", 23_100, { similarTo: "Teklif_Q4.xlsx", similarity: 95, suggestion: { verdict: "move" as const, target: "Projeler", reason: "Adı Teklif_Q4.xlsx ile benzer, ikisi birlikte gitmeli." } })] },
     { name: "Görseller", files: [f("Görseller", "logo.png", 5_120), f("Görseller", "tarama.bmp", 7_654_321)] },
     { name: "Arşivler", files: [f("Arşivler", "yedek_2026.zip", 120_000, { duplicateOf: "D:\\Yedek\\Arşiv\\yedek_2026.zip", duplicateIn: "Arşiv", suggestion: { verdict: "bin" as const, target: null, reason: "İçeriği Arşiv klasöründeki yedek_2026.zip ile birebir aynı." } })] },
+    ...(withPending ? [{ name: "İzlenen · Indirilenler", files: ["teknik_sartname_son.docx", "fatura_kasim.pdf"].map((n, i) =>
+      f("x", n, 48_200 + i * 40_000, { path: `${settings.sourceFolders[0]}\\${n}`, group: "İzlenen · Indirilenler", pending: true })) }] : []),
   ].map(g => ({ ...g, bytes: g.files.reduce((s, x) => s + x.size, 0) }));
-  return { date, dir, exists: true, days: [{ date, files: 6 }], groups: groupsIn, totalFiles: 6, totalBytes: groupsIn.reduce((s, g) => s + g.bytes, 0), truncated: false };
+  const total = groupsIn.reduce((n, g) => n + g.files.length, 0);
+  return { date, dir, exists: true, days: [{ date, files: total }], groups: groupsIn, totalFiles: total, totalBytes: groupsIn.reduce((s, g) => s + g.bytes, 0), truncated: false };
 };

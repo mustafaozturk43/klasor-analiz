@@ -2,6 +2,7 @@
 //! yazimi bitince (`watcher_core::Pending`) gunun gelen kutusuna tasinir, gecmise
 //! yazilir ve arayuze `inbox-updated` olayi gonderilir. Otomasyon duraklatildiginda
 //! dosyalar bekletilir, devam edilince tasinir. Ayarlar kaydedilince yeniden kurulur.
+//! "Otomatik tasi" kapaliysa dosyalara dokunulmaz; yalnizca arayuz yenilenir.
 
 use crate::automation;
 use crate::organize_models::FailedMove;
@@ -88,7 +89,8 @@ fn start(app: AppHandle, settings: &AppSettings) -> Result<Running, String> {
     if !missing.is_empty() {
         let _ = app.emit("inbox-error", format!("Bazı kaynak klasörler izlenemedi: {}", missing.join("; ")));
     }
-    if settings.scan_pending_on_start {
+    // Otomatik tasima kapaliyken bekleyen dosyalar yerinde kalir; kuyruga alinmaz.
+    if settings.scan_pending_on_start && settings.auto_move {
         for p in sources.iter().flat_map(|s| top_level_files(s)) {
             let _ = tx.send(p);
         }
@@ -138,6 +140,11 @@ fn process(app: &AppHandle, ready: &[PathBuf]) {
     let settings = app.state::<SettingsState>().settings.lock().map(|s| s.clone()).unwrap_or_default();
     let today = chrono::Local::now().date_naive();
     let mut update = InboxUpdate { moved: Vec::new(), failed: Vec::new() };
+    if !settings.auto_move {
+        // Dosya izlenen klasorde kalir; Bugun sayfasi yalnizca yenilenir.
+        let _ = app.emit("inbox-updated", &update);
+        return;
+    }
     let state = app.state::<AppState>();
     for path in ready {
         let mut fail = |error: String| update.failed.push(FailedMove { path: path.to_string_lossy().into_owned(), error });

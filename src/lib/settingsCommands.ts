@@ -7,6 +7,9 @@ export const getSettings = () => invoke<AppSettings>("get_settings");
 /** Dogrulanip kaydedilen (temizlenmis) ayarlari dondurur; gecersizse hata metni firlatir. */
 export const saveSettings = (settings: AppSettings) => invoke<AppSettings>("save_settings", { settings });
 
+/** Bugun sayfasindaki "Otomatik taşı" anahtari; kaydedilen ayarlari dondurur. */
+export const setAutoMove = (enabled: boolean) => invoke<AppSettings>("set_auto_move", { enabled });
+
 export const defaultExtGroups = () => invoke<ExtGroup[]>("default_ext_groups");
 
 /** Uzanti girdisini ("PDF, .docx txt") ayri, kucuk harfli uzantilara boler. */
