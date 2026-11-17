@@ -14,8 +14,6 @@ export const listInbox = (date?: string) => invoke<InboxListing>("list_inbox", {
 
 export const getTargetSubfolders = () => invoke<TargetFolder[]>("get_target_subfolders");
 
-export const createTargetFolder = (name: string) => invoke<TargetFolder>("create_target_folder", { name });
-
 export const moveSelectedFiles = (paths: string[], target: string, group = "") => invoke<MoveOutcome>("move_selected_files", { paths, target, group });
 
 /** Onizleme; uygulamak icin `applyRenamePlan(plan.id)` (automationCommands). */

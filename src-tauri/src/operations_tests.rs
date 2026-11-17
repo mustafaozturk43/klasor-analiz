@@ -56,7 +56,7 @@ fn moves_selected_files_records_history_and_cleans_emptied_dirs() {
     fs::write(fx.backup.join("Faturalar").join("su.pdf"), b"eski").unwrap();
     let a = fx.file("Dokümanlar/su.pdf", b"yeni");
     let b = fx.file("Görseller/foto.jpg", b"img");
-    let out = move_core(&fx.app, &fx.backup, &[a.clone(), b], &fx.backup.join("Faturalar"), "").unwrap();
+    let out = move_core(&fx.app, &fx.backup, &[], &[a.clone(), b], &fx.backup.join("Faturalar"), "").unwrap();
     assert_eq!(out.moved.len(), 2);
     assert!(out.failed.is_empty());
     assert_eq!(fs::read(fx.backup.join("Faturalar").join("su_1.pdf")).unwrap(), b"yeni", "hedefte ayni ad: _1");
@@ -73,10 +73,10 @@ fn group_creates_subfolder_inside_target_and_rejects_bad_names() {
     let a = fx.file("Dokümanlar/a.pdf", b"x");
     let target = fx.backup.join("Faturalar");
     for bad in ["..\\dışarı", "a\\\\b", INBOX_DIR, "con"] {
-        assert!(move_core(&fx.app, &fx.backup, std::slice::from_ref(&a), &target, bad).is_err(), "{bad}");
+        assert!(move_core(&fx.app, &fx.backup, &[], std::slice::from_ref(&a), &target, bad).is_err(), "{bad}");
     }
     assert!(Path::new(&a).exists(), "reddedilen grup adinda dosya yerinde kalir");
-    let out = move_core(&fx.app, &fx.backup, std::slice::from_ref(&a), &target, " 2026 / Kasım ").unwrap();
+    let out = move_core(&fx.app, &fx.backup, &[], std::slice::from_ref(&a), &target, " 2026 / Kasım ").unwrap();
     assert_eq!(out.moved.len(), 1);
     assert!(target.join("2026").join("Kasım").join("a.pdf").exists());
 }
@@ -88,12 +88,13 @@ fn rejects_sources_outside_inbox_and_reserved_targets() {
     let outside = fx.backup.join("Faturalar").join("b.pdf");
     fs::write(&outside, b"x").unwrap();
     let target = fx.backup.join("Faturalar");
-    assert!(move_core(&fx.app, &fx.backup, &[outside.to_string_lossy().into()], &target, "").is_err());
-    assert!(move_core(&fx.app, &fx.backup, std::slice::from_ref(&a), &fx.backup.join(QUARANTINE_DIR), "").is_err());
-    assert!(move_core(&fx.app, &fx.backup, std::slice::from_ref(&a), &fx.backup.join(INBOX_DIR), "").is_err());
-    assert!(move_core(&fx.app, &fx.backup, std::slice::from_ref(&a), &fx.base, "").is_err(), "yedek disi hedef");
+    assert!(move_core(&fx.app, &fx.backup, &[], &[outside.to_string_lossy().into()], &target, "").is_err());
+    assert!(move_core(&fx.app, &fx.backup, &[], std::slice::from_ref(&a), &fx.backup.join(QUARANTINE_DIR), "").is_err());
+    assert!(move_core(&fx.app, &fx.backup, &[], std::slice::from_ref(&a), &fx.backup.join(INBOX_DIR), "").is_err());
     assert!(Path::new(&a).exists());
     assert!(fx.app.history.lock().unwrap().is_empty(), "reddedilen islem gecmise yazilmaz");
+    let out = move_core(&fx.app, &fx.backup, &[], std::slice::from_ref(&a), &fx.base, "").unwrap();
+    assert_eq!(out.moved.len(), 1, "yedek disi hedef de secilebilir");
 }
 
 #[test]
@@ -104,11 +105,11 @@ fn trash_accepts_only_inbox_files_and_reports_each_result() {
     let outside = fx.backup.join("Faturalar").join("c.pdf");
     fs::write(&outside, b"x").unwrap();
     let never = |_: &Path| -> Result<(), String> { panic!("gecersiz istekte hicbir dosyaya dokunulmamali") };
-    assert!(trash_core(&fx.backup, &[a.clone(), outside.to_string_lossy().into()], &never).is_err());
+    assert!(trash_core(&fx.backup, &[], &[a.clone(), outside.to_string_lossy().into()], &never).is_err());
 
     // Gercek Geri Donusum Kutusu yerine sahte gonderici: b basarisiz olur.
     let fake = |p: &Path| if p.ends_with("b.pdf") { Err("Dosya kullanımda".to_string()) } else { fs::remove_file(p).map_err(|e| e.to_string()) };
-    let out = trash_core(&fx.backup, &[a.clone(), b.clone()], &fake).unwrap();
+    let out = trash_core(&fx.backup, &[], &[a.clone(), b.clone()], &fake).unwrap();
     assert_eq!(out.trashed, vec![a]);
     assert_eq!(out.failed.len(), 1);
     assert!(Path::new(&b).exists());
@@ -139,4 +140,42 @@ fn list_rename_uses_group_custom_text_and_order_and_can_be_undone() {
     assert!(plan_list_rename(&inbox, &[a.clone(), a.clone()], &opts).is_err(), "ayni dosya iki kez");
     let bad = ListRenameOptions { template: "{bilinmeyen}".into(), ..opts };
     assert!(plan_list_rename(&inbox, &[a], &bad).is_err());
+}
+
+#[test]
+fn pending_files_in_watched_folder_can_be_moved_and_trashed() {
+    let fx = Fx::new();
+    let src = fx.base.join("Desktop");
+    fs::create_dir_all(src.join("Alt")).unwrap();
+    let a = src.join("indirilen.pdf");
+    let deep = src.join("Alt").join("derin.pdf");
+    fs::write(&a, b"x").unwrap();
+    fs::write(&deep, b"x").unwrap();
+    let sources = vec![src.clone()];
+    let a_s = a.to_string_lossy().into_owned();
+    let target = fx.backup.join("Faturalar");
+    assert!(move_core(&fx.app, &fx.backup, &[], std::slice::from_ref(&a_s), &target, "").is_err(), "izlenen klasor bilinmiyorsa reddedilir");
+    assert!(move_core(&fx.app, &fx.backup, &sources, &[deep.to_string_lossy().into()], &target, "").is_err(), "alt klasordeki dosya reddedilir");
+    let out = move_core(&fx.app, &fx.backup, &sources, std::slice::from_ref(&a_s), &target, "").unwrap();
+    assert_eq!(out.moved.len(), 1);
+    assert!(target.join("indirilen.pdf").exists());
+    assert!(src.is_dir(), "izlenen klasor silinmez");
+
+    let b = src.join("b.pdf");
+    fs::write(&b, b"x").unwrap();
+    let fake = |p: &Path| fs::remove_file(p).map_err(|e| e.to_string());
+    let out = trash_core(&fx.backup, &sources, &[b.to_string_lossy().into()], &fake).unwrap();
+    assert_eq!(out.trashed.len(), 1);
+}
+
+#[test]
+fn moving_into_the_files_own_folder_is_skipped() {
+    let fx = Fx::new();
+    let src = fx.base.join("Desktop");
+    fs::create_dir_all(&src).unwrap();
+    let a = src.join("a.pdf");
+    fs::write(&a, b"x").unwrap();
+    let out = move_core(&fx.app, &fx.backup, &[src.clone()], &[a.to_string_lossy().into()], &src, "").unwrap();
+    assert!(out.moved.is_empty());
+    assert!(a.exists());
 }

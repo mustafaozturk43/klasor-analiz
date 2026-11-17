@@ -42,3 +42,14 @@
   .naming-opt, .naming-foot, .naming-skipped { padding-inline: var(--space-md); }
   .naming-go { flex: 1 1 100%; }
 }
+
+/* Tarihe Gore (Yıl\Ay) onizlemesi */
+.date-group-exts { width: 100%; min-height: 36px; padding: var(--space-xs) var(--space-sm); border: 1px solid var(--color-muted); border-radius: var(--radius-control);
+  background: var(--color-paper-2); color: var(--color-ink); font-size: var(--text-xs); }
+.naming-opt label.w-full { flex-direction: column; align-items: stretch; }
+.date-group-list { max-height: 560px; overflow-y: auto; margin: 0; padding: 0; list-style: none; }
+.date-group-row { display: grid; grid-template-columns: 7rem 5.5rem minmax(0, 1fr) auto; align-items: center; gap: var(--space-sm); min-height: 41px;
+  padding: var(--space-xs) var(--space-lg); border-top: 1px solid var(--color-rule); font-size: var(--text-sm); }
+.date-group-row .hint { margin: 0; }
+.date-group-row[data-undated] .naming-name { color: var(--color-muted); }
+.date-group-samples { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-muted); font-size: var(--text-xs); }

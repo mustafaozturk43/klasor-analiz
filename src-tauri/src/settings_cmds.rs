@@ -28,6 +28,21 @@ pub(crate) fn save_settings(app: AppHandle, state: State<'_, SettingsState>, mut
     Ok(saved)
 }
 
+/// Bugun sayfasindaki "Otomatik taşı" anahtari: yalnizca bu alani kaydeder, watcher'i yeniden kurar.
+#[tauri::command]
+pub(crate) fn set_auto_move(app: AppHandle, state: State<'_, SettingsState>, enabled: bool) -> Result<AppSettings, String> {
+    let saved = {
+        let mut guard = state.settings.lock().map_err(|e| e.to_string())?;
+        let next = AppSettings { auto_move: enabled, ..guard.clone() };
+        settings::write(&state.dir, &next)?;
+        *guard = next.clone();
+        next
+    };
+    crate::watcher::restart(&app);
+    crate::automation::notify_changed(&app);
+    Ok(saved)
+}
+
 /// Tek bir arayuz tercihini (tema, son klasorler, profiller ...) `settings.json` icine yazar;
 /// `null` deger anahtari siler. Watcher'i yeniden baslatmaz.
 #[tauri::command]

@@ -1,7 +1,7 @@
 //! Gelen kutusunun bir gunu: grup klasorlerine gore dosya ayrintilari, var olan
 //! gunlerin listesi ve benzer adli dosyalar. Aksam Kontrolu paneli bunu gosterir.
 
-use crate::inbox_dupes;
+use crate::{inbox_dupes, inbox_sources};
 use crate::inbox_path::{day_dir, DAY_SUFFIX};
 use crate::inspector::{self, FileDetail};
 use crate::models::{UndoRecord, DEFAULT_SIMILARITY_THRESHOLD, INBOX_DIR};
@@ -12,7 +12,7 @@ use chrono::NaiveDate;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager, State};
 
 /// Bir gunde listelenecek en fazla dosya (arayuz sanal liste kullanir).
@@ -78,7 +78,8 @@ fn arrivals(history: &[UndoRecord]) -> HashMap<String, u64> {
         .collect()
 }
 
-pub fn list_core(backup_root: &Path, date: NaiveDate, history: &[UndoRecord], cache_dir: &Path) -> InboxListing {
+/// `pending`: izlenen klasorlerde bekleyen dosyalar (otomatik tasima kapaliyken), ayni oneri hattindan gecer.
+pub fn list_core(backup_root: &Path, date: NaiveDate, history: &[UndoRecord], cache_dir: &Path, pending: Vec<FileDetail>) -> InboxListing {
     let dir = day_dir(backup_root, date);
     let arrived = arrivals(history);
     let mut all: Vec<FileDetail> = Vec::new();
@@ -101,6 +102,13 @@ pub fn list_core(backup_root: &Path, date: NaiveDate, history: &[UndoRecord], ca
                 all.push(d);
             }
         }
+    }
+    for d in pending {
+        if all.len() >= MAX_FILES {
+            truncated = true;
+            break;
+        }
+        all.push(d);
     }
     inspector::mark_similar(&mut all, DEFAULT_SIMILARITY_THRESHOLD);
     inbox_dupes::mark_exact(&mut all, backup_root);
@@ -138,7 +146,8 @@ pub fn list_core(backup_root: &Path, date: NaiveDate, history: &[UndoRecord], ca
 /// Bir gunun gelen kutusu (tarih verilmezse bugun, yerel saat).
 #[tauri::command(async)]
 pub(crate) fn list_inbox(app: AppHandle, state: State<'_, AppState>, settings: State<'_, SettingsState>, date: Option<String>) -> Result<InboxListing, String> {
-    let backup = settings.settings.lock().map_err(|e| e.to_string())?.backup_root.clone();
+    let current = settings.settings.lock().map_err(|e| e.to_string())?.clone();
+    let backup = current.backup_root.clone();
     if backup.is_empty() {
         return Err("Önce Ayarlar sekmesinden yedek klasörünü seçin.".into());
     }
@@ -153,5 +162,13 @@ pub(crate) fn list_inbox(app: AppHandle, state: State<'_, AppState>, settings: S
     // Oturumda bir kez: eski kucuk resimler onbellekte birikmesin.
     static PRUNE: std::sync::Once = std::sync::Once::new();
     PRUNE.call_once(|| { thumbnail::prune_cache(&cache, thumbnail::MAX_CACHE_AGE); });
-    Ok(list_core(Path::new(&backup), day, &history, &cache))
+    // Otomatik tasima kapaliysa izlenen klasorlerde bekleyenler de listelenir.
+    let sources: Vec<PathBuf> = if current.auto_move { Vec::new() } else { current.source_folders.iter().map(PathBuf::from).collect() };
+    for s in &sources {
+        crate::asset_scope::allow_dir(&app, s);
+    }
+    let pending = inbox_sources::source_files(&sources, day);
+    let mut listing = list_core(Path::new(&backup), day, &history, &cache, pending);
+    listing.days = inbox_sources::merge_days(listing.days, inbox_sources::source_days(&sources, chrono::Local::now().date_naive()));
+    Ok(listing)
 }

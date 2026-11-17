@@ -5,6 +5,8 @@
 
 pub mod asset_scope;
 pub mod compare;
+pub mod date_group;
+pub mod date_group_plan;
 pub mod file_list;
 pub mod file_ops;
 pub mod rename;
@@ -50,6 +52,7 @@ pub mod automation;
 pub mod cloud;
 pub mod inbox_dupes;
 pub mod inbox_list;
+pub mod inbox_sources;
 pub mod inbox_suggest;
 pub mod inbox_path;
 pub mod inbox_rename;
@@ -162,6 +165,7 @@ pub fn run() {
         .manage(name_rules_apply::NameRulesState::default())
         .manage(selection_move::SelectionMoveState::default())
         .manage(organize::OrganizeState::default())
+        .manage(date_group::DateGroupState::default())
         .manage(automation::AutomationState::default())
         .manage(watcher::WatcherState::default())
         .plugin(tauri_plugin_dialog::init())
@@ -194,55 +198,34 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            scan_and_group,
-            cancel_scan,
+            scan_and_group, cancel_scan,
             compare::compare_folders,
             file_list::list_files,
-            rename::preview_date_rename,
-            rename::apply_rename_plan,
+            rename::preview_date_rename, rename::apply_rename_plan,
             rename_template::preview_template_rename,
-            name_rules_apply::preview_name_rules,
-            name_rules_apply::apply_name_rules,
+            name_rules_apply::preview_name_rules, name_rules_apply::apply_name_rules,
             group_moves::move_named_groups,
-            selection_move::preview_selection_move,
-            selection_move::apply_selection_move,
+            selection_move::preview_selection_move, selection_move::apply_selection_move,
             subfolders::list_subfolders,
-            shell_cmds::get_shell_thumbnails,
-            shell_cmds::read_media_dates,
+            shell_cmds::get_shell_thumbnails, shell_cmds::read_media_dates,
             folder_stats::get_folder_stats,
-            history_cmds::undo_last_move,
-            history_cmds::undo_history_entry,
-            history_cmds::get_move_history,
-            history_cmds::clear_move_history,
-            health::folder_health,
-            health::remove_empty_folders,
-            quarantine_manage::list_quarantine,
-            quarantine_manage::restore_quarantined,
-            quarantine_manage::delete_quarantined,
-            quarantine_manage::quarantine_files,
-            organize::preview_organize,
-            organize::apply_organize,
-            organize::cancel_organize,
+            history_cmds::undo_last_move, history_cmds::undo_history_entry, history_cmds::get_move_history, history_cmds::clear_move_history,
+            health::folder_health, health::remove_empty_folders,
+            quarantine_manage::list_quarantine, quarantine_manage::restore_quarantined, quarantine_manage::delete_quarantined, quarantine_manage::quarantine_files,
+            organize::preview_organize, organize::apply_organize, organize::cancel_organize,
             organize_rules::default_organize_rules,
             organize_report::export_organize_csv,
             quarantine_cmds::clear_quarantine,
-            settings_cmds::get_settings,
-            settings_cmds::save_settings,
-            settings_cmds::set_ui_pref,
-            settings_cmds::default_ext_groups,
-            automation::get_automation_status,
+            settings_cmds::get_settings, settings_cmds::save_settings, settings_cmds::set_ui_pref, settings_cmds::default_ext_groups, settings_cmds::set_auto_move,
+            automation::get_automation_status, automation::set_automation_paused,
             inbox_list::list_inbox,
             inbox_rename::preview_inbox_rename,
             selection_rename::preview_selection_rename,
-            operations::get_target_subfolders,
-            operations::create_target_folder,
-            operations::move_selected_files,
+            operations::get_target_subfolders, operations::create_target_folder, operations::move_selected_files,
             trash_ops::delete_files_to_trash,
-            automation::set_automation_paused,
-            reporter::export_groups_csv,
-            reporter::export_history_csv,
-            shell::reveal_in_explorer,
-            shell::open_file_default
+            reporter::export_groups_csv, reporter::export_history_csv,
+            shell::reveal_in_explorer, shell::open_file_default,
+            date_group::preview_date_group, date_group::apply_date_group,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

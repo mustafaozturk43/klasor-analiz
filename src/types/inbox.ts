@@ -28,6 +28,8 @@ export interface FileDetail {
   /** O dosya yedek klasorundeyse klasor adi; gelen kutusundaysa null. */
   duplicateIn: string | null;
   suggestion: Suggestion | null;
+  /** Izlenen klasorde bekliyor (otomatik tasima kapali); gelen kutusunda degil. */
+  pending: boolean;
 }
 
 export interface InboxGroup {

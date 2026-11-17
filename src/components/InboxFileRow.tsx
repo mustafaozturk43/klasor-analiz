@@ -49,6 +49,7 @@ function InboxFileRow({ file, verdict, onVerdict, onReveal, selected, onSelect, 
     <div className="min-w-0">
       <button type="button" className="inbox-name" title={file.name} aria-current={selected || undefined} onClick={() => onSelect(file.path)}>{file.name}</button>
       <span className="inbox-meta">
+        {file.pending && <span className="badge pending" title="Otomatik taşıma kapalı; dosya izlenen klasörde bekliyor">İzlenen klasörde</span>}
         {file.arrivedMs !== null && <span className="badge">Geldi {at(file.arrivedMs)}</span>}
         {file.createdMs !== null && <span className="badge">Oluşturma {day(file.createdMs)}</span>}
         {file.modifiedMs !== null && <span className="badge">Değişiklik {day(file.modifiedMs)} {at(file.modifiedMs)}</span>}

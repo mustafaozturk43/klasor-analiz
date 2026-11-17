@@ -1,16 +1,18 @@
 //! Gelen kutusundaki secili dosyalari Windows Geri Donusum Kutusu'na gonderir.
-//! Kalici silme yapilmaz. Yalnizca gelen kutusundaki dosyalar kabul edilir. Bu
+//! Kalici silme yapilmaz. Gelen kutusundaki ve izlenen klasorlerde bekleyen
+//! (otomatik tasima kapaliyken) dosyalar kabul edilir. Bu
 //! islem uygulamanin Islem Gecmisi'nden geri alinamaz; dosyalar Geri Donusum
 //! Kutusu'ndan geri yuklenir. Bosalan grup ve gun klasorleri kaldirilir.
 
 use crate::models::INBOX_DIR;
-use crate::operations::backup_root;
+use crate::inbox_sources::is_pending_source;
+use crate::operations::{backup_root, source_folders};
 use crate::organize_cleanup::prune_empty_dirs;
 use crate::organize_models::FailedMove;
 use crate::path_guard::ensure_inside;
 use crate::settings::SettingsState;
 use serde::Serialize;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use tauri::State;
 
 #[derive(Debug, Clone, Serialize)]
@@ -20,14 +22,17 @@ pub struct TrashOutcome {
     pub failed: Vec<FailedMove>,
 }
 
-pub fn trash_core(backup: &Path, paths: &[String], send: &dyn Fn(&Path) -> Result<(), String>) -> Result<TrashOutcome, String> {
+/// `sources`: izlenen klasorler; dogrudan icindeki bekleyen dosyalar da gonderilebilir.
+pub fn trash_core(backup: &Path, sources: &[PathBuf], paths: &[String], send: &dyn Fn(&Path) -> Result<(), String>) -> Result<TrashOutcome, String> {
     if paths.is_empty() {
         return Err("Önce dosya seçin.".into());
     }
     let inbox = backup.join(INBOX_DIR);
     // Tek bir gecersiz yol bile varsa hicbir dosyaya dokunulmaz.
     for p in paths {
-        ensure_inside(&inbox, Path::new(p)).map_err(|_| format!("Yalnızca gelen kutusundaki dosyalar gönderilebilir: {p}"))?;
+        if ensure_inside(&inbox, Path::new(p)).is_err() && !is_pending_source(sources, Path::new(p)) {
+            return Err(format!("Yalnızca gelen kutusundaki ya da izlenen klasörde bekleyen dosyalar gönderilebilir: {p}"));
+        }
         if !Path::new(p).is_file() {
             return Err(format!("Yalnızca dosyalar gönderilebilir: {p}"));
         }
@@ -46,5 +51,5 @@ pub fn trash_core(backup: &Path, paths: &[String], send: &dyn Fn(&Path) -> Resul
 
 #[tauri::command(async)]
 pub(crate) fn delete_files_to_trash(settings: State<'_, SettingsState>, paths: Vec<String>) -> Result<TrashOutcome, String> {
-    trash_core(&backup_root(&settings)?, &paths, &|p| trash::delete(p).map_err(|e| e.to_string()))
+    trash_core(&backup_root(&settings)?, &source_folders(&settings)?, &paths, &|p| trash::delete(p).map_err(|e| e.to_string()))
 }

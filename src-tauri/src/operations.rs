@@ -1,6 +1,6 @@
 //! Aksam Kontrolu toplu islemleri: hedef klasorler ve secili gelen kutusu
-//! dosyalarini tasima. Kaynak her zaman gelen kutusunda, hedef her zaman yedek
-//! klasorunde (gelen kutusu ve karantina disinda) olmali. Tasima once gecmise
+//! dosyalarini tasima. Kaynak gelen kutusunda ya da izlenen klasorde bekliyor
+//! olmali; hedef herhangi bir klasor olabilir (gelen kutusu ve karantina haric). Tasima once gecmise
 //! yazilir (geri alinabilir), ardindan bosalan grup ve gun klasorleri silinir.
 
 use crate::models::{MoveRecord, UndoRecord, INBOX_DIR, QUARANTINE_DIR};
@@ -9,7 +9,9 @@ use crate::organize_cleanup::prune_empty_dirs;
 use crate::organize_models::FailedMove;
 use crate::organize_rules::check_folder_name;
 use crate::path_guard::{canonical, ensure_inside};
+use crate::inbox_sources::is_pending_source;
 use crate::settings::SettingsState;
+use crate::watcher_core::same_dir;
 use crate::{file_ops, history, AppState};
 use serde::Serialize;
 use std::path::{Path, PathBuf};
@@ -42,6 +44,11 @@ pub fn backup_root(settings: &State<'_, SettingsState>) -> Result<PathBuf, Strin
     Ok(PathBuf::from(root))
 }
 
+/// Ayarlardaki izlenen (kaynak) klasorler.
+pub fn source_folders(settings: &State<'_, SettingsState>) -> Result<Vec<PathBuf>, String> {
+    Ok(settings.settings.lock().map_err(|e| e.to_string())?.source_folders.iter().map(PathBuf::from).collect())
+}
+
 /// Yedek klasorunun dogrudan alt klasorleri (gelen kutusu ve karantina haric), ada gore.
 pub fn target_folders(backup: &Path) -> Vec<TargetFolder> {
     let mut out: Vec<TargetFolder> = std::fs::read_dir(backup)
@@ -57,22 +64,30 @@ pub fn target_folders(backup: &Path) -> Vec<TargetFolder> {
     out
 }
 
-/// Hedef klasor yedek klasorunun icinde olmali; gelen kutusu veya karantina olamaz.
-fn check_target(backup: &Path, target: &Path) -> Result<(), String> {
-    ensure_inside(backup, target)?;
-    let rel = canonical(target)?.strip_prefix(canonical(backup)?).map(Path::to_path_buf).unwrap_or_default();
-    match rel.components().next() {
-        Some(c) if is_reserved(&c.as_os_str().to_string_lossy()) => Err("Gelen kutusu veya karantina hedef olarak seçilemez.".into()),
-        _ => Ok(()),
+/// Hedef var olan bir klasor olmali (yedek klasoru disinda da olabilir); hicbir
+/// yerde gelen kutusu veya karantina klasorunun kendisi ya da ici olamaz.
+fn check_target(target: &Path) -> Result<(), String> {
+    let real = canonical(target)?;
+    if !real.is_dir() {
+        return Err(format!("Hedef bir klasör olmalı: {}", target.display()));
     }
+    let bad = |c: std::path::Component| {
+        let n = c.as_os_str().to_string_lossy();
+        n.eq_ignore_ascii_case(INBOX_DIR) || n.eq_ignore_ascii_case(QUARANTINE_DIR)
+    };
+    if real.components().any(bad) {
+        return Err("Gelen kutusu veya karantina hedef olarak seçilemez.".into());
+    }
+    Ok(())
 }
 
 /// `group`: hedefin icinde olusturulacak alt klasor ("Mayıs" ya da "Faturalar\Mayıs"); bos ise dogrudan hedefe tasinir.
-pub(crate) fn move_core(app: &AppState, backup: &Path, paths: &[String], target: &Path, group: &str) -> Result<MoveOutcome, String> {
+/// `sources`: izlenen klasorler; dogrudan icindeki dosyalar da (otomatik tasima kapaliyken bekleyenler) tasinabilir.
+pub(crate) fn move_core(app: &AppState, backup: &Path, sources: &[PathBuf], paths: &[String], target: &Path, group: &str) -> Result<MoveOutcome, String> {
     if paths.is_empty() {
         return Err("Önce dosya seçin.".into());
     }
-    check_target(backup, target)?;
+    check_target(target)?;
     let segments = crate::selection_paths::split_group(group)?;
     if let Some(bad) = segments.iter().find(|s| is_reserved(s)) {
         return Err(format!("“{bad}” grup adı olarak kullanılamaz."));
@@ -80,7 +95,9 @@ pub(crate) fn move_core(app: &AppState, backup: &Path, paths: &[String], target:
     let target = &segments.iter().fold(target.to_path_buf(), |dir, seg| dir.join(seg));
     let inbox = backup.join(INBOX_DIR);
     for p in paths {
-        ensure_inside(&inbox, Path::new(p)).map_err(|_| format!("Yalnızca gelen kutusundaki dosyalar taşınabilir: {p}"))?;
+        if ensure_inside(&inbox, Path::new(p)).is_err() && !is_pending_source(sources, Path::new(p)) {
+            return Err(format!("Yalnızca gelen kutusundaki ya da izlenen klasörde bekleyen dosyalar taşınabilir: {p}"));
+        }
     }
     std::fs::create_dir_all(target).map_err(|e| format!("{}: {e}", target.display()))?;
     let label = target.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
@@ -90,6 +107,9 @@ pub(crate) fn move_core(app: &AppState, backup: &Path, paths: &[String], target:
     let mut out = MoveOutcome { moved: Vec::new(), failed: Vec::new(), removed_dirs: 0 };
     for p in paths {
         let from = PathBuf::from(p);
+        if from.parent().is_some_and(|dir| same_dir(dir, target)) {
+            continue; // zaten hedef klasorde
+        }
         let name = from.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
         let dest = unique_dest_with(target, &name, Suffix::Underscore);
         // Once gecmise yaz, sonra tasi: islem yarida kesilse de geri alinabilir.
@@ -133,7 +153,7 @@ pub(crate) fn create_target_folder(settings: State<'_, SettingsState>, name: Str
 
 #[tauri::command(async)]
 pub(crate) fn move_selected_files(app: State<'_, AppState>, settings: State<'_, SettingsState>, paths: Vec<String>, target: String, group: Option<String>) -> Result<MoveOutcome, String> {
-    move_core(&app, &backup_root(&settings)?, &paths, Path::new(&target), group.as_deref().unwrap_or(""))
+    move_core(&app, &backup_root(&settings)?, &source_folders(&settings)?, &paths, Path::new(&target), group.as_deref().unwrap_or(""))
 }
 
 #[cfg(test)]

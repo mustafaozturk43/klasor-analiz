@@ -40,6 +40,8 @@ pub struct FileDetail {
     pub duplicate_in: Option<String>,
     /// Baslangic karari onerisi (`inbox_suggest`).
     pub suggestion: Option<crate::inbox_suggest::Suggestion>,
+    /// Izlenen klasorde bekliyor (otomatik tasima kapali); gelen kutusunda degil.
+    pub pending: bool,
 }
 
 fn ms(t: std::io::Result<SystemTime>) -> Option<u64> {
@@ -106,6 +108,7 @@ pub fn detail_of(path: &Path, group: &str, arrived_ms: Option<u64>) -> Option<Fi
         duplicate_of: None,
         duplicate_in: None,
         suggestion: None,
+        pending: false,
         ext,
     })
 }
