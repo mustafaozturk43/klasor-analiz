@@ -32,12 +32,12 @@ fn top_files(dir: &Path) -> Vec<PathBuf> {
     v
 }
 
-/// Kaynak klasorlerde `day` gunu olusturulmus dosyalar (`pending = true`).
-pub fn source_files(sources: &[PathBuf], day: NaiveDate) -> Vec<FileDetail> {
+/// Kaynak klasorlerde bekleyen dosyalar (`pending = true`); `day` verilirse yalnizca o gun olusturulanlar.
+pub fn source_files(sources: &[PathBuf], day: Option<NaiveDate>) -> Vec<FileDetail> {
     let mut out = Vec::new();
     for src in sources {
         let group = group_name(src);
-        for p in top_files(src).into_iter().filter(|p| created_day(p) == Some(day)) {
+        for p in top_files(src).into_iter().filter(|p| day.is_none() || created_day(p) == day) {
             if let Some(mut d) = inspector::detail_of(&p, &group, None) {
                 d.arrived_ms = d.created_ms;
                 d.pending = true;

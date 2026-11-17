@@ -179,3 +179,21 @@ fn moving_into_the_files_own_folder_is_skipped() {
     assert!(out.moved.is_empty());
     assert!(a.exists());
 }
+
+#[test]
+fn pending_files_in_watched_folder_can_be_renamed_but_not_deeper_ones() {
+    let fx = Fx::new();
+    let src = fx.base.join("Desktop");
+    fs::create_dir_all(src.join("Alt")).unwrap();
+    let a = src.join("MAS_AIO.zip");
+    let deep = src.join("Alt").join("b.zip");
+    fs::write(&a, b"x").unwrap();
+    fs::write(&deep, b"x").unwrap();
+    let inbox = fx.backup.join(INBOX_DIR);
+    let opts = ListRenameOptions { template: "{OzelMetin}".into(), custom_text: "Yeni".into(), start: 1, pad: 1, ..Default::default() };
+    let sources = vec![src.clone()];
+    let (plan, _) = crate::inbox_rename::plan_inbox_or_pending(&inbox, &sources, &[a.to_string_lossy().into()], &opts).unwrap();
+    assert!(plan.entries[0].to.as_deref().unwrap().ends_with("Yeni.zip"));
+    assert!(crate::inbox_rename::plan_inbox_or_pending(&inbox, &sources, &[deep.to_string_lossy().into()], &opts).is_err());
+    assert!(crate::inbox_rename::plan_inbox_or_pending(&inbox, &[], &[a.to_string_lossy().into()], &opts).is_err());
+}

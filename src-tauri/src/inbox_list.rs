@@ -167,8 +167,10 @@ pub(crate) fn list_inbox(app: AppHandle, state: State<'_, AppState>, settings: S
     for s in &sources {
         crate::asset_scope::allow_dir(&app, s);
     }
-    let pending = inbox_sources::source_files(&sources, day);
+    // Bugun: izlenen klasorde bekleyen her dosya (ne zaman gelmis olursa olsun); gecmis gunler: o gun olusturulanlar.
+    let today = chrono::Local::now().date_naive();
+    let pending = inbox_sources::source_files(&sources, (day != today).then_some(day));
     let mut listing = list_core(Path::new(&backup), day, &history, &cache, pending);
-    listing.days = inbox_sources::merge_days(listing.days, inbox_sources::source_days(&sources, chrono::Local::now().date_naive()));
+    listing.days = inbox_sources::merge_days(listing.days, inbox_sources::source_days(&sources, today));
     Ok(listing)
 }

@@ -2,10 +2,12 @@
 //! `{OzelMetin}_{Grup}_{tarih}_{sıra}` -> `Kasim_Faturalari_Dokümanlar_2026-11-10_01.pdf`.
 //! Mevcut sablon motorunu (`rename_template::render`) ve onizle -> uygula -> geri al
 //! akisini (`rename::apply_pending`) kullanir. Sira numarasi verilen liste sirasidir.
-//! Dosyalar bulunduklari klasorde kalir; ayni ad varsa `ad_1.uzanti`.
+//! Dosyalar bulunduklari klasorde kalir; ayni ad varsa `ad_1.uzanti`. Otomatik tasima
+//! kapaliyken izlenen klasorde bekleyen dosyalar da adlandirilabilir.
 
 use crate::models::INBOX_DIR;
-use crate::operations::backup_root;
+use crate::inbox_sources::is_pending_source;
+use crate::operations::{backup_root, source_folders};
 use crate::path_guard::ensure_inside;
 use crate::rename::{FileStamps, Pending, RenameEntry, RenamePlan, RenameState};
 use crate::rename_template::{render, Fields};
@@ -52,6 +54,17 @@ fn free_target(dir: &Path, stem: &str, ext: &str, reserved: &mut HashSet<String>
 
 pub fn plan_list_rename(inbox: &Path, paths: &[String], opts: &ListRenameOptions) -> Result<(RenamePlan, FileStamps), String> {
     plan_rename_in(&[inbox.to_path_buf()], "Yalnızca gelen kutusundaki dosyalar adlandırılabilir", paths, opts)
+}
+
+/// Gelen kutusu dosyalari ve izlenen klasorde bekleyenler (kaynak klasorun dogrudan icindekiler).
+pub fn plan_inbox_or_pending(inbox: &Path, sources: &[PathBuf], paths: &[String], opts: &ListRenameOptions) -> Result<(RenamePlan, FileStamps), String> {
+    for raw in paths {
+        if ensure_inside(inbox, Path::new(raw)).is_err() && !is_pending_source(sources, Path::new(raw)) {
+            return Err(format!("Yalnızca gelen kutusundaki ya da izlenen klasörde bekleyen dosyalar adlandırılabilir: {raw}"));
+        }
+    }
+    let bases: Vec<PathBuf> = std::iter::once(inbox.to_path_buf()).chain(sources.iter().cloned()).collect();
+    plan_rename_in(&bases, "Yalnızca gelen kutusundaki dosyalar adlandırılabilir", paths, opts)
 }
 
 fn tidy(stem: &str) -> String {
@@ -129,7 +142,7 @@ pub fn plan_rename_in(bases: &[PathBuf], outside_msg: &str, paths: &[String], op
 #[tauri::command(async)]
 pub(crate) fn preview_inbox_rename(state: State<'_, RenameState>, settings: State<'_, SettingsState>, paths: Vec<String>, options: ListRenameOptions) -> Result<RenamePlan, String> {
     let inbox = backup_root(&settings)?.join(INBOX_DIR);
-    let (plan, stamps) = plan_list_rename(&inbox, &paths, &options)?;
+    let (plan, stamps) = plan_inbox_or_pending(&inbox, &source_folders(&settings)?, &paths, &options)?;
     *state.pending.lock().map_err(|e| e.to_string())? = Some(Pending { plan: plan.clone(), stamps, label: HISTORY_LABEL });
     Ok(plan)
 }

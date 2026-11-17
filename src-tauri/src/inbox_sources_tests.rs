@@ -15,11 +15,12 @@ fn lists_only_todays_eligible_top_level_files() {
     fs::write(src.join("indiriliyor.crdownload"), b"x").unwrap();
     fs::write(src.join("Alt").join("derin.pdf"), b"x").unwrap();
     let today = Local::now().date_naive();
-    let files = source_files(std::slice::from_ref(&src), today);
+    let files = source_files(std::slice::from_ref(&src), Some(today));
     assert_eq!(files.len(), 1);
     assert!(files[0].pending);
     assert_eq!(files[0].group, "İzlenen · Desktop");
-    assert!(source_files(std::slice::from_ref(&src), today.pred_opt().unwrap()).is_empty());
+    assert!(source_files(std::slice::from_ref(&src), today.pred_opt()).is_empty());
+    assert_eq!(source_files(std::slice::from_ref(&src), None).len(), 1, "tarih verilmezse hepsi");
     let days = source_days(std::slice::from_ref(&src), today);
     assert_eq!(days.len(), 1);
     assert_eq!(days[0].files, 1);
