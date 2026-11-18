@@ -6,8 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "test": "vitest run",
+    "test:slow": "cargo test --manifest-path src-tauri/Cargo.toml --no-default-features --lib five_thousand -- --ignored --nocapture",
     "audit:source": "node scripts/audit-source.mjs",
-    "check": "npm run build && npm run audit:source && cargo test --manifest-path src-tauri/Cargo.toml --no-default-features",
+    "check": "npm run build && npm run test && npm run audit:source && cargo test --manifest-path src-tauri/Cargo.toml --no-default-features",
     "portable": "npm run tauri build -- --no-bundle && node scripts/package-portable.mjs",
     "setup": "npm run tauri build -- --bundles nsis && node scripts/package-setup.mjs",
     "release": "npm run tauri build -- --bundles nsis && node scripts/package-setup.mjs && node scripts/package-portable.mjs",
@@ -40,6 +42,7 @@
     "@vitejs/plugin-react": "^6.0.2",
     "tailwindcss": "^4.3.5",
     "typescript": "~6.0.3",
-    "vite": "^8.0.16"
+    "vite": "^8.0.16",
+    "vitest": "^5.1.1"
   }
 }

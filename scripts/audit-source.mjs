@@ -25,7 +25,7 @@ function visit(file) {
 }
 visit(path.resolve("src/main.tsx"));
 console.log("Unreachable source modules:");
-console.log(files.filter(f => !seen.has(f) && !f.endsWith(".d.ts")).map(f => path.relative(process.cwd(), f)).join("\n") || "None");
+console.log(files.filter(f => !seen.has(f) && !f.endsWith(".d.ts") && !/\.test\.tsx?$/.test(f)).map(f => path.relative(process.cwd(), f)).join("\n") || "None");
 const lib = fs.readFileSync("src-tauri/src/lib.rs", "utf8");
 const handlers = lib.split("tauri::generate_handler![")[1]?.split("])")[0] ?? "";
 const registered = new Set(handlers.split(",").map(s => s.trim().split("::").at(-1)).filter(Boolean));

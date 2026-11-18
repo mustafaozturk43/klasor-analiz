@@ -23,7 +23,10 @@ pub struct DateGroupState {
     pending: Mutex<Option<(DateGroupPlan, FileStamps)>>,
 }
 
-const BATCH: usize = 25;
+/// Gecmis dosyasi parti basina bir kez yazilir; buyuk islerde yazim sayisi ~40 ile sinirlanir (25..250 dosya).
+fn batch_size(total: usize) -> usize {
+    (total / 40).clamp(25, 250)
+}
 
 pub(crate) fn apply_core(app: &AppState, plan: &DateGroupPlan, stamps: &FileStamps, progress: &dyn Fn(u64, u64)) -> Result<MoveOutcome, String> {
     if plan.entries.is_empty() {
@@ -44,7 +47,7 @@ pub(crate) fn apply_core(app: &AppState, plan: &DateGroupPlan, stamps: &FileStam
     let mut out = MoveOutcome { moved: Vec::new(), failed: Vec::new(), removed_dirs: 0 };
     let total = plan.entries.len() as u64;
     progress(0, total);
-    for chunk in plan.entries.chunks(BATCH) {
+    for chunk in plan.entries.chunks(batch_size(plan.entries.len())) {
         let mut ready = Vec::with_capacity(chunk.len());
         for entry in chunk {
             match Path::new(&entry.to).parent().map(fs::create_dir_all).transpose() {
@@ -107,3 +110,7 @@ pub(crate) fn apply_date_group(state: State<'_, DateGroupState>, app: State<'_, 
     };
     apply_core(&app, &plan, &stamps, &send)
 }
+
+#[cfg(test)]
+#[path = "date_group_scale_tests.rs"]
+mod scale_tests;

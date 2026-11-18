@@ -35,6 +35,8 @@ npm run tauri dev
 
 Doğrulama: proje kökünde `npm run build`, `src-tauri` içinde `cargo test --no-default-features --lib` (antivirüs build-script kilidine takılmamak için; tam derleme `cargo test`).
 
+Testler: `npm test` ön yüz saf mantığını (`*.test.ts`, vitest), `cargo test` Rust modüllerini çalıştırır; ikisi de `npm run check` içindedir. 5.000 dosyalı Tarihe Göre hız testi yavaş olduğu için ayrıdır: `npm run test:slow` (~40 sn, süre `--nocapture` ile yazılır).
+
 Kaynak bağlantılarını, 250 satır ve 300 karakterlik satır sınırını denetleme: `npm run audit:source`. Hepsi tek komutta (derleme + denetim + Rust testleri): `npm run check`.
 GitHub Actions (`.github/workflows/check.yml`) her push ve pull request'te `npm run check` çalıştırır. `artifacts/` altındaki eski sürüm paketlerini listelemek için `npm run prune:artifacts` (en yeni 3 sürüm tutulur; `-- --keep=5` ile değişir), silmek için `npm run prune:artifacts -- --yes`.
 Açık Windows uygulaması debug `.exe` dosyasını kilitliyorsa uygulamayı kapatmadan alternatif test: `src-tauri` içinde `cargo test --release` (ayrı release çıktısı kullanılır).
