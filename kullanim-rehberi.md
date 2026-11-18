@@ -58,6 +58,11 @@ Aynı dosyaları bulup yönetmek için kullanılır.
     - *Birebir:* Boyutları ve içerikleri aynı dosyalardır.
     - *Benzer:* Adları birbirine çok yakın dosyalardır. Adın benzer olması içeriğin aynı olduğu anlamına gelmez.
 - **İki klasör karşılaştırma:** İki klasörü (A ve B) karşılaştırır. Hangi dosyaların her iki klasörde de bulunduğunu, hangilerinin yalnız birinde olduğunu gösterir. Aynı veya iç içe iki klasör seçilemez.
+- **Benzer görseller:** Aynı fotoğrafın yeniden boyutlandırılmış, sıkıştırılmış (ör. WhatsApp) ya da hafifçe düzenlenmiş kopyalarını bulur. Her görselin 64 bitlik görsel parmak izi (dHash) çıkarılır; parmak izleri yeterince yakınsa görseller aynı gruba girer. İçerik okunur, dosya değişmez.
+  - **Hassasiyet:** *Çok benzer*, *Benzer* (varsayılan) ya da *Gevşek*. Gevşek hassasiyette yanlış eşleşme olabilir; karantinaya almadan önce küçük resimlere bakın.
+  - Her grupta en yüksek çözünürlüklü görsel **Önerilen: tut** olarak işaretlenir; diğerleri seçilidir. Seçimi kutularla değiştirirsiniz; her grupta en az bir görsel yerinde kalmalıdır.
+  - **Seçilenleri karantinaya al** dosyaları `_Kopyalar_Karantina/Benzer görseller` klasörüne taşır. Silinmez; Karantina sekmesinden veya İşlem Geçmişi'nden geri alınır.
+  - Desteklenen biçimler: jpg, png, webp, gif, bmp, tiff. HEIC desteklenmez. Bir taramada en fazla 30.000 görsel karşılaştırılır.
 - **Karantina:** Taşınmış kopyaların bulunduğu klasördür. Buradan dosyaları asıl yerlerine geri yükleyebilir, seçtiklerinizi Geri Dönüşüm Kutusu'na gönderebilir veya 30 günden eski dosyaları seçebilirsiniz (seçim yapar, gönderme yine onaylıdır).
 
 ### 3.3 Harita

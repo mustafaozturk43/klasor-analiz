@@ -23,7 +23,7 @@ pub use fileops::{batch_move, file_ops, group_moves, history, history_cmds, move
 pub use inbox::{inbox_dupes, inbox_list, inbox_path, inbox_rename, inbox_sources, inbox_suggest, inspector, operations, trash_ops};
 pub use organizer::{organize, organize_apply, organize_cleanup, organize_models, organize_names, organize_plan, organize_report, organize_rules, organize_walk, reporter};
 pub use renaming::{name_rules, name_rules_apply, name_rules_plan, naming, rename, rename_template, selection_rename};
-pub use scan::{cloud, compare, file_list, folder_stats, grouper, hash_cache, hasher, health, scanner, similarity};
+pub use scan::{cloud, compare, file_list, folder_stats, grouper, hash_cache, hasher, health, scanner, similarity, visual};
 pub use winshell::{asset_scope, media_dates, shell, shell_cmds, shell_thumb, thumbnail};
 
 use hash_cache::HashCache;
@@ -124,6 +124,7 @@ pub fn run() {
         .manage(organize::OrganizeState::default())
         .manage(date_group::DateGroupState::default())
         .manage(rule_apply::RuleEngineState::default())
+        .manage(visual::VisualState::default())
         .manage(automation::AutomationState::default())
         .manage(watcher::WatcherState::default())
         .plugin(tauri_plugin_dialog::init())
@@ -168,7 +169,7 @@ pub fn run() {
             shell_cmds::get_shell_thumbnails, shell_cmds::read_media_dates,
             folder_stats::get_folder_stats,
             history_cmds::undo_last_move, history_cmds::undo_history_entry, history_cmds::get_move_history, history_cmds::clear_move_history,
-            health::folder_health, health::remove_empty_folders,
+            health::folder_health, health::remove_empty_folders, visual::find_similar_images,
             quarantine_manage::list_quarantine, quarantine_manage::restore_quarantined, quarantine_manage::delete_quarantined, quarantine_manage::quarantine_files,
             organize::preview_organize, organize::apply_organize, organize::cancel_organize,
             organize_rules::default_organize_rules,

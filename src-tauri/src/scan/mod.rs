@@ -8,3 +8,4 @@ pub mod file_list;
 pub mod folder_stats;
 pub mod health;
 pub mod cloud;
+pub mod visual;

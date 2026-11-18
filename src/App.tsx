@@ -23,6 +23,7 @@ import FileBrowser from "./features/map/FileBrowser";
 import HistoryPanel from "./features/history/HistoryPanel";
 import RulesView from "./features/rules/RulesView";
 import HealthView from "./features/map/HealthView";
+import VisualView from "./features/duplicates/VisualView";
 import QuarantineView from "./features/duplicates/QuarantineView";
 import AutomationView from "./features/rules/AutomationView";
 import EveningPanel from "./features/today/EveningPanel";
@@ -35,7 +36,7 @@ import AppNav from "./components/AppNav";
 
 // Ust bilgiler yalnizca ilgili ekranlarda: tarama kapsami onu kullananlarda,
 // sayi seridi ve tarama rozeti tarama sonucu gosterenlerde.
-const SCAN_SCOPE = new Set<Module>(["analysis", "compare", "files", "groups", "settings", "health", "automation"]);
+const SCAN_SCOPE = new Set<Module>(["analysis", "compare", "files", "groups", "settings", "health", "visual", "automation"]);
 const SCAN_STATS = new Set<Module>(["analysis", "compare", "files", "groups"]);
 
 export default function App() {
@@ -111,7 +112,7 @@ export default function App() {
     <div className="app-body">
     <AppNav dest={dest} setDest={setDest} counts={{ duplicates: app.groups.length }} automation={automation.status} onTogglePause={automation.togglePause} rail={nav.rail} />
     <main className="shell-scroll" id="workspace"><div className="shell-width workspace">
-      {ops && <FolderPickerBar app={app} scanControls={module !== "naming" && module !== "dateGroup" && module !== "ruleEngine"}>{scoped && <WorkspaceSettings app={app} embedded />}</FolderPickerBar>}
+      {ops && <FolderPickerBar app={app} scanControls={module !== "naming" && module !== "dateGroup" && module !== "ruleEngine" && module !== "visual"}>{scoped && <WorkspaceSettings app={app} embedded />}</FolderPickerBar>}
       {dest !== "today" && <ScreenHeader dest={def} module={module} onPick={go} title={title} sub={sub} stats={SCAN_STATS.has(module) ? stats : null}
         scan={!SCAN_STATS.has(module) ? null : app.isScanning ? "busy" : app.scanResult ? "done" : "idle"} />}
       {!ops && scoped && <WorkspaceSettings app={app} />}
@@ -133,6 +134,7 @@ export default function App() {
         {on("groups") && <GroupsView active={dest === "duplicates" && module === "groups"} app={app} onPreview={setPreviewFile} />}
       </fieldset>
       <div hidden={module !== "health"}>{on("health") && <HealthView app={app} health={health} />}</div>
+      <div hidden={module !== "visual"}>{on("visual") && <VisualView app={app} />}</div>
       <div hidden={module !== "quarantine"}>{on("quarantine") && <QuarantineView app={app} active={dest === "duplicates" && module === "quarantine"} />}</div>
       <div hidden={module !== "naming"}>{on("naming") && <NamingView app={app} active={module === "naming"} />}</div>
       <div hidden={module !== "dateGroup"}>{on("dateGroup") && <DateGroupView app={app} active={module === "dateGroup"} />}</div>

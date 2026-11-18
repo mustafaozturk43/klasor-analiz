@@ -80,6 +80,13 @@ const handlers: Record<string, (a: Args) => unknown> = {
     const entries = counts.flatMap(c => c.samples.map(n => ({ from: `${String(a.root)}\\${n}`, to: c.action === "trash" ? "" : `${String(a.root)}\\Hedef\\${n}`, rule: c.rule, action: c.action })));
     return { id: "RE-mock", root: String(a.root), entries, counts, scanned: 40, unmatched: 31, inPlace: 0, trashCount: entries.filter(e => !e.to).length, createdDirs: [] };
   },
+  find_similar_images: a => {
+    const f = (n: string, w: number, h: number, size: number, distance: number) => ({ path: `${String(a.rootPath)}\\${n}`, size, width: w, height: h, mtime: 1_700_000_000, distance });
+    return { rootPath: String(a.rootPath), scanned: 12, unreadable: 1, groups: [
+      { id: "VG-1", files: [f("IMG_0412.jpg", 4032, 3024, 4_200_000, 0), f("IMG_0412_kucuk.jpg", 1280, 960, 310_000, 3), f("IMG_0412_whatsapp.jpg", 1600, 1200, 280_000, 5)] },
+      { id: "VG-2", files: [f("logo.png", 800, 800, 90_000, 0), f("logo_kopya.png", 800, 800, 88_000, 2)] },
+    ] };
+  },
   apply_rules: () => ({ moved: [], trashed: 0, failed: [], removedDirs: 0 }),
   apply_name_rules: () => 9,
   list_subfolders: a => ({ paths: ["Arsiv", "Faturalar", "Faturalar\\Nisan", "Fotograflar", "Notlar", "Projeler"].map(n => `${String(a.root)}\\${n}`), truncated: false }),

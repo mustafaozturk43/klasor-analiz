@@ -15,7 +15,7 @@ export const OPS_LABEL = "Klasör-Dosya İşlemleri";
 export const DESTINATIONS: DestinationDef[] = [
   { id: "today", label: "Bugün", views: [{ id: "evening", label: "Akşam Kontrolü" }] },
   { id: "duplicates", label: "Kopyalar", group: "ops", views: [
-    { id: "groups", label: "Dosya grupları" }, { id: "compare", label: "İki klasör karşılaştırma" }, { id: "quarantine", label: "Karantina" },
+    { id: "groups", label: "Dosya grupları" }, { id: "compare", label: "İki klasör karşılaştırma" }, { id: "visual", label: "Benzer görseller" }, { id: "quarantine", label: "Karantina" },
   ] },
   { id: "map", label: "Harita", group: "ops", views: [
     { id: "analysis", label: "Klasör analizi" }, { id: "files", label: "Klasördeki dosyalar" }, { id: "health", label: "Klasör sağlığı" },

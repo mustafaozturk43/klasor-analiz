@@ -1,6 +1,6 @@
 import type { useAppState } from "../hooks/useAppState";
 export type OrganizerState = ReturnType<typeof useAppState>;
 /** Tek bir ekran (eski sekme kimlikleri). */
-export type Module = "analysis" | "compare" | "files" | "groups" | "health" | "quarantine" | "naming" | "dateGroup" | "ruleEngine" | "evening" | "automation" | "settings" | "history";
+export type Module = "analysis" | "compare" | "files" | "groups" | "health" | "quarantine" | "visual" | "naming" | "dateGroup" | "ruleEngine" | "evening" | "automation" | "settings" | "history";
 /** Kenar cubugundaki hedefler; her biri bir veya birkac ekrani toplar (lib/navigation.ts). */
 export type Destination = "today" | "duplicates" | "map" | "rename" | "dates" | "engine" | "rules" | "history";
