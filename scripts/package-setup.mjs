@@ -21,9 +21,16 @@ fs.mkdirSync("artifacts", { recursive: true });
 const target = path.resolve("artifacts", `SmartFileOrganizer-${version}-windows-x64-setup-${stamp}.exe`);
 fs.copyFileSync(source, target, fs.constants.COPYFILE_EXCL);
 // Guncelleyici imzasi (`createUpdaterArtifacts`): TAURI_SIGNING_PRIVATE_KEY olmadan uretilmez.
+// Yerel derlemede (SFO_LOCAL_BUILD=1, createUpdaterArtifacts kapali) imza aranmaz; boyle bir kurulum dosyasi
+// guncelleme olarak yayinlanamaz (latest.json uretimi .sig ister, surum is akisi anahtar olmadan durur).
 const sigSource = `${source}.sig`;
-if (!fs.existsSync(sigSource)) throw new Error(`Güncelleme imzası yok (${sigSource}). TAURI_SIGNING_PRIVATE_KEY ve TAURI_SIGNING_PRIVATE_KEY_PASSWORD ortam değişkenlerini ayarlayıp derleyin.`);
-fs.copyFileSync(sigSource, `${target}.sig`, fs.constants.COPYFILE_EXCL);
+if (fs.existsSync(sigSource)) {
+  fs.copyFileSync(sigSource, `${target}.sig`, fs.constants.COPYFILE_EXCL);
+} else if (process.env.SFO_LOCAL_BUILD === "1") {
+  console.warn("Uyarı: güncelleme imzası (.sig) yok; bu kurulum dosyası yalnızca elle kurulum içindir, güncelleme olarak yayınlanamaz.");
+} else {
+  throw new Error(`Güncelleme imzası yok (${sigSource}). TAURI_SIGNING_PRIVATE_KEY ve TAURI_SIGNING_PRIVATE_KEY_PASSWORD ortam değişkenlerini ayarlayıp derleyin (yalnızca elle kurulum için: SFO_LOCAL_BUILD=1 ve TAURI_CONFIG ile createUpdaterArtifacts kapatın).`);
+}
 const hash = createHash("sha256").update(bytes).digest("hex");
 fs.writeFileSync(`${target}.sha256`, `${hash}  ${path.basename(target)}\n`, "utf8");
 console.log(JSON.stringify({ setup: target, bytes: bytes.length, sha256: hash }, null, 2));
