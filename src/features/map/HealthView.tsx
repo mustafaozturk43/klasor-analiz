@@ -4,6 +4,8 @@ import type { HealthState, HealthTab } from "./useHealth";
 import { baseName, formatAge, formatBytes, formatCount, formatDate } from "../../lib/format";
 import { relative } from "../rules/organizeView";
 import VirtualRows from "../../components/VirtualRows";
+import ExportButton from "../../components/ExportButton";
+import { HEALTH_HEADER, healthRows } from "./healthReport";
 
 const TABS: { id: HealthTab; label: string; hint: string }[] = [
   { id: "largest", label: "En büyük dosyalar", hint: "En çok yer kaplayan ilk 200 dosya" },
@@ -23,6 +25,7 @@ export default function HealthView({ app, health: h }: { app: OrganizerState; he
     <section className="panel">
       <div className="panel-head">
         <div><h2><HeartPulse size={18} /> Klasör sağlığı</h2><p>Yer kaplayan, unutulmuş ve boş öğeleri bulur. Yalnızca dosya bilgileri okunur; içerik okunmaz, hiçbir şey kendiliğinden değişmez.</p></div>
+        {r && <ExportButton app={app} fileName="klasor-sagligi.csv" header={HEALTH_HEADER} rows={() => healthRows(r)} disabled={busy} />}
         <button className="btn primary" onClick={() => void h.run()} disabled={!app.rootPath || busy}><Play size={14} /> {h.loading ? "Taranıyor…" : r ? "Yeniden tara" : "Raporu oluştur"}</button>
       </div>
       {r ? <div className="organize-kpis">

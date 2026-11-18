@@ -26,6 +26,6 @@ export default function RuleEngineView({ app, active }: { app: OrganizerState; a
         {eng.rules.some(r => r.enabled) && <p className="hint">{eng.rules.filter(r => r.enabled).map(r => `${r.name}: ${describeConditions(r) || "koşul yok"}`).join(" → ")}</p>}
       </fieldset>
     </section>
-    <RulePreview eng={eng} rootPath={app.rootPath} locked={locked} />
+    <RulePreview app={app} eng={eng} rootPath={app.rootPath} locked={locked} />
   </div>;
 }

@@ -69,6 +69,10 @@ Kurallar ekranında kaynak klasör (ör. İndirilenler) ve yedek klasörü seçi
 
 Pencere kapatıldığında otomasyon açıksa uygulama sistem tepsisinde çalışmaya devam eder (tepsi menüsü: Paneli aç, Duraklat/Devam et, Bugünün klasörünü aç, Çıkış). Ayarlar ve arayüz tercihleri (tema, son klasörler, yasaklı uzantılar, düzenleme profilleri) uygulama veri dizinindeki `settings.json` dosyasında tutulur. Kurallar ekranındaki "Windows açılınca başlat" anahtarı uygulamayı kullanıcı başlangıç kaydına (HKCU `Run`) ekler; otomasyon açıksa pencere göstermeden tepside başlar. "Otomatik taşımaları bildir" açıkken, pencere önde değilse her yerleştirmede bir Windows bildirimi çıkar. İkisi de varsayılan olarak kapalıdır ve `settings.json` içinde tutulur (`startWithWindows`, `notifyMoves`). Akşam Kontrolü'ndeki "Sil" kalıcı silmez; yalnızca gelen kutusu dosyalarını onayla Geri Dönüşüm Kutusu'na gönderir ve bu işlem uygulama içinden geri alınamaz.
 
+## Raporlar (CSV)
+
+Excel uyumlu CSV (UTF-8, noktalı virgül) dışa aktarma düğmeleri: Kopyalar > Dosya grupları ve Geçmiş (mevcut), ayrıca **Harita > Klasör sağlığı** (dört bölüm tek tabloda), **Kopyalar > Benzer görseller** (grup, önerilen, çözünürlük, benzerlik %) ve **Kural motoru** önizlemesi (hangi dosya hangi kurala göre nereye gidecek). Hepsi "CSV'ye aktar" ile kaydet diyaloğu açar; formül gibi başlayan hücreler (`=`, `+`, `-`, `@`) metne çevrilir. Ekranlar satırları hazırlar, yazma tek komutla yapılır (`export_table_csv`, `organizer/table_report.rs`).
+
 ## Güvenlik ve davranış
 
 Taşıma, grup kurallarını korur: Exact ana dosya etikete, kopyalar karantinaya; Similar tüm üyeler etikete. Her işlem önce onaylanır; dosyaların üzerine yazılmaz. Kısmi işlemler geçmişte tutulur. 500 MiB üzerindeki örnek hash eşleşmeleri tam içerik eşitliğinin kanıtı değildir; tam doğrulama seçeneği kullanılabilir.

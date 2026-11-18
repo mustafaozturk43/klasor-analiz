@@ -8,3 +8,4 @@ pub mod organize_report;
 pub mod organize_rules;
 pub mod organize_walk;
 pub mod reporter;
+pub mod table_report;

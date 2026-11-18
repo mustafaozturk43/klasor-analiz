@@ -71,7 +71,7 @@ Klasörleri anlamak ve temizlik yapmak için kullanılır.
 
 - **Klasör analizi:** Klasörün boyutunu, dosyaların türe göre dağılımını ve **Temizlenecekler** özetini gösterir. Boyuta göre orantılı bir kutu haritası sunar.
 - **Klasördeki dosyalar:** Seçili klasörün dosyalarını arama, sayfalama ve ön izleme ile listeler. Buradan seçtiğiniz dosyaları bir hedef klasöre ve grup adına taşıyabilir ya da şablonla yeniden adlandırabilirsiniz.
-- **Klasör sağlığı:** En büyük dosyaları ve uzun süredir değişmemiş dosyaları raporlar.
+- **Klasör sağlığı:** En büyük dosyaları ve uzun süredir değişmemiş dosyaları raporlar. **CSV'ye aktar** dört bölümü (en büyük, en eski, 0 baytlık, boş klasörler) tek tabloda kaydeder.
 
 ### 3.4 Adlandırma
 
@@ -79,6 +79,8 @@ Seçili klasördeki dosya ve klasör adlarını kurallarla toplu düzenler.
 
 - **Hazır kalıplar** ve ayrı ayrı kurallar: kapsam (klasör, dosya veya ikisi), harf biçimi, boşluk yerine tire/alt çizgi, Türkçe harfleri kaldırma, parantez ve noktalama temizliği, başa sıra numarası, tarih ve uzunluk sınırı.
 - Önizleme görmeden hiçbir ad değişmez; uygulanan işlem Geçmiş'ten geri alınabilir.
+
+> **Raporlar:** "CSV'ye aktar" düğmesi Klasör sağlığı, Benzer görseller ve Kural motoru önizlemesinde bulunur; Dosya grupları ve Geçmiş'te zaten vardı. Dosyalar Excel'de doğrudan açılır (UTF-8, noktalı virgül).
 
 ### 3.5 Tarihe Göre
 

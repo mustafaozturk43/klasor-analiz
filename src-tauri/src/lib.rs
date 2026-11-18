@@ -21,7 +21,7 @@ pub use engine::{rule_apply, rule_model, rule_plan};
 pub use by_date::{date_group, date_group_index, date_group_layout, date_group_plan};
 pub use fileops::{batch_move, file_ops, group_moves, history, history_cmds, mover, path_guard, quarantine_cmds, quarantine_manage, selection_move, selection_paths, subfolders};
 pub use inbox::{inbox_dupes, inbox_list, inbox_path, inbox_rename, inbox_sources, inbox_suggest, inspector, operations, trash_ops};
-pub use organizer::{organize, organize_apply, organize_cleanup, organize_models, organize_names, organize_plan, organize_report, organize_rules, organize_walk, reporter};
+pub use organizer::{organize, organize_apply, organize_cleanup, organize_models, organize_names, organize_plan, organize_report, organize_rules, organize_walk, reporter, table_report};
 pub use renaming::{name_rules, name_rules_apply, name_rules_plan, naming, rename, rename_template, selection_rename};
 pub use scan::{cloud, compare, file_list, folder_stats, grouper, hash_cache, hasher, health, scanner, similarity, visual};
 pub use winshell::{asset_scope, media_dates, shell, shell_cmds, shell_thumb, thumbnail};
@@ -182,7 +182,7 @@ pub fn run() {
             selection_rename::preview_selection_rename,
             operations::get_target_subfolders, operations::create_target_folder, operations::move_selected_files,
             trash_ops::delete_files_to_trash,
-            reporter::export_groups_csv, reporter::export_history_csv,
+            reporter::export_groups_csv, reporter::export_history_csv, table_report::export_table_csv,
             shell::reveal_in_explorer, shell::open_file_default,
             date_group::preview_date_group, date_group::apply_date_group, date_group::rebuild_date_index, rule_apply::preview_rules, rule_apply::apply_rules,
         ])

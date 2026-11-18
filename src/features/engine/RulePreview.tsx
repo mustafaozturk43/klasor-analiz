@@ -1,13 +1,16 @@
 import { ListChecks, Undo2 } from "lucide-react";
 import MoveProgress from "../../components/MoveProgress";
+import ExportButton from "../../components/ExportButton";
 import { formatCount } from "../../lib/format";
+import type { OrganizerState } from "../../types/app";
+import { RULE_HEADER, ruleRows } from "./ruleReport";
 import type { RuleEngineState } from "./useRuleEngine";
 import { ACTION_LABELS } from "./ruleModel";
 
-interface Props { eng: RuleEngineState; rootPath: string; locked: boolean }
+interface Props { app: OrganizerState; eng: RuleEngineState; rootPath: string; locked: boolean }
 
 /** Onizleme: kural basina dosya sayisi ve ornek adlar; altta uygulama, ilerleme ve geri alma. */
-export default function RulePreview({ eng, rootPath, locked }: Props) {
+export default function RulePreview({ app, eng, rootPath, locked }: Props) {
   const { plan, error, loading } = eng;
   const n = plan?.entries.length ?? 0;
   const hasRules = eng.rules.some(r => r.enabled);
@@ -29,6 +32,7 @@ export default function RulePreview({ eng, rootPath, locked }: Props) {
     <div className="naming-foot">
       <span role="status">{plan ? `${formatCount(plan.scanned)} dosya bakıldı · ${formatCount(n)} işlem · ${formatCount(plan.unmatched)} dosya hiçbir kurala uymadı`
         + `${plan.inPlace ? ` · ${formatCount(plan.inPlace)} zaten yerinde` : ""}.` : ""}{loading && plan ? " Güncelleniyor…" : ""}</span>
+      {plan && n > 0 && <ExportButton app={app} fileName="kural-plani.csv" header={RULE_HEADER} rows={() => ruleRows(plan)} disabled={locked} />}
       {eng.canUndo && <button type="button" className="btn" onClick={() => void eng.undo()} disabled={locked}><Undo2 size={14} /> Geri al</button>}
       <button type="button" className="btn primary naming-go" onClick={() => void eng.apply()} disabled={locked || loading || !n}>
         {n ? `${formatCount(n)} işlemi uygula` : "Uygulanacak işlem yok"}</button>

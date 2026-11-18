@@ -74,6 +74,7 @@ const handlers: Record<string, (a: Args) => unknown> = {
   },
   apply_date_group: () => ({ moved: [], failed: [], removedDirs: 0 }),
   rebuild_date_index: () => 12,
+  export_table_csv: a => (a.rows as unknown[]).length,
   preview_rules: a => {
     const rules = (a.rules as { name: string; action: string; enabled: boolean }[]).filter(r => r.enabled);
     const counts = rules.map((r, i) => ({ rule: r.name, action: r.action, count: 3 + i, samples: ["rapor.pdf", "fatura_ocak.pdf", "notlar.txt"] }));

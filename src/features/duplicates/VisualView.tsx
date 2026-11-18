@@ -5,6 +5,8 @@ import type { OrganizerState } from "../../types/app";
 import { useShellThumbs } from "../map/useShellThumbs";
 import { SENSITIVITY, similarityPct, type VisualGroup } from "./visualCommands";
 import { useVisual } from "./useVisual";
+import ExportButton from "../../components/ExportButton";
+import { VISUAL_HEADER, visualRows } from "./visualReport";
 
 const PAGE = 40;
 
@@ -45,6 +47,7 @@ export default function VisualView({ app }: { app: OrganizerState }) {
     {r && (r.groups.length ? <section className="panel">
       <div className="panel-body inline-actions">
         <span className="hint mr-auto">Her grupta en yüksek çözünürlüklü görsel önerilen olarak kalır; kutuyu işaretlediklerin karantinaya gider. Her grupta en az bir görsel yerinde kalmalı.</span>
+        <ExportButton app={app} fileName="benzer-gorseller.csv" header={VISUAL_HEADER} rows={() => visualRows(r)} disabled={busy} />
         <button className="btn" disabled={!v.selected.size || busy} onClick={() => void v.act()}><ShieldAlert size={14} /> Seçilenleri karantinaya al</button>
       </div>
       <ul className="visual-groups">
