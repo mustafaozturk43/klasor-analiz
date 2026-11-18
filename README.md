@@ -63,9 +63,18 @@ Tek seferlik kurulum: `npm run tauri signer generate -- -w C:\Users\<siz>\.tauri
 
 Genel anahtar değişirse eski sürümler yeni imzayı doğrulayamaz; anahtarı yalnızca gerçekten sızdığında yenileyin, bu durumda kullanıcıların elle yeniden kurması gerekir.
 
-### Henüz yapılmayan: kod imzalama
+### Kod imzalama (Authenticode, PFX)
 
-Paketler **Windows kod imzalama sertifikasıyla imzalı değildir** (SmartScreen yayıncı uyarısı gösterebilir). Bu, güncelleme imzasından ayrıdır ve bir kod imzalama sertifikası (PFX veya bulut HSM) ile parolası gerektirir.
+Kod imzalama, güncelleme imzasından ayrıdır: kurulum dosyasına ve uygulama exe'sine bir CA sertifikasıyla imza atar; Windows SmartScreen'in "bilinmeyen yayıncı" uyarısını azaltır. Sürüm iş akışı sertifika sağlandığında kendiliğinden imzalar, sağlanmadığında **imzasız derleyip uyarı verir** (yani sertifika olmadan da yayın çalışır).
+
+Kurulum (bir kez), GitHub deposunda Settings > Secrets and variables > Actions altına:
+
+- `WINDOWS_PFX_BASE64`: `.pfx` dosyasının base64 hâli. PowerShell: `[Convert]::ToBase64String([IO.File]::ReadAllBytes('C:\yol\sertifika.pfx')) | Set-Clipboard`
+- `WINDOWS_PFX_PASSWORD`: PFX parolası.
+
+İş akışı (`.github/workflows/release.yml`) bu durumda PFX'i geçici olarak kullanıcı sertifika deposuna alır, dosyayı hemen siler ve Tauri'ye `TAURI_CONFIG` ortam değişkeniyle parmak izini, SHA-256'yı ve zaman damgası sunucusunu (DigiCert) verir; sertifika bilgisi depoya yazılmaz. Derleme sonunda **Kod imzasını doğrula** adımı kurulum dosyasının ve portable exe'nin `Get-AuthenticodeSignature` durumunun `Valid` olduğunu denetler; değilse (imzasız ya da güvenilmeyen zincir) taslak sürüm oluşmaz.
+
+Yerelde imzalı derleme için sertifikayı kullanıcı deposuna alıp `$env:TAURI_CONFIG = '{"bundle":{"windows":{"certificateThumbprint":"<PARMAK_IZI>","digestAlgorithm":"sha256","timestampUrl":"http://timestamp.digicert.com"}}}'` tanımlayın. Not: 2023'ten beri CA'lar yeni OV/EV sertifikalarının özel anahtarını donanımda (HSM/token) tutmayı şart koşuyor; dışa aktarılabilir `.pfx` yalnızca eski sertifikalarda ya da bazı CA'larda verilir. PFX alamıyorsanız Azure Trusted Signing veya SignPath gibi bulut imzalama gerekir (iş akışı o zaman değişir). SmartScreen itibarı OV sertifikada zamanla oluşur; EV'de hemen başlar.
 
 ## Windows paketleri (setup + portable)
 
