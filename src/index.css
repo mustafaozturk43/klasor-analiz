@@ -21,6 +21,7 @@
 @import "./styles/naming.css";
 @import "./styles/engine.css";
 @import "./styles/visual.css";
+@import "./styles/palette.css";
 @import "./styles/alerts.css";
 @import "./styles/map.css";
 @import "./styles/rules.css";

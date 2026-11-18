@@ -1,4 +1,4 @@
-//! Klavye kisayollari (F1): Ctrl+Z=geri al, F5=yeniden tara, Ctrl+A=tum gruplari sec.
+//! Klavye kisayollari (F1): Ctrl+Z=geri al, F5=yeniden tara, Ctrl+A=tum gruplari sec, Ctrl+K=komut paleti.
 
 import { useEffect } from "react";
 import type { FileGroup } from "../types/file";
@@ -9,6 +9,8 @@ interface KeyboardShortcutsDeps {
   scan: () => void;
   undoLast: () => void;
   toggleAllVisible: (groups: FileGroup[]) => void;
+  /** Ctrl+K: komut paletini acar/kapatir (girdi alanlarinda da calisir). */
+  togglePalette: () => void;
 }
 
 /**
@@ -20,9 +22,15 @@ export function useKeyboardShortcuts({
   scan,
   undoLast,
   toggleAllVisible,
+  togglePalette,
 }: KeyboardShortcutsDeps) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        togglePalette();
+        return;
+      }
       if (e.defaultPrevented || document.querySelector("dialog[open]")) return;
       const target = e.target as HTMLElement | null;
       const inEditor =
@@ -47,5 +55,5 @@ export function useKeyboardShortcuts({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [visibleGroups, scan, undoLast, toggleAllVisible]);
+  }, [visibleGroups, scan, undoLast, toggleAllVisible, togglePalette]);
 }

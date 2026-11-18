@@ -80,6 +80,8 @@ Seçili klasördeki dosya ve klasör adlarını kurallarla toplu düzenler.
 - **Hazır kalıplar** ve ayrı ayrı kurallar: kapsam (klasör, dosya veya ikisi), harf biçimi, boşluk yerine tire/alt çizgi, Türkçe harfleri kaldırma, parantez ve noktalama temizliği, başa sıra numarası, tarih ve uzunluk sınırı.
 - Önizleme görmeden hiçbir ad değişmez; uygulanan işlem Geçmiş'ten geri alınabilir.
 
+> **Komut paleti:** `Ctrl+K` (ya da üst çubuktaki arama düğmesi) ekranlara, son klasörlere ve sık işlemlere yazarak gitmenizi sağlar. Türkçe harfler yazılmadan da bulunur ("gecmis" → Geçmiş). Ok tuşlarıyla gezin, Enter ile seçin, Esc ile kapatın.
+
 > **Raporlar:** "CSV'ye aktar" düğmesi Klasör sağlığı, Benzer görseller ve Kural motoru önizlemesinde bulunur; Dosya grupları ve Geçmiş'te zaten vardı. Dosyalar Excel'de doğrudan açılır (UTF-8, noktalı virgül).
 
 ### 3.5 Tarihe Göre

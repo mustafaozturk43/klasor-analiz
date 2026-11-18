@@ -69,6 +69,10 @@ Kurallar ekranında kaynak klasör (ör. İndirilenler) ve yedek klasörü seçi
 
 Pencere kapatıldığında otomasyon açıksa uygulama sistem tepsisinde çalışmaya devam eder (tepsi menüsü: Paneli aç, Duraklat/Devam et, Bugünün klasörünü aç, Çıkış). Ayarlar ve arayüz tercihleri (tema, son klasörler, yasaklı uzantılar, düzenleme profilleri) uygulama veri dizinindeki `settings.json` dosyasında tutulur. Kurallar ekranındaki "Windows açılınca başlat" anahtarı uygulamayı kullanıcı başlangıç kaydına (HKCU `Run`) ekler; otomasyon açıksa pencere göstermeden tepside başlar. "Otomatik taşımaları bildir" açıkken, pencere önde değilse her yerleştirmede bir Windows bildirimi çıkar. İkisi de varsayılan olarak kapalıdır ve `settings.json` içinde tutulur (`startWithWindows`, `notifyMoves`). Akşam Kontrolü'ndeki "Sil" kalıcı silmez; yalnızca gelen kutusu dosyalarını onayla Geri Dönüşüm Kutusu'na gönderir ve bu işlem uygulama içinden geri alınamaz.
 
+## Komut paleti (Ctrl+K)
+
+Üst çubuktaki arama düğmesi ya da **Ctrl+K** komut paletini açar (girdi alanlarındayken de çalışır). Yazarak şunlara gidersiniz: tüm ekranlar ve alt sekmeleri, son klasörler ("Klasörü aç: …"), Taramayı başlat, Son işlemi geri al ve Tema. Arama Türkçe harf ve büyük/küçük harf farkını yok sayar ("gecmis" → "Geçmiş"); ↑ ↓ gezer, Enter seçer, Esc kapatır. Tarama ya da taşıma sürerken ilgili işlemler soluk görünür ve seçilemez. Mantık `src/lib/palette.ts`, arayüz `src/components/CommandPalette.tsx`.
+
 ## Raporlar (CSV)
 
 Excel uyumlu CSV (UTF-8, noktalı virgül) dışa aktarma düğmeleri: Kopyalar > Dosya grupları ve Geçmiş (mevcut), ayrıca **Harita > Klasör sağlığı** (dört bölüm tek tabloda), **Kopyalar > Benzer görseller** (grup, önerilen, çözünürlük, benzerlik %) ve **Kural motoru** önizlemesi (hangi dosya hangi kurala göre nereye gidecek). Hepsi "CSV'ye aktar" ile kaydet diyaloğu açar; formül gibi başlayan hücreler (`=`, `+`, `-`, `@`) metne çevrilir. Ekranlar satırları hazırlar, yazma tek komutla yapılır (`export_table_csv`, `organizer/table_report.rs`).
