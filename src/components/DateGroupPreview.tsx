@@ -8,6 +8,14 @@ interface Props { dg: DateGroupState; rootPath: string; locked: boolean }
 const MONTHS = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
 const monthName = (folder: string) => (folder === UNDATED ? "" : MONTHS[Number(folder.split("\\")[1]) - 1] ?? "");
 
+function MoveProgress({ done, total }: { done: number; total: number }) {
+  const pct = total ? Math.min(100, Math.round(done / total * 100)) : 0;
+  return <div role="status" className="rules-organize-progress">
+    <span>Taşınıyor · {formatCount(done)} / {formatCount(total)} (%{pct})</span>
+    <div className="organize-progress"><span style={{ transform: `scaleX(${pct / 100})` }} /></div>
+  </div>;
+}
+
 /** Onizleme: Yıl\Ay klasoru, dosya sayisi ve ornek adlar; altta uygulama ve geri alma. */
 export default function DateGroupPreview({ dg, rootPath, locked }: Props) {
   const { plan, error, progress } = dg;
@@ -17,7 +25,7 @@ export default function DateGroupPreview({ dg, rootPath, locked }: Props) {
     {!rootPath ? <div className="empty-state">Gruplamak için yukarıdan bir klasör seçin.</div>
       : error ? <div className="error-state" role="alert">{error}</div>
       : !plan ? <div className="empty-state" role="status">Tarihler okunuyor{progress?.total ? ` · ${formatCount(progress.done)} / ${formatCount(progress.total)}` : "…"}</div>
-      : !plan.buckets.length ? <div className="empty-state">{plan.inPlace ? "Dosyaların hepsi zaten doğru Yıl\\Ay klasöründe." : "Bu seçimle taşınacak dosya yok."}</div>
+      : !plan.buckets.length ? <div className="empty-state">{plan.inPlace ? "Dosyaların hepsi zaten doğru klasörde." : "Bu seçimle taşınacak dosya yok."}</div>
       : <ul className="date-group-list">
         {plan.buckets.map(b => <li key={b.folder} className="date-group-row" data-undated={b.folder === UNDATED || undefined}>
           <span className="naming-name"><Folder size={16} aria-hidden="true" /><span className="font-mono">{b.folder}</span></span>
@@ -26,6 +34,7 @@ export default function DateGroupPreview({ dg, rootPath, locked }: Props) {
           <span className="badge">{formatCount(b.count)} dosya</span>
         </li>)}
       </ul>}
+    {dg.moving && <MoveProgress done={dg.moving.done} total={dg.moving.total} />}
     <div className="naming-foot">
       <span role="status">{plan && n ? `${formatCount(n)} dosya, ${formatCount(plan.buckets.length)} klasör · ${formatCount(plan.fromTaken)} çekim tarihinden`
         + `${plan.renamed ? ` · ${formatCount(plan.renamed)} ad dolu olduğu için numaralandı` : ""}${plan.inPlace ? ` · ${formatCount(plan.inPlace)} zaten yerinde` : ""}.` : ""}

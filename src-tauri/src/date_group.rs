@@ -23,7 +23,9 @@ pub struct DateGroupState {
     pending: Mutex<Option<(DateGroupPlan, FileStamps)>>,
 }
 
-pub(crate) fn apply_core(app: &AppState, plan: &DateGroupPlan, stamps: &FileStamps) -> Result<MoveOutcome, String> {
+const BATCH: usize = 25;
+
+pub(crate) fn apply_core(app: &AppState, plan: &DateGroupPlan, stamps: &FileStamps, progress: &dyn Fn(u64, u64)) -> Result<MoveOutcome, String> {
     if plan.entries.is_empty() {
         return Err("Taşınacak dosya yok.".into());
     }
@@ -40,24 +42,34 @@ pub(crate) fn apply_core(app: &AppState, plan: &DateGroupPlan, stamps: &FileStam
     history::push(&mut guard, UndoRecord { id: plan.id.clone(), timestamp: crate::now_ms(), tag: format!("Tarihe göre gruplama · {label}"), moves: Vec::new() });
     history::save(&app.dir, &guard)?;
     let mut out = MoveOutcome { moved: Vec::new(), failed: Vec::new(), removed_dirs: 0 };
-    for entry in &plan.entries {
-        let to = Path::new(&entry.to);
-        if let Some(dir) = to.parent() {
-            if let Err(e) = fs::create_dir_all(dir) {
-                out.failed.push(FailedMove { path: entry.from.clone(), error: e.to_string() });
-                continue;
+    let total = plan.entries.len() as u64;
+    progress(0, total);
+    for chunk in plan.entries.chunks(BATCH) {
+        let mut ready = Vec::with_capacity(chunk.len());
+        for entry in chunk {
+            match Path::new(&entry.to).parent().map(fs::create_dir_all).transpose() {
+                Ok(_) => ready.push(entry),
+                Err(e) => out.failed.push(FailedMove { path: entry.from.clone(), error: e.to_string() }),
             }
         }
-        // Once gecmise yaz, sonra tasi: islem yarida kesilse de geri alinabilir.
-        guard[0].moves.push(entry.clone());
+        // Once gecmise yaz (parti basina tek dosya yazimi), sonra tasi: islem yarida kesilse de geri alinabilir.
+        guard[0].moves.extend(ready.iter().map(|e| (*e).clone()));
         history::save(&app.dir, &guard)?;
-        match file_ops::transfer(Path::new(&entry.from), to) {
-            Ok(()) => out.moved.push(entry.clone()),
-            Err(error) => {
-                guard[0].moves.pop();
-                out.failed.push(FailedMove { path: entry.from.clone(), error });
+        let mut failed_from = Vec::new();
+        for entry in ready {
+            match file_ops::transfer(Path::new(&entry.from), Path::new(&entry.to)) {
+                Ok(()) => out.moved.push(entry.clone()),
+                Err(error) => {
+                    failed_from.push(entry.from.clone());
+                    out.failed.push(FailedMove { path: entry.from.clone(), error });
+                }
             }
         }
+        if !failed_from.is_empty() {
+            guard[0].moves.retain(|m| !failed_from.contains(&m.from));
+            history::save(&app.dir, &guard)?;
+        }
+        progress((out.moved.len() + out.failed.len()) as u64, total);
     }
     if guard[0].moves.is_empty() {
         guard.remove(0);
@@ -79,7 +91,7 @@ pub(crate) fn preview_date_group(state: State<'_, DateGroupState>, root: String,
 }
 
 #[tauri::command(async)]
-pub(crate) fn apply_date_group(state: State<'_, DateGroupState>, app: State<'_, AppState>, plan_id: String) -> Result<MoveOutcome, String> {
+pub(crate) fn apply_date_group(state: State<'_, DateGroupState>, app: State<'_, AppState>, plan_id: String, on_progress: Channel<ScanProgress>) -> Result<MoveOutcome, String> {
     let (plan, stamps) = {
         let mut pending = state.pending.lock().map_err(|e| e.to_string())?;
         match pending.take() {
@@ -90,5 +102,8 @@ pub(crate) fn apply_date_group(state: State<'_, DateGroupState>, app: State<'_, 
             }
         }
     };
-    apply_core(&app, &plan, &stamps)
+    let send = |done: u64, total: u64| {
+        let _ = on_progress.send(ScanProgress { phase: "moving".into(), files_done: done, total_files: total });
+    };
+    apply_core(&app, &plan, &stamps, &send)
 }

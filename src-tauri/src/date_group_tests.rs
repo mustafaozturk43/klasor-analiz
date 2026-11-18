@@ -81,13 +81,13 @@ fn apply_moves_files_and_undo_restores_and_removes_new_folders() {
     fs::write(root.join("foto.jpg"), b"x").unwrap();
     let app = AppState { history: Mutex::new(Vec::new()), dir: root.join("h"), cancel_scan: AtomicBool::new(false), hash_cache: HashCache::new() };
     let (plan, stamps) = plan_date_group(&root, &DateGroupOptions::default(), &|_| Some(JAN), &no_progress).unwrap();
-    let out = crate::date_group::apply_core(&app, &plan, &stamps).unwrap();
+    let out = crate::date_group::apply_core(&app, &plan, &stamps, &no_progress).unwrap();
     assert_eq!(out.moved.len(), 1);
     assert!(root.join("2026").join("01").join("foto.jpg").exists());
     let index = fs::read_to_string(root.join(crate::date_group_index::INDEX_FILE)).unwrap();
-    assert!(index.contains("href=\"2026/01/foto.jpg\"") && index.contains("eski konum: foto.jpg"), "{index}");
+    assert!(index.contains(">foto.jpg<") && !index.contains("eski konum"), "{index}");
     assert!(index.contains("href=\"2026/01/\""), "{index}");
-    assert!(crate::date_group::apply_core(&app, &plan, &stamps).is_err(), "eski plan ikinci kez uygulanmaz");
+    assert!(crate::date_group::apply_core(&app, &plan, &stamps, &no_progress).is_err(), "eski plan ikinci kez uygulanmaz");
 
     let id = app.history.lock().unwrap()[0].id.clone();
     crate::history_cmds::undo_entry_core(&app, &id).unwrap();
@@ -103,8 +103,8 @@ fn index_html_escapes_encodes_and_prepends_sections() {
     crate::date_group_index::write_index(&root, &[rec("2026\\01\\a&b ç.jpg")]).unwrap();
     crate::date_group_index::write_index(&root, &[rec("2026\\02\\a&b.jpg")]).unwrap();
     let html = fs::read_to_string(root.join(crate::date_group_index::INDEX_FILE)).unwrap();
-    assert!(html.contains("href=\"2026/01/a%26b%20%C3%A7.jpg\""), "{html}");
-    assert!(html.contains(">a&amp;b ç.jpg<") && html.contains("eski konum: Alt\\a&amp;b.jpg"), "{html}");
+    assert!(html.contains("href=\"2026/01/\"") && !html.contains("%C3%A7.jpg"), "{html}");
+    assert!(html.contains(">a&amp;b ç.jpg<") && !html.contains("eski konum"), "{html}");
     assert!(html.find("2026/02/").unwrap() < html.find("2026/01/").unwrap(), "yeni bolum uste");
     assert_eq!(html.matches("<!doctype").count(), 1);
     let _ = fs::remove_dir_all(&root);

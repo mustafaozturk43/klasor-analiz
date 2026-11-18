@@ -1,5 +1,5 @@
 //! Tarihe Gore gruplamada kok klasore yazilan HTML dizin: klasor -> dosya (link)
-//! -> eski konum. Her gruplama en uste yeni bir bolum olarak eklenir; tasimadan
+//!. Her gruplama en uste yeni bir bolum olarak eklenir; tasimadan
 //! once yazilir (yazilamazsa gruplama baslamaz). Linkler kok klasore gorelidir.
 
 use crate::models::MoveRecord;
@@ -20,7 +20,7 @@ h1{margin:0 0 12px}h2{font-size:16px;margin:28px 0 8px;color:#4a5a50}\
 #q{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #b8c4bb;border-radius:8px;font:inherit}\
 details{background:#fff;border:1px solid #d6ded8;border-radius:8px;margin:8px 0;padding:6px 12px}\
 summary{cursor:pointer;font-weight:600}table{width:100%;border-collapse:collapse;margin:6px 0}\
-td{padding:3px 8px 3px 0;vertical-align:top;border-top:1px solid #eef1ee}td+td{color:#6b7a70;font-size:13px}\
+td{padding:3px 8px 3px 0;vertical-align:top;border-top:1px solid #eef1ee}\
 a{color:#1a6b4a;text-decoration:none}a:hover{text-decoration:underline}\
 @media(prefers-color-scheme:dark){body{background:#121a16;color:#dfe8e2}details{background:#1a251f;border-color:#2c3a32}\
 #q{background:#1a251f;color:inherit;border-color:#2c3a32}td{border-color:#26332b}a{color:#6fd0a0}h2{color:#9fb2a6}}\
@@ -54,19 +54,21 @@ fn href(rel_path: &str) -> String {
 }
 
 pub fn render_section(root: &Path, entries: &[MoveRecord], when: &str) -> String {
-    let mut by_dir: BTreeMap<String, Vec<(String, String)>> = BTreeMap::new();
+    let mut by_dir: BTreeMap<String, Vec<String>> = BTreeMap::new();
     for e in entries {
         let to = rel(root, &e.to);
-        let dir = Path::new(&to).parent().map(|d| d.to_string_lossy().into_owned()).unwrap_or_default();
-        by_dir.entry(dir).or_default().push((to, rel(root, &e.from)));
+        let p = Path::new(&to);
+        let dir = p.parent().map(|d| d.to_string_lossy().into_owned()).unwrap_or_default();
+        by_dir.entry(dir).or_default().push(p.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default());
     }
     let mut out = format!("<section><h2>{} · {} dosya · {} klasör</h2>\n", esc(when), entries.len(), by_dir.len());
-    for (dir, mut files) in by_dir {
-        files.sort();
-        out.push_str(&format!("<details open><summary><a href=\"{}/\">{}</a> ({} dosya)</summary><table>\n", href(&dir), esc(&dir), files.len()));
-        for (to, from) in files {
-            let name = Path::new(&to).file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
-            out.push_str(&format!("<tr><td><a href=\"{}\">{}</a></td><td>eski konum: {}</td></tr>\n", href(&to), esc(&name), esc(&from)));
+    for (dir, mut names) in by_dir {
+        names.sort();
+        // Dosya adi, dosyanin bulundugu klasoru acar.
+        let link = if dir.is_empty() { "./".to_string() } else { format!("{}/", href(&dir)) };
+        out.push_str(&format!("<details open><summary><a href=\"{link}\">{}</a> ({} dosya)</summary><table>\n", esc(&dir), names.len()));
+        for name in names {
+            out.push_str(&format!("<tr><td><a href=\"{link}\" title=\"Klasörü aç\">{}</a></td></tr>\n", esc(&name)));
         }
         out.push_str("</table></details>\n");
     }

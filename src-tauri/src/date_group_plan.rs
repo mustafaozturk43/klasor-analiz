@@ -12,7 +12,9 @@ use crate::watcher_core::eligible;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashSet};
 use std::fs;
+use rayon::prelude::*;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub use crate::date_group_layout::UNDATED;
@@ -88,7 +90,7 @@ fn collect(dir: &Path, recursive: bool, exts: &[String], out: &mut Vec<PathBuf>)
 }
 
 /// `taken`: cekim tarihi okuyucu (testlerde sahte); `progress(done, total)`.
-pub fn plan_date_group(root: &Path, opts: &DateGroupOptions, taken: &dyn Fn(&Path) -> Option<u64>, progress: &dyn Fn(u64, u64)) -> Result<(DateGroupPlan, FileStamps), String> {
+pub fn plan_date_group(root: &Path, opts: &DateGroupOptions, taken: &(dyn Fn(&Path) -> Option<u64> + Sync), progress: &(dyn Fn(u64, u64) + Sync)) -> Result<(DateGroupPlan, FileStamps), String> {
     if !root.is_dir() {
         return Err("Önce var olan bir klasör seçin.".into());
     }
@@ -100,11 +102,22 @@ pub fn plan_date_group(root: &Path, opts: &DateGroupOptions, taken: &dyn Fn(&Pat
     let mut buckets: BTreeMap<String, DateBucket> = BTreeMap::new();
     let (mut in_place, mut from_taken, mut renamed) = (0, 0, 0);
     let mut created: Vec<String> = Vec::new();
-    let mut dated = Vec::new();
-    for (i, p) in files.iter().enumerate() {
-        progress(i as u64, total);
-        let Ok(meta) = fs::metadata(p) else { continue };
-        let shot = taken(p);
+    // Cekim tarihi okumasi (Windows shell) dosya basina yavas: paralel okunur, sira korunur.
+    let done = AtomicU64::new(0);
+    let read: Vec<_> = files
+        .par_iter()
+        .filter_map(|p| {
+            let meta = fs::metadata(p).ok()?;
+            let shot = taken(p);
+            let n = done.fetch_add(1, Ordering::Relaxed) + 1;
+            if n % 8 == 0 {
+                progress(n, total);
+            }
+            Some((p, meta, shot))
+        })
+        .collect();
+    let mut dated = Vec::with_capacity(read.len());
+    for (p, meta, shot) in read {
         from_taken += usize::from(shot.is_some());
         let secs = shot.or_else(|| created_secs(&meta));
         dated.push((p, meta, secs));

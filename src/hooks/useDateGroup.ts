@@ -17,6 +17,7 @@ export function useDateGroup(app: OrganizerState, active: boolean) {
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [moving, setMoving] = useState<{ done: number; total: number } | null>(null);
   const [groups, setGroups] = useState<ExtGroup[]>([]);
   const [lastId, setLastId] = useState<string | null>(null);
   const request = useRef(0);
@@ -54,7 +55,8 @@ export function useDateGroup(app: OrganizerState, active: boolean) {
     setBusy(true);
     setFileOperationBusy(true);
     try {
-      const out = await applyDateGroup(plan.id);
+      setMoving({ done: 0, total: n });
+      const out = await applyDateGroup(plan.id, p => setMoving({ done: p.filesDone, total: p.totalFiles }));
       setLastId(out.moved.length ? plan.id : null);
       const failed = out.failed.length ? ` ${formatCount(out.failed.length)} dosya taşınamadı: ${out.failed[0].error}` : "";
       setStatus({ type: out.failed.length ? "error" : "success", text: `${formatCount(out.moved.length)} dosya tarih klasörlerine taşındı; ${DATE_INDEX_FILE} güncellendi. İşlem geri alınabilir.${failed}` });
@@ -62,6 +64,7 @@ export function useDateGroup(app: OrganizerState, active: boolean) {
       setStatus({ type: "error", text: String(e) });
     } finally {
       setPlan(null);
+      setMoving(null);
       await refreshHistory();
       bumpStatsToken();
       setFileOperationBusy(false);
@@ -77,7 +80,7 @@ export function useDateGroup(app: OrganizerState, active: boolean) {
     await app.undoEntry(lastId);
   }, [lastId, app]);
 
-  return { options, setOptions, defaults: DEFAULTS, plan, error, progress, busy, groups, apply, canUndo, undo };
+  return { options, setOptions, defaults: DEFAULTS, plan, error, progress, moving, busy, groups, apply, canUndo, undo };
 }
 
 export type DateGroupState = ReturnType<typeof useDateGroup>;

@@ -35,4 +35,9 @@ export async function previewDateGroup(root: string, options: DateGroupOptions, 
   return invoke<DateGroupPlan>("preview_date_group", { root, options, onProgress: channel });
 }
 
-export const applyDateGroup = (planId: string) => invoke<MoveOutcome>("apply_date_group", { planId });
+/** Dosyalar tasinirken `onProgress` (filesDone / totalFiles) cagrilir. */
+export async function applyDateGroup(planId: string, onProgress: (p: ScanProgress) => void): Promise<MoveOutcome> {
+  const channel = new Channel<ScanProgress>();
+  channel.onmessage = onProgress;
+  return invoke<MoveOutcome>("apply_date_group", { planId, onProgress: channel });
+}
