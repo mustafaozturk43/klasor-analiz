@@ -38,7 +38,7 @@ export default function DateGroupView({ app, active }: { app: OrganizerState; ac
             {LAYOUTS.map(l => <button key={l.id} type="button" aria-pressed={o.layout === l.id} title={l.example} onClick={() => dg.setOptions({ ...o, layout: l.id })}>{l.label}</button>)}
           </div>
           <p className="hint">{LAYOUTS.find(l => l.id === o.layout)?.example}</p>
-          <p className="hint">Gruplama öncesi kök klasöre {DATE_INDEX_FILE} yazılır: hangi dosya hangi klasöre gitti.</p></div>
+          <p className="hint">Gruplama öncesi kök klasöre {DATE_INDEX_FILE} yazılır: klasör, dosya adı ve dosyaya link; tarayıcıda açıp arayabilirsin.</p></div>
         <div className="naming-opt"><b>Tarih</b>
           <p className="hint">Fotoğraf ve videolarda çekim tarihi, diğerlerinde oluşturma tarihi kullanılır. Tarihi okunamayanlar “Tarihsiz” klasörüne gider.</p></div>
       </fieldset>

@@ -3,7 +3,7 @@
 //! tarihi (fotograf/video), yoksa olusturma tarihi, o da yoksa `Tarihsiz`.
 //! Plan diske dokunmaz; ayni ad cakisirsa `ad (1).uzanti`.
 
-use crate::date_group_index::INDEX_FILE;
+use crate::date_group_index::{INDEX_FILE, LEGACY_INDEX_FILE};
 use crate::date_group_layout::{year_month, DateLayout, FolderNamer};
 use crate::models::{normalize_exts, MoveRecord, INBOX_DIR, QUARANTINE_DIR};
 use crate::rename::FileStamps;
@@ -78,7 +78,7 @@ fn collect(dir: &Path, recursive: bool, exts: &[String], out: &mut Vec<PathBuf>)
             if recursive && !skip_dir(&name) {
                 collect(&p, recursive, exts, out);
             }
-        } else if eligible(&p) && !p.file_name().is_some_and(|n| n.eq_ignore_ascii_case(INDEX_FILE)) {
+        } else if eligible(&p) && !p.file_name().is_some_and(|n| n.eq_ignore_ascii_case(INDEX_FILE) || n.eq_ignore_ascii_case(LEGACY_INDEX_FILE)) {
             let ext = p.extension().map(|e| e.to_string_lossy().to_lowercase()).unwrap_or_default();
             if exts.is_empty() || exts.contains(&ext) {
                 out.push(p);

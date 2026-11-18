@@ -6,7 +6,7 @@ import type { MoveOutcome } from "./inboxCommands";
 export type DateLayout = "yearMonth" | "month" | "yearNumbered";
 export interface DateGroupOptions { extensions: string[]; recursive: boolean; layout: DateLayout }
 
-export const DATE_INDEX_FILE = "Tarih_Dizini.txt";
+export const DATE_INDEX_FILE = "Tarih_Dizini.html";
 export const LAYOUTS: { id: DateLayout; label: string; example: string }[] = [
   { id: "yearMonth", label: "Yıl\\Ay", example: "Örn. 2026\\01 (yıl klasörü içinde ay klasörleri)" },
   { id: "month", label: "Aya göre", example: "Örn. 2026-01 (tek düzeyde ay klasörleri)" },
