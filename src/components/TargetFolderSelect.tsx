@@ -2,7 +2,7 @@ import { useState, type KeyboardEvent } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { Check, ChevronDown } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { leafName } from "../lib/groupPath";
+import { leafName } from "../features/duplicates/groupPath";
 
 export interface RootOption { label: string; path: string }
 

@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import * as api from "../lib/commands";
 import { formatCount, parentPath, skippedNote } from "../lib/format";
 import { pushRecent } from "../lib/recent";
-import { useBannedExtensions } from "./useBannedExtensions";
+import { useBannedExtensions } from "../features/rules/useBannedExtensions";
 import type { ScanProgress, ScanResult } from "../types/file";
 import type { StatusMessage } from "../types/ui";
 

@@ -1,0 +1,9 @@
+pub mod inbox_dupes;
+pub mod inbox_list;
+pub mod inbox_sources;
+pub mod inbox_suggest;
+pub mod inbox_path;
+pub mod inbox_rename;
+pub mod inspector;
+pub mod operations;
+pub mod trash_ops;

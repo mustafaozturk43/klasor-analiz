@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { save } from "@tauri-apps/plugin-dialog";
 import { cancelOrganize, confirmDialog } from "../lib/commands";
-import { applyOrganize, exportOrganizeCsv, previewOrganize } from "../lib/organizeCommands";
+import { applyOrganize, exportOrganizeCsv, previewOrganize } from "../features/rules/organizeCommands";
 import { formatBytes, formatCount } from "../lib/format";
 import type { OrganizerState } from "../types/app";
 import type { ScanProgress } from "../types/file";
 import type { OrganizeOutcome, OrganizePlan } from "../types/organize";
-import type { OrganizeSettings } from "./useOrganizeSettings";
+import type { OrganizeSettings } from "../features/rules/useOrganizeSettings";
 
 /** "Türüne Göre Düzenle" sekmesinin akisi: onizleme, uygulama, CSV, sonuc. */
 export function useOrganizer(app: OrganizerState, settings: OrganizeSettings) {

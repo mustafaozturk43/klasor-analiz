@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { suggestTagName } from "../lib/tagSuggest";
+import { suggestTagName } from "../features/duplicates/tagSuggest";
 import type { FileGroup, FileListMode, KeepPolicy } from "../types/file";
 import type { StatusMessage } from "../types/ui";
 import { useMoveOps } from "./useMoveOps";

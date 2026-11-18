@@ -7,7 +7,7 @@
  */
 import * as data from "./mockData";
 import { mockNamePlan } from "./mockNaming";
-import type { NameRuleOptions } from "../lib/namingCommands";
+import type { NameRuleOptions } from "../features/rename/namingCommands";
 
 type Args = Record<string, unknown>;
 const today = () => {

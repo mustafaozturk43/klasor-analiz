@@ -1,0 +1,86 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import { confirmDialog } from "../../lib/commands";
+import { applyDateGroup, DATE_INDEX_FILE, previewDateGroup, type DateGroupOptions, type DateGroupPlan } from "./dateGroupCommands";
+import { formatCount } from "../../lib/format";
+import { getPref, setPref } from "../../lib/prefs";
+import { getSettings } from "../rules/settingsCommands";
+import type { OrganizerState } from "../../types/app";
+import type { ExtGroup } from "../../types/settings";
+
+const KEY = "dateGroupOptions";
+const DEFAULTS: DateGroupOptions = { extensions: [], recursive: false, layout: "yearMonth" };
+
+/** Tarihe gore (Yıl\Ay) gruplama: secenekler (`uiPrefs.dateGroupOptions`), canli onizleme, uygulama ve geri alma. */
+export function useDateGroup(app: OrganizerState, active: boolean) {
+  const [options, setOptionsState] = useState<DateGroupOptions>(() => ({ ...DEFAULTS, ...getPref<Partial<DateGroupOptions>>(KEY) }));
+  const [plan, setPlan] = useState<DateGroupPlan | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [moving, setMoving] = useState<{ done: number; total: number } | null>(null);
+  const [groups, setGroups] = useState<ExtGroup[]>([]);
+  const [lastId, setLastId] = useState<string | null>(null);
+  const request = useRef(0);
+  const { rootPath, statsToken, setStatus, setFileOperationBusy, refreshHistory, bumpStatsToken } = app;
+
+  const setOptions = useCallback((next: DateGroupOptions) => {
+    setOptionsState(next);
+    setPref(KEY, next);
+  }, []);
+
+  useEffect(() => {
+    if (active) getSettings().then(s => setGroups(s.extGroups)).catch(() => setGroups([]));
+  }, [active]);
+
+  // Onizleme: klasor, secenek veya disk degisince yeniden hesaplanir; diske yazmaz.
+  useEffect(() => {
+    if (!active || !rootPath || busy) return;
+    const id = ++request.current;
+    const timer = window.setTimeout(() => {
+      setProgress({ done: 0, total: 0 });
+      previewDateGroup(rootPath, options, p => { if (id === request.current) setProgress({ done: p.filesDone, total: p.totalFiles }); })
+        .then(result => { if (id === request.current) { setPlan(result); setError(null); } })
+        .catch(e => { if (id === request.current) { setPlan(null); setError(String(e)); } })
+        .finally(() => { if (id === request.current) setProgress(null); });
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [active, rootPath, options, statsToken, busy]);
+
+  const apply = useCallback(async () => {
+    const n = plan?.entries.length ?? 0;
+    if (!plan || !n || busy) return;
+    const text = `${formatCount(n)} dosya ${formatCount(plan.buckets.length)} Yıl\\Ay klasöre taşınacak. Önce kök klasöre ${DATE_INDEX_FILE} yazılır. Hiçbir dosyanın üstüne yazılmaz; aynı ad varsa numaralandırılır. `
+      + "İşlem Geçmişi'nden geri alınabilir.";
+    if (!await confirmDialog(text, "Tarihe göre grupla", "Grupla")) return;
+    setBusy(true);
+    setFileOperationBusy(true);
+    try {
+      setMoving({ done: 0, total: n });
+      const out = await applyDateGroup(plan.id, p => setMoving({ done: p.filesDone, total: p.totalFiles }));
+      setLastId(out.moved.length ? plan.id : null);
+      const failed = out.failed.length ? ` ${formatCount(out.failed.length)} dosya taşınamadı: ${out.failed[0].error}` : "";
+      setStatus({ type: out.failed.length ? "error" : "success", text: `${formatCount(out.moved.length)} dosya tarih klasörlerine taşındı; ${DATE_INDEX_FILE} güncellendi. İşlem geri alınabilir.${failed}` });
+    } catch (e) {
+      setStatus({ type: "error", text: String(e) });
+    } finally {
+      setPlan(null);
+      setMoving(null);
+      await refreshHistory();
+      bumpStatsToken();
+      setFileOperationBusy(false);
+      setBusy(false);
+    }
+  }, [plan, busy, setStatus, setFileOperationBusy, refreshHistory, bumpStatsToken]);
+
+  /** Yalnizca Gecmis'in en ustundeki kayit bu gruplamaysa geri alinir. */
+  const canUndo = !!lastId && app.history[0]?.id === lastId;
+  const undo = useCallback(async () => {
+    if (!lastId) return;
+    setLastId(null);
+    await app.undoEntry(lastId);
+  }, [lastId, app]);
+
+  return { options, setOptions, defaults: DEFAULTS, plan, error, progress, moving, busy, groups, apply, canUndo, undo };
+}
+
+export type DateGroupState = ReturnType<typeof useDateGroup>;

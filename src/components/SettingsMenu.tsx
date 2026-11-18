@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Monitor, Moon, Settings, Sun } from "lucide-react";
-import BannedExtEditor from "./BannedExtEditor";
+import BannedExtEditor from "../features/rules/BannedExtEditor";
 import Segmented from "./Segmented";
 import type { Theme } from "../hooks/useTheme";
 

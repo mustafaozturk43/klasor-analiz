@@ -2,7 +2,7 @@
  * Yalnizca gelistirme: `preview_name_rules` icin ornek agac ve kurallarin sade bir taklidi.
  * Gercek kurallar Rust tarafindadir (`name_rules.rs`); bu dosya yalnizca arayuzu tarayicida gostermek icindir.
  */
-import type { NameEntry, NameRuleOptions } from "../lib/namingCommands";
+import type { NameEntry, NameRuleOptions } from "../features/rename/namingCommands";
 
 const TREE: [string, boolean][] = [
   ["FATURALAR 2026", true], ["FATURALAR 2026\\fatura ocak.pdf", false], ["FATURALAR 2026\\Fatura Şubat.PDF", false],

@@ -1,0 +1,9 @@
+pub mod automation;
+pub mod watcher;
+pub mod watcher_core;
+pub mod notifier;
+pub mod startup;
+pub(crate) mod tray;
+pub(crate) mod single_instance;
+pub mod settings;
+pub mod settings_cmds;

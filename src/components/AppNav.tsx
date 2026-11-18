@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useState } from "react";
 import { CalendarDays, ChevronDown, Copy, Folders, History, Inbox, LayoutGrid, PenLine, SlidersHorizontal, type LucideIcon } from "lucide-react";
 import type { Destination } from "../types/app";
-import type { AutomationStatus } from "../lib/automationCommands";
+import type { AutomationStatus } from "../features/rules/automationCommands";
 import { DESTINATIONS, OPS_LABEL, type DestinationDef } from "../lib/navigation";
 
 const ICONS: Record<Destination, LucideIcon> = { today: Inbox, duplicates: Copy, map: LayoutGrid, rename: PenLine, dates: CalendarDays, rules: SlidersHorizontal, history: History };

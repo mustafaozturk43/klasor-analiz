@@ -80,7 +80,24 @@ Karşılaştırmada aynı veya iç içe kökler reddedilir. Eşleşme grupları 
 - [Proje mimarisi](proje_mimarisi.md)
 - [Görsel prototip](mockup-organizer.html) — örnek verili tasarım referansı, gerçek uygulama değildir.
 
-`src/components/Workspace*` uygulama kabuğunu; `FolderAnalysis`, `CompareView`, `FileBrowser`, `GroupsView` modülleri ekranları oluşturur. Rust tarafında `compare`, `folder_stats`, `rename`, `group_moves` işlevleri ayrı tutulur. Kaynak dosyaları 250 satırı, satırlar 300 karakteri geçmez.
+### Klasör yapısı
+
+Ön yüz (`src/`): ekrana özel bileşen, hook ve komut dosyaları `src/features/<ekran>/` altındadır (`today`, `duplicates`, `map`, `rename`, `dates`, `rules`, `history`). Birden fazla ekranın kullandığı parçalar (kabuk, gezinme, ortak hook ve yardımcılar) `src/components`, `src/hooks` ve `src/lib` altında kalır. Bir dosya yalnızca tek ekran kullanıyorsa o ekranın klasörüne konur.
+
+Arka uç (`src-tauri/src/`): modüller konuya göre klasörlere ayrılır; `lib.rs` hepsini eski adlarıyla yeniden dışa aktarır, yani `crate::scanner` gibi yollar değişmez. Testler (`*_tests.rs`) modülünün yanındadır.
+
+| Klasör | İçerik |
+| --- | --- |
+| `scan/` | tarama, hash, gruplama, benzerlik, karşılaştırma, dosya listesi, klasör istatistikleri, sağlık, bulut yer tutucuları |
+| `inbox/` | gelen kutusu: kopya/öneri/ad, ayrıntı, Akşam Kontrolü işlemleri, Geri Dönüşüm |
+| `auto/` | otomasyon, watcher, bildirim, başlangıç, tepsi, tek kopya, `settings.json` |
+| `organizer/` | "Türüne göre düzenle" ve CSV rapor |
+| `renaming/` | adlandırma kuralları, şablonla adlandırma, seçili dosyaları adlandırma |
+| `by_date/` | Tarihe Göre gruplama: plan, klasör düzeni, HTML dizin |
+| `fileops/` | taşıma, geri alma geçmişi, karantina, yol koruması |
+| `winshell/` | Windows kabuğu: küçük resim, çekim tarihi, asset kapsamı |
+
+Kaynak dosyaları 250 satırı, satırlar 300 karakteri geçmez.
 
 Sayfalama şu anda istemci tarafındadır; büyük envanterlerde IPC veri aktarımını küçültmez. Liste satırları ayrıca sanallaştırılır. Resimlerde yerleşik ön izleme, diğer türlerde metadata ve varsayılan uygulamada açma bulunur.
 

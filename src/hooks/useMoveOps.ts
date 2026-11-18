@@ -1,8 +1,8 @@
 import { useCallback, useRef, useState } from "react";
 import * as api from "../lib/commands";
 import { moveNamedGroups } from "../lib/fileOperations";
-import { undoHistoryEntry } from "../lib/healthCommands";
-import { suggestTagName } from "../lib/tagSuggest";
+import { undoHistoryEntry } from "../features/map/healthCommands";
+import { suggestTagName } from "../features/duplicates/tagSuggest";
 import { formatCount } from "../lib/format";
 import type { FileGroup, KeepPolicy, UndoRecord } from "../types/file";
 import type { StatusMessage } from "../types/ui";

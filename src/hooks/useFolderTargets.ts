@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { listSubfolders } from "../lib/selectionCommands";
+import { listSubfolders } from "../features/map/selectionCommands";
 
 /**
  * Hedef klasor secicisi icin kok(ler)in altindaki klasorler. Yalnizca `enabled`
