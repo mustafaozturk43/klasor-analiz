@@ -3,18 +3,19 @@
 //! tarihi (fotograf/video), yoksa olusturma tarihi, o da yoksa `Tarihsiz`.
 //! Plan diske dokunmaz; ayni ad cakisirsa `ad (1).uzanti`.
 
+use crate::date_group_index::INDEX_FILE;
+use crate::date_group_layout::{year_month, DateLayout, FolderNamer};
 use crate::models::{normalize_exts, MoveRecord, INBOX_DIR, QUARANTINE_DIR};
 use crate::rename::FileStamps;
 use crate::selection_paths::free_dest;
 use crate::watcher_core::eligible;
-use chrono::{DateTime, Local};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-pub const UNDATED: &str = "Tarihsiz";
+pub use crate::date_group_layout::UNDATED;
 const SAMPLES: usize = 3;
 
 #[derive(Debug, Clone, Default, Deserialize)]
@@ -26,6 +27,9 @@ pub struct DateGroupOptions {
     /// Alt klasorlerdeki dosyalar da toplansin mi?
     #[serde(default)]
     pub recursive: bool,
+    /// Klasor duzeni: Yıl\Ay (varsayilan), yalniz Yıl-Ay, sira numarali yil.
+    #[serde(default)]
+    pub layout: DateLayout,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -53,9 +57,7 @@ pub struct DateGroupPlan {
 
 /// Unix saniyeden yerel `YYYY\MM`; tarih yoksa `Tarihsiz`.
 pub fn folder_for(secs: Option<u64>) -> String {
-    secs.and_then(|s| DateTime::from_timestamp(s as i64, 0))
-        .map(|d| d.with_timezone(&Local).format("%Y\\%m").to_string())
-        .unwrap_or_else(|| UNDATED.to_string())
+    FolderNamer::new(DateLayout::YearMonth, Path::new("")).folder(secs)
 }
 
 fn created_secs(meta: &fs::Metadata) -> Option<u64> {
@@ -76,7 +78,7 @@ fn collect(dir: &Path, recursive: bool, exts: &[String], out: &mut Vec<PathBuf>)
             if recursive && !skip_dir(&name) {
                 collect(&p, recursive, exts, out);
             }
-        } else if eligible(&p) {
+        } else if eligible(&p) && !p.file_name().is_some_and(|n| n.eq_ignore_ascii_case(INDEX_FILE)) {
             let ext = p.extension().map(|e| e.to_string_lossy().to_lowercase()).unwrap_or_default();
             if exts.is_empty() || exts.contains(&ext) {
                 out.push(p);
@@ -98,13 +100,21 @@ pub fn plan_date_group(root: &Path, opts: &DateGroupOptions, taken: &dyn Fn(&Pat
     let mut buckets: BTreeMap<String, DateBucket> = BTreeMap::new();
     let (mut in_place, mut from_taken, mut renamed) = (0, 0, 0);
     let mut created: Vec<String> = Vec::new();
+    let mut dated = Vec::new();
     for (i, p) in files.iter().enumerate() {
         progress(i as u64, total);
         let Ok(meta) = fs::metadata(p) else { continue };
         let shot = taken(p);
         from_taken += usize::from(shot.is_some());
-        let folder = folder_for(shot.or_else(|| created_secs(&meta)));
+        let secs = shot.or_else(|| created_secs(&meta));
+        dated.push((p, meta, secs));
+    }
+    let mut namer = FolderNamer::new(opts.layout, root);
+    namer.register(dated.iter().filter_map(|(_, _, s)| year_month(*s).map(|(y, _)| y)).collect());
+    for (p, meta, secs) in dated {
+        let folder = namer.folder(secs);
         let dir = folder.split('\\').fold(root.to_path_buf(), |d, seg| d.join(seg));
+        let p = p.as_path();
         if p.parent() == Some(dir.as_path()) {
             in_place += 1;
             continue;

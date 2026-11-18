@@ -6,6 +6,8 @@
 pub mod asset_scope;
 pub mod compare;
 pub mod date_group;
+pub mod date_group_index;
+pub mod date_group_layout;
 pub mod date_group_plan;
 pub mod file_list;
 pub mod file_ops;

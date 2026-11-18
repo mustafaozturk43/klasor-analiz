@@ -32,7 +32,7 @@ fn plan_prefers_date_taken_filters_extensions_and_numbers_clashes() {
     fs::create_dir_all(root.join("2026").join("01")).unwrap();
     fs::write(root.join("2026").join("01").join("a.jpg"), b"eski").unwrap();
     let taken = |p: &Path| (p.extension().is_some_and(|e| e == "jpg")).then_some(JAN);
-    let opts = DateGroupOptions { extensions: vec!["JPG".into(), ".png".into()], recursive: false };
+    let opts = DateGroupOptions { extensions: vec!["JPG".into(), ".png".into()], recursive: false, layout: DateLayout::YearMonth };
     let (plan, stamps) = plan_date_group(&root, &opts, &taken, &no_progress).unwrap();
     assert_eq!(plan.entries.len(), 2, "pdf ve alt klasor disarida");
     assert_eq!(stamps.len(), 2);
@@ -46,12 +46,28 @@ fn plan_prefers_date_taken_filters_extensions_and_numbers_clashes() {
 }
 
 #[test]
+fn month_and_numbered_year_layouts() {
+    let root = scratch("layout");
+    fs::write(root.join("a.jpg"), b"x").unwrap();
+    fs::write(root.join(crate::date_group_index::INDEX_FILE), b"eski").unwrap();
+    fs::create_dir_all(root.join("03_2024")).unwrap();
+    let month = DateGroupOptions { layout: DateLayout::Month, ..Default::default() };
+    let (plan, _) = plan_date_group(&root, &month, &|_| Some(JAN), &no_progress).unwrap();
+    assert_eq!(plan.entries.len(), 1, "dizin dosyasi tasinmaz");
+    assert_eq!(plan.buckets[0].folder, "2026-01");
+    let numbered = DateGroupOptions { layout: DateLayout::YearNumbered, ..Default::default() };
+    let (plan, _) = plan_date_group(&root, &numbered, &|_| Some(JAN), &no_progress).unwrap();
+    assert_eq!(plan.buckets[0].folder, "04_2026", "mevcut en buyuk numaradan devam eder");
+    let _ = fs::remove_dir_all(&root);
+}
+
+#[test]
 fn recursive_plan_skips_files_already_in_place() {
     let root = scratch("rec");
     fs::create_dir_all(root.join("2026").join("01")).unwrap();
     fs::write(root.join("2026").join("01").join("yerinde.jpg"), b"x").unwrap();
     fs::write(root.join("Alt").join("tasin.jpg"), b"x").unwrap();
-    let opts = DateGroupOptions { extensions: Vec::new(), recursive: true };
+    let opts = DateGroupOptions { extensions: Vec::new(), recursive: true, layout: DateLayout::YearMonth };
     let (plan, _) = plan_date_group(&root, &opts, &|_| Some(JAN), &no_progress).unwrap();
     assert_eq!(plan.in_place, 1);
     assert_eq!(plan.entries.len(), 1);
@@ -68,6 +84,8 @@ fn apply_moves_files_and_undo_restores_and_removes_new_folders() {
     let out = crate::date_group::apply_core(&app, &plan, &stamps).unwrap();
     assert_eq!(out.moved.len(), 1);
     assert!(root.join("2026").join("01").join("foto.jpg").exists());
+    let index = fs::read_to_string(root.join(crate::date_group_index::INDEX_FILE)).unwrap();
+    assert!(index.contains("[2026\\01]") && index.contains("foto.jpg   <- foto.jpg"), "{index}");
     assert!(crate::date_group::apply_core(&app, &plan, &stamps).is_err(), "eski plan ikinci kez uygulanmaz");
 
     let id = app.history.lock().unwrap()[0].id.clone();

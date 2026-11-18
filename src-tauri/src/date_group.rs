@@ -2,6 +2,7 @@
 //! uygulamada dosya damgalari yeniden dogrulanir, her tasima once Gecmis'e yazilir.
 //! Geri alma, genel `history_cmds` yoluyla yapilir (bosalan Yıl\Ay klasorleri de kalkar).
 
+use crate::date_group_index::write_index;
 use crate::date_group_plan::{plan_date_group, DateGroupOptions, DateGroupPlan};
 use crate::models::{ScanProgress, UndoRecord};
 use crate::operations::MoveOutcome;
@@ -32,7 +33,9 @@ pub(crate) fn apply_core(app: &AppState, plan: &DateGroupPlan, stamps: &FileStam
             return Err(CHANGED.into());
         }
     }
-    let label = Path::new(&plan.root).file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_else(|| plan.root.clone());
+    // Dizin dosyasi tasimadan once kok klasore yazilir.
+    write_index(Path::new(&plan.root), &plan.entries)?;
+    let label =Path::new(&plan.root).file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_else(|| plan.root.clone());
     let mut guard = app.history.lock().map_err(|e| e.to_string())?;
     history::push(&mut guard, UndoRecord { id: plan.id.clone(), timestamp: crate::now_ms(), tag: format!("Tarihe göre gruplama · {label}"), moves: Vec::new() });
     history::save(&app.dir, &guard)?;

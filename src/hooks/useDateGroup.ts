@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { confirmDialog } from "../lib/commands";
-import { applyDateGroup, previewDateGroup, type DateGroupOptions, type DateGroupPlan } from "../lib/dateGroupCommands";
+import { applyDateGroup, DATE_INDEX_FILE, previewDateGroup, type DateGroupOptions, type DateGroupPlan } from "../lib/dateGroupCommands";
 import { formatCount } from "../lib/format";
 import { getPref, setPref } from "../lib/prefs";
 import { getSettings } from "../lib/settingsCommands";
@@ -8,7 +8,7 @@ import type { OrganizerState } from "../types/app";
 import type { ExtGroup } from "../types/settings";
 
 const KEY = "dateGroupOptions";
-const DEFAULTS: DateGroupOptions = { extensions: [], recursive: false };
+const DEFAULTS: DateGroupOptions = { extensions: [], recursive: false, layout: "yearMonth" };
 
 /** Tarihe gore (Yıl\Ay) gruplama: secenekler (`uiPrefs.dateGroupOptions`), canli onizleme, uygulama ve geri alma. */
 export function useDateGroup(app: OrganizerState, active: boolean) {
@@ -48,7 +48,7 @@ export function useDateGroup(app: OrganizerState, active: boolean) {
   const apply = useCallback(async () => {
     const n = plan?.entries.length ?? 0;
     if (!plan || !n || busy) return;
-    const text = `${formatCount(n)} dosya ${formatCount(plan.buckets.length)} Yıl\\Ay klasörüne taşınacak. Hiçbir dosyanın üstüne yazılmaz; aynı ad varsa numaralandırılır. `
+    const text = `${formatCount(n)} dosya ${formatCount(plan.buckets.length)} Yıl\\Ay klasöre taşınacak. Önce kök klasöre ${DATE_INDEX_FILE} yazılır. Hiçbir dosyanın üstüne yazılmaz; aynı ad varsa numaralandırılır. `
       + "İşlem Geçmişi'nden geri alınabilir.";
     if (!await confirmDialog(text, "Tarihe göre grupla", "Grupla")) return;
     setBusy(true);
@@ -57,7 +57,7 @@ export function useDateGroup(app: OrganizerState, active: boolean) {
       const out = await applyDateGroup(plan.id);
       setLastId(out.moved.length ? plan.id : null);
       const failed = out.failed.length ? ` ${formatCount(out.failed.length)} dosya taşınamadı: ${out.failed[0].error}` : "";
-      setStatus({ type: out.failed.length ? "error" : "success", text: `${formatCount(out.moved.length)} dosya Yıl\\Ay klasörlerine taşındı. İşlem geri alınabilir.${failed}` });
+      setStatus({ type: out.failed.length ? "error" : "success", text: `${formatCount(out.moved.length)} dosya tarih klasörlerine taşındı; ${DATE_INDEX_FILE} güncellendi. İşlem geri alınabilir.${failed}` });
     } catch (e) {
       setStatus({ type: "error", text: String(e) });
     } finally {

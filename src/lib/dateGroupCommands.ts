@@ -3,7 +3,15 @@ import { Channel, invoke } from "@tauri-apps/api/core";
 import type { MoveRecord, ScanProgress } from "../types/file";
 import type { MoveOutcome } from "./inboxCommands";
 
-export interface DateGroupOptions { extensions: string[]; recursive: boolean }
+export type DateLayout = "yearMonth" | "month" | "yearNumbered";
+export interface DateGroupOptions { extensions: string[]; recursive: boolean; layout: DateLayout }
+
+export const DATE_INDEX_FILE = "Tarih_Dizini.txt";
+export const LAYOUTS: { id: DateLayout; label: string; example: string }[] = [
+  { id: "yearMonth", label: "Yıl\\Ay", example: "Örn. 2026\\01 (yıl klasörü içinde ay klasörleri)" },
+  { id: "month", label: "Aya göre", example: "Örn. 2026-01 (tek düzeyde ay klasörleri)" },
+  { id: "yearNumbered", label: "Yıl (sıra no)", example: "Örn. 01_2025, 02_2026 (yıla göre, sıra numaralı)" },
+];
 export interface DateBucket { folder: string; count: number; samples: string[] }
 export interface DateGroupPlan {
   id: string;

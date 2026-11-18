@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CalendarDays } from "lucide-react";
 import { useDateGroup } from "../hooks/useDateGroup";
+import { DATE_INDEX_FILE, LAYOUTS } from "../lib/dateGroupCommands";
 import { splitExtensions } from "../lib/settingsCommands";
 import type { OrganizerState } from "../types/app";
 import DateGroupPreview from "./DateGroupPreview";
@@ -32,6 +33,12 @@ export default function DateGroupView({ app, active }: { app: OrganizerState; ac
         <div className="naming-opt"><b>Kapsam</b>
           <label><Switch checked={o.recursive} onChange={v => dg.setOptions({ ...o, recursive: v })} label="Alt klasörlerdeki dosyaları da topla" /> Alt klasörlerdeki dosyalar da</label>
           <p className="hint">Kapalıyken yalnızca seçili klasörün kendi dosyaları taşınır.</p></div>
+        <div className="naming-opt"><b>Klasör düzeni</b>
+          <div className="naming-seg" role="group" aria-label="Klasör düzeni">
+            {LAYOUTS.map(l => <button key={l.id} type="button" aria-pressed={o.layout === l.id} title={l.example} onClick={() => dg.setOptions({ ...o, layout: l.id })}>{l.label}</button>)}
+          </div>
+          <p className="hint">{LAYOUTS.find(l => l.id === o.layout)?.example}</p>
+          <p className="hint">Gruplama öncesi kök klasöre {DATE_INDEX_FILE} yazılır: hangi dosya hangi klasöre gitti.</p></div>
         <div className="naming-opt"><b>Tarih</b>
           <p className="hint">Fotoğraf ve videolarda çekim tarihi, diğerlerinde oluşturma tarihi kullanılır. Tarihi okunamayanlar “Tarihsiz” klasörüne gider.</p></div>
       </fieldset>
