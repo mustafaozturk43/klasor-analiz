@@ -10,7 +10,7 @@ static NEXT: AtomicUsize = AtomicUsize::new(0);
 fn opts() -> NameRuleOptions {
     NameRuleOptions {
         scope: "both".into(), include_subdirs: true, case: "title".into(), space: "dash".into(), ascii: false, clean: false,
-        seq_dirs: false, seq_files: false, start: 1, pad: 2, date: "none".into(), max_len: 0, exclude_folders: Vec::new(),
+        seq_dirs: false, seq_files: false, start: 1, pad: 2, date: "none".into(), max_len: 0, exclude_folders: Vec::new(), custom_names: Default::default(),
     }
 }
 
@@ -140,6 +140,8 @@ fn protected_project_quarantine_and_hidden_items_are_left_alone() {
     let warning = |rel: &str| plan.entries.iter().find(|e| Path::new(&e.from) == root.join(rel)).unwrap().warning.clone().unwrap();
     assert!(warning("izlenen kaynak").contains("kayıtlı"), "korunan yolun ust klasoru de korunur");
     assert!(warning("proje klasörü").contains("Proje"));
+    let is_guarded = |rel: &str| plan.entries.iter().find(|e| Path::new(&e.from) == root.join(rel)).unwrap().guarded;
+    assert!(is_guarded("proje klasörü") && is_guarded("izlenen kaynak") && !is_guarded("serbest dosya.txt"));
     assert_eq!(plan.entries.len(), 4, "karantina, gelen kutusu, gizli, haric ve gecici ogeler listelenmez; korunanlarin icine girilmez");
 
     let inside = plan_name_rules(&root.join("izlenen kaynak"), &opts(), &[root.to_string_lossy().into_owned()]);
@@ -161,5 +163,51 @@ fn stale_plan_and_reserved_or_too_long_names_are_refused() {
     assert!(apply_plan(plan, &state).unwrap_err().contains("yeniden ön izleyin"));
     assert!(state.history.lock().unwrap().is_empty(), "hicbir seye dokunulmadi");
     assert!(root.join("con.txt").exists());
+    fs::remove_dir_all(&root).unwrap();
+}
+
+fn with_custom(root: &Path, pairs: &[(&str, &str)], base: NameRuleOptions) -> NameRuleOptions {
+    let custom_names = pairs.iter().map(|(rel, text)| (root.join(rel).to_string_lossy().into_owned(), text.to_string())).collect();
+    NameRuleOptions { custom_names, ..base }
+}
+
+#[test]
+fn custom_name_replaces_rule_result_keeps_extension_and_marks_entry() {
+    let root = tree(&["Rapor Ocak.pdf", "diger dosya.pdf"]);
+    let o = with_custom(&root, &[("Rapor Ocak.pdf", "  Yıllık   Özet: 2026? ")], opts());
+    let plan = plan_name_rules(&root, &o, &[]).unwrap();
+    assert_eq!(new_name(&plan, &root, "Rapor Ocak.pdf").as_deref(), Some("Yıllık Özet 2026.pdf"), "gecersiz karakterler atilir, uzanti korunur");
+    assert_eq!(new_name(&plan, &root, "diger dosya.pdf").as_deref(), Some("Diger-Dosya.pdf"), "digerleri kurallarla");
+    let by = |n: &str| plan.entries.iter().find(|e| e.from.ends_with(n)).unwrap();
+    assert!(by("Rapor Ocak.pdf").custom && !by("diger dosya.pdf").custom);
+    fs::remove_dir_all(&root).unwrap();
+}
+
+#[test]
+fn custom_name_does_not_consume_sequence_numbers_and_wins_over_scope() {
+    let root = tree(&["a.txt", "b.txt", "c.txt"]);
+    let base = NameRuleOptions { seq_files: true, ..opts() };
+    let plan = plan_name_rules(&root, &with_custom(&root, &[("b.txt", "Ozel")], base.clone()), &[]).unwrap();
+    assert_eq!(new_name(&plan, &root, "a.txt").as_deref(), Some("01-A.txt"));
+    assert_eq!(new_name(&plan, &root, "b.txt").as_deref(), Some("Ozel.txt"));
+    assert_eq!(new_name(&plan, &root, "c.txt").as_deref(), Some("02-C.txt"), "ozel ad numara harcamaz");
+    // Kapsam "yalniz klasorler" olsa da acikca ozel ad yazilan dosya adlandirilir.
+    let dirs_only = NameRuleOptions { scope: "dirs".into(), ..base };
+    let plan = plan_name_rules(&root, &with_custom(&root, &[("c.txt", "Elle")], dirs_only), &[]).unwrap();
+    assert_eq!(new_name(&plan, &root, "c.txt").as_deref(), Some("Elle.txt"));
+    assert!(new_name(&plan, &root, "a.txt").is_none(), "ozel adsiz dosya kapsam disinda kalir");
+    fs::remove_dir_all(&root).unwrap();
+}
+
+#[test]
+fn custom_name_conflicts_are_numbered_and_unusable_text_is_skipped() {
+    let root = tree(&["a.txt", "Hedef.txt"]);
+    let plan = plan_name_rules(&root, &with_custom(&root, &[("a.txt", "hedef")], opts()), &[]).unwrap();
+    assert_eq!(new_name(&plan, &root, "a.txt").as_deref(), Some("hedef (1).txt"), "dolu ad numaralanir, ustune yazilmaz");
+    let plan = plan_name_rules(&root, &with_custom(&root, &[("a.txt", "???")], opts()), &[]).unwrap();
+    let e = plan.entries.iter().find(|e| e.from.ends_with("a.txt")).unwrap();
+    assert!(e.to.is_none() && e.warning.as_ref().unwrap().contains("Özel ad"), "{:?}", e.warning);
+    let plan = plan_name_rules(&root, &with_custom(&root, &[("a.txt", "   ")], opts()), &[]).unwrap();
+    assert!(!plan.entries.iter().find(|e| e.from.ends_with("a.txt")).unwrap().custom, "bos metin ozel ad sayilmaz");
     fs::remove_dir_all(&root).unwrap();
 }

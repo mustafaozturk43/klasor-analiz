@@ -33,6 +33,18 @@ pub struct NameRuleOptions {
     pub max_len: usize,
     #[serde(default)]
     pub exclude_folders: Vec<String>,
+    /// Dosya basina ozel ad: tam yol -> yazilan metin (uzantisiz). Doluysa kurallarin urettigi ad yerine gecer.
+    #[serde(default)]
+    pub custom_names: std::collections::HashMap<String, String>,
+}
+
+/// Kullanicinin yazdigi ozel adi temizler: adda bulunamayan karakterler ve kontrol karakterleri atilir, bosluklar
+/// tekil olur, bastaki/sondaki bosluk ve nokta kirpilir. Geriye bir sey kalmazsa None.
+pub fn clean_custom(text: &str) -> Option<String> {
+    let kept: String = text.chars().filter(|c| !BAD_CHARS.contains(c) && !c.is_control()).collect();
+    let s = collapse(&kept);
+    let s = s.trim_matches(|c: char| c == '.' || c.is_whitespace());
+    (!s.is_empty()).then(|| s.to_string())
 }
 
 /// Govdeyi kurallara gore donusturur. `seq`: bu ogeye verilecek sira numarasi (yoksa None).

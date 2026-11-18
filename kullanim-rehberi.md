@@ -81,6 +81,7 @@ Klasörleri anlamak ve temizlik yapmak için kullanılır.
 Seçili klasördeki dosya ve klasör adlarını kurallarla toplu düzenler.
 
 - **Hazır kalıplar** ve ayrı ayrı kurallar: kapsam (klasör, dosya veya ikisi), harf biçimi, boşluk yerine tire/alt çizgi, Türkçe harfleri kaldırma, parantez ve noktalama temizliği, başa sıra numarası, tarih ve uzunluk sınırı.
+- **Özel ad:** Önizlemedeki her satırın sağında bir "Özel ad" kutusu vardır. Bir öğe için ad yazarsanız kuralların ürettiği ad yerine o kullanılır (uzantı korunur; `< > : " / \ | ? *` gibi geçersiz karakterler atılır). Aynı adda öğe varsa numaralanır, hiçbir şeyin üstüne yazılmaz. Özel adlı öğe sıra numarası harcamaz ve "Yalnız klasörler" gibi kapsam ayarının dışında kalsa da adlandırılır. Proje ve ayarlı klasörler korunur, onlara özel ad yazılamaz. Alttaki "özel adı temizle" düğmesi hepsini siler; özel adlar kalıcı değildir (klasör değişince ya da uygulanınca temizlenir).
 - Önizleme görmeden hiçbir ad değişmez; uygulanan işlem Geçmiş'ten geri alınabilir.
 
 > **Komut paleti:** `Ctrl+K` (ya da üst çubuktaki arama düğmesi) ekranlara, son klasörlere ve sık işlemlere yazarak gitmenizi sağlar. Türkçe harfler yazılmadan da bulunur ("gecmis" → Geçmiş). Ok tuşlarıyla gezin, Enter ile seçin, Esc ile kapatın.

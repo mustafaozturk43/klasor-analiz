@@ -15,7 +15,7 @@
 .naming-seg button:hover { color: var(--color-ink); border-color: var(--color-muted); }
 .naming-seg button[aria-pressed="true"] { background: var(--color-ink); border-color: var(--color-ink); color: var(--color-paper-2); }
 
-.naming-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 3.5rem 6.5rem; align-items: center; gap: var(--space-sm); min-height: 41px;
+.naming-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(8rem, 12rem) 3.5rem 6.5rem; align-items: center; gap: var(--space-sm); min-height: 41px;
   padding: var(--space-xs) var(--space-lg); border-top: 1px solid var(--color-rule); font-size: var(--text-sm); }
 .naming-head { border-top: 0; min-height: 0; font-size: var(--text-xs); font-weight: 600; color: var(--color-muted); }
 .naming-name { display: flex; align-items: center; gap: var(--space-xs); min-width: 0; }
@@ -38,6 +38,7 @@
 @media (max-width: 44rem) {
   .naming-row { grid-template-columns: minmax(0, 1fr) auto; padding-inline: var(--space-md); }
   .naming-old, .naming-len, .naming-head { display: none; }
+  .naming-custom { grid-column: 1 / -1; }
   .naming-new { padding-left: 0 !important; }
   .naming-opt, .naming-foot, .naming-skipped { padding-inline: var(--space-md); }
   .naming-go { flex: 1 1 100%; }
@@ -53,3 +54,8 @@
 .date-group-row .hint { margin: 0; }
 .date-group-row[data-undated] .naming-name { color: var(--color-muted); }
 .date-group-samples { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-muted); font-size: var(--text-xs); }
+
+/* Dosya basina ozel ad kutusu (Adlandirma onizlemesi). */
+.naming-custom { min-width: 0; width: 100%; min-height: 30px; padding: 2px var(--space-xs); border: 1px solid var(--color-rule); border-radius: var(--radius-control); background: transparent; color: var(--color-ink); font-size: var(--text-sm); }
+.naming-custom:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+.naming-row .naming-custom:not(:placeholder-shown) { border-color: var(--color-accent); }

@@ -4,7 +4,7 @@
 //! proje klasorleri ve ayarlarda yolu kayitli klasorler listelenir ama korunur.
 
 use crate::models::{INBOX_DIR, QUARANTINE_DIR};
-use crate::name_rules::{is_reserved, transform, NameRuleOptions};
+use crate::name_rules::{clean_custom, is_reserved, transform, NameRuleOptions};
 use crate::organize_rules::{is_project_dir, is_temp_or_system};
 use serde::Serialize;
 use std::collections::HashSet;
@@ -24,6 +24,10 @@ pub struct NameEntry {
     pub to: Option<String>,
     pub warning: Option<String>,
     pub is_dir: bool,
+    /// Ad, kullanicinin bu oge icin yazdigi ozel metinden geliyor.
+    pub custom: bool,
+    /// Korunan klasor (proje ya da ayarlarda yolu kayitli): adlandirilmaz, ozel ad da yazilamaz.
+    pub guarded: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -77,19 +81,24 @@ impl Walk<'_> {
             if self.entries.len() >= MAX_ENTRIES {
                 return Err(format!("{MAX_ENTRIES} öğeden fazlası var; daha küçük bir klasör seçin veya alt klasörleri kapatın."));
             }
-            let mut entry = NameEntry { from: it.path.to_string_lossy().into_owned(), to: None, warning: None, is_dir: it.is_dir };
+            let from = it.path.to_string_lossy().into_owned();
+            // Ozel metin yazilmis oge kapsam disinda olsa da adlandirilir; sira numarasi tuketmez.
+            let custom = self.o.custom_names.get(&from).filter(|t| !t.trim().is_empty()).cloned();
+            let mut entry = NameEntry { from, to: None, warning: None, is_dir: it.is_dir, custom: custom.is_some(), guarded: false };
             let mut final_name = it.name.clone();
             let guarded = it.is_dir.then(|| self.guard(&it.path)).flatten();
             let in_scope = self.o.scope == "both" || (self.o.scope == "dirs") == it.is_dir;
             if let Some(reason) = guarded {
                 entry.warning = Some(reason.into());
-            } else if in_scope {
+                entry.custom = false;
+                entry.guarded = true;
+            } else if in_scope || custom.is_some() {
                 let counter = if it.is_dir { &mut next_dir } else { &mut next_file };
-                let seq = (if it.is_dir { self.o.seq_dirs } else { self.o.seq_files }).then(|| {
+                let seq = (custom.is_none() && in_scope && (if it.is_dir { self.o.seq_dirs } else { self.o.seq_files })).then(|| {
                     *counter += 1;
                     *counter - 1
                 });
-                match self.rename(&it, seq, new_dir, &mut used) {
+                match self.rename(&it, seq, custom.as_deref(), new_dir, &mut used) {
                     Ok(Some((name, numbered))) => {
                         entry.to = Some(dir.join(&name).to_string_lossy().into_owned());
                         entry.warning = numbered.then(|| "Bu ad dolu; numara eklendi.".to_string());
@@ -108,9 +117,12 @@ impl Walk<'_> {
     }
 
     /// Yeni adi ve cakisma numarasi eklenip eklenmedigini dondurur; ad degismiyorsa Ok(None), oge atlanacaksa Err(neden).
-    fn rename(&self, it: &Item, seq: Option<u64>, new_dir: &Path, used: &mut HashSet<String>) -> Result<Option<(String, bool)>, String> {
+    fn rename(&self, it: &Item, seq: Option<u64>, custom: Option<&str>, new_dir: &Path, used: &mut HashSet<String>) -> Result<Option<(String, bool)>, String> {
         let (stem, ext) = split(&it.name, it.is_dir);
-        let new_stem = transform(stem, self.o, seq, it.mtime).ok_or("Kurallar bu ad için boş sonuç veriyor; atlanacak.")?;
+        let new_stem = match custom {
+            Some(text) => clean_custom(text).ok_or("Özel ad yalnızca geçersiz karakterlerden oluşuyor; atlanacak.")?,
+            None => transform(stem, self.o, seq, it.mtime).ok_or("Kurallar bu ad için boş sonuç veriyor; atlanacak.")?,
+        };
         let wanted = format!("{new_stem}{ext}");
         if wanted == it.name {
             return Ok(None);

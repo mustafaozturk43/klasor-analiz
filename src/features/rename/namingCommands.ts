@@ -19,7 +19,8 @@ export interface NameRuleOptions {
   maxLen: number;
 }
 
-export interface NameEntry { from: string; to: string | null; warning: string | null; isDir: boolean }
+/** `custom`: ad, kullanicinin bu oge icin yazdigi ozel metinden geliyor. */
+export interface NameEntry { from: string; to: string | null; warning: string | null; isDir: boolean; custom: boolean; guarded: boolean }
 export interface NamePlan { id: string; entries: NameEntry[] }
 
 export const NAMING_DEFAULTS: NameRuleOptions = {
@@ -36,7 +37,10 @@ export const NAMING_PRESETS: { id: string; label: string; hint: string; options:
     options: { ...NAMING_DEFAULTS, case: "sentence", space: "keep", seqDirs: false } },
 ];
 
-export const previewNameRules = (rootPath: string, options: NameRuleOptions & { excludeFolders: string[] }) =>
+/** `customNames`: tam yol -> o dosya icin yazilan ozel ad (uzantisiz); kurallarin urettigi adin yerine gecer. */
+export type NamePreviewOptions = NameRuleOptions & { excludeFolders: string[]; customNames: Record<string, string> };
+
+export const previewNameRules = (rootPath: string, options: NamePreviewOptions) =>
   invoke<NamePlan>("preview_name_rules", { rootPath, options });
 
 export const applyNameRules = (planId: string) => invoke<number>("apply_name_rules", { planId });

@@ -30,20 +30,21 @@ function rename(stem: string, o: NameRuleOptions, seq: number | null): string {
   return prefix + s.replace(/^[-_ .]+|[-_ .]+$/g, "") + suffix;
 }
 
-export function mockNamePlan(root: string, o: NameRuleOptions) {
+export function mockNamePlan(root: string, o: NameRuleOptions & { customNames?: Record<string, string> }) {
   const counters = new Map<string, number>();
   const entries: NameEntry[] = [];
   for (const [rel, isDir] of TREE) {
     const cut = rel.lastIndexOf("\\"), parent = cut < 0 ? "" : rel.slice(0, cut), name = rel.slice(cut + 1);
     if (parent && !o.includeSubdirs) continue;
     const from = `${root}\\${rel}`;
-    if (name === "proje klasörü") { entries.push({ from, to: null, warning: "Proje klasörü; içindekilerle birlikte korunur.", isDir }); continue; }
+    if (name === "proje klasörü") { entries.push({ from, to: null, warning: "Proje klasörü; içindekilerle birlikte korunur.", isDir, custom: false, guarded: true }); continue; }
     const inScope = o.scope === "both" || (o.scope === "dirs") === isDir;
     const key = `${parent}|${isDir}`, numbered = isDir ? o.seqDirs : o.seqFiles;
     const seq = inScope && numbered ? (counters.set(key, (counters.get(key) ?? o.start - 1) + 1), counters.get(key)!) : null;
     const dot = isDir ? -1 : name.lastIndexOf(".");
-    const next = rename(dot > 0 ? name.slice(0, dot) : name, o, seq) + (dot > 0 ? name.slice(dot) : "");
-    entries.push({ from, to: inScope && next !== name ? `${root}\\${parent ? `${parent}\\` : ""}${next}` : null, warning: null, isDir });
+    const customText = (o.customNames?.[from] ?? "").replace(/[<>:"/\\|?*]/g, "").replace(/\s+/g, " ").trim();
+    const next = customText ? customText + (dot > 0 ? name.slice(dot) : "") : rename(dot > 0 ? name.slice(0, dot) : name, o, seq) + (dot > 0 ? name.slice(dot) : "");
+    entries.push({ from, to: (inScope || customText) && next !== name ? `${root}\\${parent ? `${parent}\\` : ""}${next}` : null, warning: null, isDir, custom: !!customText, guarded: false });
   }
   return { id: "mock-names", entries };
 }

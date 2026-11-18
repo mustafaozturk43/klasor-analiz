@@ -6,7 +6,7 @@ const MTIME: u64 = 1_699_964_000;
 pub(crate) fn opts() -> NameRuleOptions {
     NameRuleOptions {
         scope: "both".into(), include_subdirs: true, case: "title".into(), space: "dash".into(), ascii: false, clean: false,
-        seq_dirs: false, seq_files: false, start: 1, pad: 2, date: "none".into(), max_len: 0, exclude_folders: Vec::new(),
+        seq_dirs: false, seq_files: false, start: 1, pad: 2, date: "none".into(), max_len: 0, exclude_folders: Vec::new(), custom_names: Default::default(),
     }
 }
 

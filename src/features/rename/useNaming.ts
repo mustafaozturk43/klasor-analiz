@@ -14,8 +14,18 @@ export function useNaming(app: OrganizerState, active: boolean) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
+  /** Dosya basina ozel adlar (tam yol -> metin); kalici degil, klasor degisince ve uygulaninca temizlenir. */
+  const [customNames, setCustomNames] = useState<Record<string, string>>({});
   const request = useRef(0);
   const { rootPath, excludeText, statsToken, setStatus, setFileOperationBusy } = app;
+
+  const setCustom = useCallback((path: string, text: string) => setCustomNames(prev => {
+    const next = { ...prev };
+    if (text.trim()) next[path] = text; else delete next[path];
+    return next;
+  }), []);
+  const clearCustom = useCallback(() => setCustomNames({}), []);
+  useEffect(() => { setCustomNames({}); }, [rootPath]);
 
   const setOptions = useCallback((next: NameRuleOptions) => {
     setOptionsState(next);
@@ -29,13 +39,13 @@ export function useNaming(app: OrganizerState, active: boolean) {
     setLoading(true);
     const timer = window.setTimeout(() => {
       const excludeFolders = excludeText.split(",").map(s => s.trim()).filter(Boolean);
-      previewNameRules(rootPath, { ...options, excludeFolders })
+      previewNameRules(rootPath, { ...options, excludeFolders, customNames })
         .then(result => { if (id === request.current) { setPlan(result); setError(null); } })
         .catch(e => { if (id === request.current) { setPlan(null); setError(String(e)); } })
         .finally(() => { if (id === request.current) setLoading(false); });
     }, 250);
     return () => window.clearTimeout(timer);
-  }, [active, rootPath, excludeText, options, statsToken, busy]);
+  }, [active, rootPath, excludeText, options, customNames, statsToken, busy]);
 
   const changing = plan?.entries.filter(e => e.to) ?? [];
 
@@ -55,6 +65,7 @@ export function useNaming(app: OrganizerState, active: boolean) {
       setStatus({ type: "error", text: String(e) });
     } finally {
       setPlan(null);
+      setCustomNames({});
       await app.refreshHistory();
       app.bumpStatsToken(); // Harita ve onizleme yeni adlari gorur.
       setFileOperationBusy(false);
@@ -62,7 +73,8 @@ export function useNaming(app: OrganizerState, active: boolean) {
     }
   }, [plan, busy, app, setStatus, setFileOperationBusy]);
 
-  return { options, setOptions, plan, error, loading, busy, changing, apply };
+  const customCount = Object.keys(customNames).length;
+  return { options, setOptions, plan, error, loading, busy, changing, apply, customNames, customCount, setCustom, clearCustom };
 }
 
 export type NamingState = ReturnType<typeof useNaming>;
