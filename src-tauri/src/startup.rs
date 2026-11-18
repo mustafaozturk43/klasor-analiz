@@ -4,7 +4,7 @@
 //! penceresini gostermeden tepside calisir.
 
 use tauri::plugin::TauriPlugin;
-use tauri::{AppHandle, Manager, Wry};
+use tauri::{AppHandle, Wry};
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 
 pub const HIDDEN_ARG: &str = "--autostart";

@@ -11,6 +11,7 @@
     "portable": "npm run tauri build -- --no-bundle && node scripts/package-portable.mjs",
     "setup": "npm run tauri build -- --bundles nsis && node scripts/package-setup.mjs",
     "release": "npm run tauri build -- --bundles nsis && node scripts/package-setup.mjs && node scripts/package-portable.mjs",
+    "prune:artifacts": "node scripts/prune-artifacts.mjs",
     "preview": "vite preview",
     "tauri": "tauri"
   },

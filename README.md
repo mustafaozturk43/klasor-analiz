@@ -36,6 +36,7 @@ npm run tauri dev
 Doğrulama: proje kökünde `npm run build`, `src-tauri` içinde `cargo test --no-default-features --lib` (antivirüs build-script kilidine takılmamak için; tam derleme `cargo test`).
 
 Kaynak bağlantılarını, 250 satır ve 300 karakterlik satır sınırını denetleme: `npm run audit:source`. Hepsi tek komutta (derleme + denetim + Rust testleri): `npm run check`.
+GitHub Actions (`.github/workflows/check.yml`) her push ve pull request'te `npm run check` çalıştırır. `artifacts/` altındaki eski sürüm paketlerini listelemek için `npm run prune:artifacts` (en yeni 3 sürüm tutulur; `-- --keep=5` ile değişir), silmek için `npm run prune:artifacts -- --yes`.
 Açık Windows uygulaması debug `.exe` dosyasını kilitliyorsa uygulamayı kapatmadan alternatif test: `src-tauri` içinde `cargo test --release` (ayrı release çıktısı kullanılır).
 
 ## Windows paketleri (setup + portable)
@@ -48,11 +49,13 @@ Açık Windows uygulaması debug `.exe` dosyasını kilitliyorsa uygulamayı kap
 
 ## Ekranlar
 
-Kenar çubuğunda 5 hedef var; birkaçının içinde alt sekmeler bulunur (`src/lib/navigation.ts`).
+Kenar çubuğunda 7 hedef var; birkaçının içinde alt sekmeler bulunur (`src/lib/navigation.ts`). Kopyalar, Harita, Adlandırma ve Tarihe Göre "Klasör-Dosya İşlemleri" grubunun altındadır.
 
 - **Bugün:** günün gelen kutusu. Her dosya için **Tut / Taşı / At** kararı verilir (varsayılan Tut); sonra "Kararları uygula" tek dokunuşla hepsini yapar. Taşınanlar hedef klasöre gider ve İşlem Geçmişi'nden geri alınır; "At" onaylı olarak Windows Geri Dönüşüm Kutusu'na gönderilir. Gruplar, küçük resimler, metin özeti ve benzer isimliler satırlarda görünür; "Taşınacakları adlandır" şablonla adlandırır.
 - **Kopyalar:** Dosya grupları (solda süzülebilir liste, sağda ana dosya ve kopyaların karşılaştırması, saklama politikası, "Bu grubu taşı"; kutularla toplu seçim alt çubuktan), İki klasör karşılaştırma ve Karantina.
 - **Harita:** Klasör analizi (boyutla orantılı kutu haritası, türe göre alan, Temizlenecekler özeti), Klasördeki dosyalar (arama, sayfalama, ön izleme) ve Klasör sağlığı.
+- **Adlandırma:** klasör ve dosya adlarını kurallarla (harf biçimi, boşluk, Türkçe harf, sıra numarası, tarih) toplu düzenler; önce önizleme, geri alınabilir.
+- **Tarihe Göre:** dosyaları çekim (yoksa oluşturma) tarihine göre `Yıl\Ay`, `Yıl-Ay` veya sıra numaralı yıl klasörlerine toplar. Taşımadan önce kök klasöre `Tarih_Dizini.html` yazar: klasör ve dosya adları, arama kutusu, dosya adına tıklayınca klasör açılır. Taşıma sırasında yüzde ilerleme gösterilir; Geçmiş'ten geri alınır.
 - **Kurallar:** Kurallar (otomasyon, kaynak ve yedek klasörleri, 5 uzantı grubu ve sağda "Türüne göre düzenle": seçenekler, profiller, önizleme ve uygulama) ve Otomasyon durumu (izleme durumu, şablonla adlandırma).
 - **Geçmiş:** taşıma ve yeniden adlandırmaları geri alma.
 

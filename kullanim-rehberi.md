@@ -12,6 +12,7 @@ Smart File Organizer, Windows bilgisayarınızdaki klasörleri tarayıp düzeni 
 - **Kopyaları ayıklamak:** Bir grubun ana dosyasını bırakıp diğerlerini karantinaya ya da etiket klasörüne taşıyabilir.
 - **Klasörleri analiz etmek:** Hangi klasörün ne kadar yer kapladığını, hangi türdeki dosyaların ağırlıkta olduğunu gösterir.
 - **Gelen kutusunu düzenlemek:** İndirilenler gibi bir kaynak klasöre yeni düşen dosyaları otomatik olarak gruplara ayırıp bir "Bakılacaklar" klasörüne taşır.
+- **Tarihe göre gruplamak:** Dosyaları çekim veya oluşturma tarihine göre `Yıl\Ay` klasörlerine toplar ve kök klasöre aranabilir bir HTML dizin yazar.
 - **Türüne göre düzenlemek:** Dosyaları uzantılarına göre kategori ve tür klasörlerine yerleştirir (önce önizleme gösterilir).
 - **Her şeyi geri almak:** Yapılan taşıma ve yeniden adlandırmalar İşlem Geçmişi'nde tutulur ve geri alınabilir.
 
@@ -21,7 +22,7 @@ Smart File Organizer, Windows bilgisayarınızdaki klasörleri tarayıp düzeni 
 
 ## 2. İlk kullanım (hızlı başlangıç)
 
-1. Uygulamayı açın. Sol tarafta koyu yeşil bir kenar çubuğu göreceksiniz; beş ana bölüm vardır: **Bugün, Kopyalar, Harita, Kurallar, Geçmiş**.
+1. Uygulamayı açın. Sol tarafta koyu yeşil bir kenar çubuğu göreceksiniz; yedi ana bölüm vardır: **Bugün, Kopyalar, Harita, Adlandırma, Tarihe Göre, Kurallar, Geçmiş**.
 2. Önce **Harita** bölümüne gidip bir klasörü seçerek **Klasör analizi** ekranında boyutları inceleyebilirsiniz. Bu ekran dosyalarınızı değiştirmez.
 3. Kopyalarınızı görmek için **Kopyalar > Dosya grupları** ekranını açın; klasörü seçip taramayı başlatın.
 4. Gelen kutusu otomasyonunu kullanmak istiyorsanız **Kurallar** bölümünden kaynak ve yedek klasörleri seçin (bkz. Bölüm 5).
@@ -67,7 +68,24 @@ Klasörleri anlamak ve temizlik yapmak için kullanılır.
 - **Klasördeki dosyalar:** Seçili klasörün dosyalarını arama, sayfalama ve ön izleme ile listeler. Buradan seçtiğiniz dosyaları bir hedef klasöre ve grup adına taşıyabilir ya da şablonla yeniden adlandırabilirsiniz.
 - **Klasör sağlığı:** En büyük dosyaları ve uzun süredir değişmemiş dosyaları raporlar.
 
-### 3.4 Kurallar
+### 3.4 Adlandırma
+
+Seçili klasördeki dosya ve klasör adlarını kurallarla toplu düzenler.
+
+- **Hazır kalıplar** ve ayrı ayrı kurallar: kapsam (klasör, dosya veya ikisi), harf biçimi, boşluk yerine tire/alt çizgi, Türkçe harfleri kaldırma, parantez ve noktalama temizliği, başa sıra numarası, tarih ve uzunluk sınırı.
+- Önizleme görmeden hiçbir ad değişmez; uygulanan işlem Geçmiş'ten geri alınabilir.
+
+### 3.5 Tarihe Göre
+
+Seçili klasördeki dosyaları tarihlerine göre klasörlere toplar. Fotoğraf ve videolarda çekim tarihi, diğerlerinde oluşturma tarihi kullanılır; tarihi okunamayanlar `Tarihsiz` klasörüne gider.
+
+- **Klasör düzeni:** `Yıl\Ay` (`2026\01`), yalnız `Aya göre` (`2026-01`) veya `Yıl (sıra no)` (`01_2025`, `02_2026`).
+- **Hangi dosyalar** ve **alt klasörlerdeki dosyalar da** seçenekleriyle kapsam belirlenir.
+- Önizleme klasörleri, dosya sayılarını ve örnek adları gösterir. "Grupla"ya basınca taşıma sırasında yüzdeli ilerleme çubuğu görünür.
+- **Dizin dosyası:** Taşımadan önce kök klasöre `Tarih_Dizini.html` yazılır. Tarayıcıda açınca hangi dosyanın hangi klasörde olduğunu görür, arama kutusuyla bulabilir ve dosya adına tıklayarak o klasörü açabilirsiniz. Her gruplama dosyanın en üstüne yeni bir bölüm ekler. Geri alma bu dosyayı güncellemez.
+- Hiçbir dosyanın üzerine yazılmaz; aynı ad varsa `ad (1).uzantı` olur. İşlem Geçmiş'ten geri alınır.
+
+### 3.6 Kurallar
 
 Uygulamanın ayarlarının bulunduğu yerdir.
 
@@ -79,7 +97,7 @@ Uygulamanın ayarlarının bulunduğu yerdir.
   - **Otomatik taşımaları bildir:** Pencere önde değilken her yerleştirmede bir Windows bildirimi gösterir. Varsayılan olarak kapalıdır.
 - **Otomasyon durumu:** İzlemenin açık mı, duraklatılmış mı olduğunu, izlenen kaynakları ve şablonla adlandırma ayarlarını gösterir.
 
-### 3.5 Geçmiş
+### 3.7 Geçmiş
 
 - **İşlem geçmişi:** Yapılan taşıma ve yeniden adlandırmaların listesidir. Geri alma buradan yapılır.
   - Son 200 işlem tutulur.
