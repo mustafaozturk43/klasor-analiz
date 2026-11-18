@@ -51,13 +51,14 @@ Açık Windows uygulaması debug `.exe` dosyasını kilitliyorsa uygulamayı kap
 
 ## Ekranlar
 
-Kenar çubuğunda 7 hedef var; birkaçının içinde alt sekmeler bulunur (`src/lib/navigation.ts`). Kopyalar, Harita, Adlandırma ve Tarihe Göre "Klasör-Dosya İşlemleri" grubunun altındadır.
+Kenar çubuğunda 8 hedef var; birkaçının içinde alt sekmeler bulunur (`src/lib/navigation.ts`). Kopyalar, Harita, Adlandırma, Tarihe Göre ve Kural motoru "Klasör-Dosya İşlemleri" grubunun altındadır.
 
 - **Bugün:** günün gelen kutusu. Her dosya için **Tut / Taşı / At** kararı verilir (varsayılan Tut); sonra "Kararları uygula" tek dokunuşla hepsini yapar. Taşınanlar hedef klasöre gider ve İşlem Geçmişi'nden geri alınır; "At" onaylı olarak Windows Geri Dönüşüm Kutusu'na gönderilir. Gruplar, küçük resimler, metin özeti ve benzer isimliler satırlarda görünür; "Taşınacakları adlandır" şablonla adlandırır.
 - **Kopyalar:** Dosya grupları (solda süzülebilir liste, sağda ana dosya ve kopyaların karşılaştırması, saklama politikası, "Bu grubu taşı"; kutularla toplu seçim alt çubuktan), İki klasör karşılaştırma ve Karantina.
 - **Harita:** Klasör analizi (boyutla orantılı kutu haritası, türe göre alan, Temizlenecekler özeti), Klasördeki dosyalar (arama, sayfalama, ön izleme) ve Klasör sağlığı.
 - **Adlandırma:** klasör ve dosya adlarını kurallarla (harf biçimi, boşluk, Türkçe harf, sıra numarası, tarih) toplu düzenler; önce önizleme, geri alınabilir.
 - **Tarihe Göre:** dosyaları çekim (yoksa oluşturma) tarihine göre `Yıl\Ay`, `Yıl-Ay` veya sıra numaralı yıl klasörlerine toplar. Taşımadan önce kök klasöre `Tarih_Dizini.html` yazar: klasör ve dosya adları, arama kutusu, dosya adına tıklayınca klasör açılır. Taşıma sırasında yüzde ilerleme gösterilir; Geçmiş'ten geri alınır. "Dizini aç" ve "Dizini yenile" düğmeleri dizini tarayıcıda açar veya alt klasörlerin şimdiki durumundan baştan yazar.
+- **Kural motoru:** seçili klasörde kendi kurallarını çalıştırır. Bir kural; uzantı, ad içeriyor, boyut (MB) ve yaş (gün) koşullarının hepsini (en az biri zorunlu) ve tek eylemi (klasöre taşı, Yıl\Ay klasörüne taşı, Geri Dönüşüm Kutusu'na gönder) içerir. Kurallar yukarıdan aşağıya denenir, ilk eşleşen kazanır. Önizleme canlıdır; taşıma Geçmiş'ten geri alınır. Geri Dönüşüm Kutusu eylemi ayrı bir ikinci onay ister ve geri alınamaz. Kurallar `settings.json` içindeki `uiPrefs.ruleEngine` alanında saklanır. Gelen Kutusu'na dokunmaz.
 - **Kurallar:** Kurallar (otomasyon, kaynak ve yedek klasörleri, 5 uzantı grubu ve sağda "Türüne göre düzenle": seçenekler, profiller, önizleme ve uygulama) ve Otomasyon durumu (izleme durumu, şablonla adlandırma).
 - **Geçmiş:** taşıma ve yeniden adlandırmaları geri alma.
 
@@ -96,7 +97,8 @@ Arka uç (`src-tauri/src/`): modüller konuya göre klasörlere ayrılır; `lib.
 | `organizer/` | "Türüne göre düzenle" ve CSV rapor |
 | `renaming/` | adlandırma kuralları, şablonla adlandırma, seçili dosyaları adlandırma |
 | `by_date/` | Tarihe Göre gruplama: plan, klasör düzeni, HTML dizin |
-| `fileops/` | taşıma, geri alma geçmişi, karantina, yol koruması |
+| `fileops/` | taşıma (`batch_move`: önce Geçmiş'e yaz, sonra taşı), geri alma geçmişi, karantina, yol koruması |
+| `engine/` | Kural motoru: kural modeli, plan, uygulama |
 | `winshell/` | Windows kabuğu: küçük resim, çekim tarihi, asset kapsamı |
 
 Kaynak dosyaları 250 satırı, satırlar 300 karakteri geçmez.

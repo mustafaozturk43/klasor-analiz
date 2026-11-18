@@ -22,7 +22,7 @@ Smart File Organizer, Windows bilgisayarınızdaki klasörleri tarayıp düzeni 
 
 ## 2. İlk kullanım (hızlı başlangıç)
 
-1. Uygulamayı açın. Sol tarafta koyu yeşil bir kenar çubuğu göreceksiniz; yedi ana bölüm vardır: **Bugün, Kopyalar, Harita, Adlandırma, Tarihe Göre, Kurallar, Geçmiş**.
+1. Uygulamayı açın. Sol tarafta koyu yeşil bir kenar çubuğu göreceksiniz; sekiz ana bölüm vardır: **Bugün, Kopyalar, Harita, Adlandırma, Tarihe Göre, Kural motoru, Kurallar, Geçmiş**.
 2. Önce **Harita** bölümüne gidip bir klasörü seçerek **Klasör analizi** ekranında boyutları inceleyebilirsiniz. Bu ekran dosyalarınızı değiştirmez.
 3. Kopyalarınızı görmek için **Kopyalar > Dosya grupları** ekranını açın; klasörü seçip taramayı başlatın.
 4. Gelen kutusu otomasyonunu kullanmak istiyorsanız **Kurallar** bölümünden kaynak ve yedek klasörleri seçin (bkz. Bölüm 5).
@@ -85,7 +85,18 @@ Seçili klasördeki dosyaları tarihlerine göre klasörlere toplar. Fotoğraf v
 - **Dizin dosyası:** Taşımadan önce kök klasöre `Tarih_Dizini.html` yazılır. Tarayıcıda açınca hangi dosyanın hangi klasörde olduğunu görür, arama kutusuyla bulabilir ve dosya adına tıklayarak o klasörü açabilirsiniz. Her gruplama dosyanın en üstüne yeni bir bölüm ekler. Geri alma bu dosyayı güncellemez. Önizlemenin altındaki **Dizini aç** dosyayı tarayıcıda açar; **Dizini yenile** hiçbir dosya taşımadan dizini alt klasörlerin şimdiki durumundan baştan yazar (geri alma sonrası bayat kalan bölümleri temizler; kökteki dosyalar dizine girmez).
 - Hiçbir dosyanın üzerine yazılmaz; aynı ad varsa `ad (1).uzantı` olur. İşlem Geçmiş'ten geri alınır.
 
-### 3.6 Kurallar
+### 3.6 Kural motoru
+
+Kendi kurallarınla seçili klasörü düzenlersin.
+
+- **Kural ekle:** Her kuralın en az bir koşulu olmalı: uzantılar, adı içerir, en az/en çok MB, en az kaç gün eski. Koşulların hepsi birlikte sağlanmalıdır.
+- **Eylem:** klasöre taşı (seçili klasörün altında bir hedef), `Yıl\Ay` klasörüne taşı (dosyanın değişiklik tarihine göre) ya da Geri Dönüşüm Kutusu'na gönder.
+- Kurallar yukarıdan aşağıya denenir; bir dosyaya **ilk eşleşen kural** uygulanır. Sırayı ok düğmeleriyle değiştirirsin.
+- Önizleme her değişiklikte güncellenir: kural başına dosya sayısı ve örnek adlar. Onaylamadan hiçbir dosyaya dokunulmaz.
+- Taşımalar İşlem Geçmişi'nden geri alınır. **Geri Dönüşüm Kutusu'na gönder** eylemi ayrı bir ikinci onay ister ve Geçmiş'ten geri alınamaz; dosyaları Geri Dönüşüm Kutusu'ndan geri yüklersin.
+- Gelen Kutusu otomasyonuna dokunmaz; yalnızca elle çalıştırılır.
+
+### 3.7 Kurallar
 
 Uygulamanın ayarlarının bulunduğu yerdir.
 
@@ -97,7 +108,7 @@ Uygulamanın ayarlarının bulunduğu yerdir.
   - **Otomatik taşımaları bildir:** Pencere önde değilken her yerleştirmede bir Windows bildirimi gösterir. Varsayılan olarak kapalıdır.
 - **Otomasyon durumu:** İzlemenin açık mı, duraklatılmış mı olduğunu, izlenen kaynakları ve şablonla adlandırma ayarlarını gösterir.
 
-### 3.7 Geçmiş
+### 3.8 Geçmiş
 
 - **İşlem geçmişi:** Yapılan taşıma ve yeniden adlandırmaların listesidir. Geri alma buradan yapılır.
   - Son 200 işlem tutulur.

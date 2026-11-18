@@ -27,6 +27,7 @@ import QuarantineView from "./features/duplicates/QuarantineView";
 import AutomationView from "./features/rules/AutomationView";
 import EveningPanel from "./features/today/EveningPanel";
 import DateGroupView from "./features/dates/DateGroupView";
+import RuleEngineView from "./features/engine/RuleEngineView";
 import NamingView from "./features/rename/NamingView";
 import FilePreview from "./features/map/FilePreview";
 import CleanupTable from "./features/map/CleanupTable";
@@ -82,11 +83,13 @@ export default function App() {
   const mapView = dest === "map" && module === "analysis" && !!mapStats;
   const title = dest === "duplicates" && wasted > 0 ? `${formatBytes(wasted)} geri kazanılabilir`
     : mapView && mapStats ? `${formatBytes(mapStats.rootTotalBytes)}, ${formatCount(mapStats.rootFileCount)} dosya`
+    : dest === "engine" ? "Kendi kurallarınla düzenle"
     : dest === "rename" ? "Adları tek kurala bağla"
     : dest === "dates" ? "Dosyaları Yıl\\Ay klasörlerine topla"
     : dest === "rules" && module === "settings" ? "Kurallar cümle gibi okunur" : def.label;
   const sub = mapView && top.length > 1 ? `${top[0].name} ve ${top[1].name}, alanın yüzde ${topShare}’ini tutuyor. Kutuya tıklayıp içine girebilirsin.`
     : dest === "dates" ? "Seçili klasördeki dosyalar çekim ya da oluşturma tarihine göre 2026\\01 gibi klasörlere taşınır. Önce önizlersin; onaylamadan hiçbir dosya taşınmaz."
+    : dest === "engine" ? "Uzantı, ad, boyut ve yaş koşullarıyla dosyaları klasöre taşı ya da Geri Dönüşüm Kutusu'na gönder. Önce önizlersin; onaylamadan hiçbir dosyaya dokunulmaz."
     : dest === "rename" ? "Seçili klasörün içindeki klasör ve dosya adları aşağıdaki kurallara göre düzenlenir. Önce önizlersin; onaylamadan hiçbir ad değişmez."
     : dest === "rules" && module === "settings" ? "İzlenen klasöre düşen dosya, uzantısına göre günün klasörüne taşınır. Uyan grup yoksa dosya olduğu yerde kalır."
     : dest === "duplicates" && app.groups.length > 0 ? `${exact.length} birebir kopya, ${app.groups.length - exact.length} benzer ad. Ana dosya yerinde kalır, kopyalar silinmez, karantinaya gider.`
@@ -108,7 +111,7 @@ export default function App() {
     <div className="app-body">
     <AppNav dest={dest} setDest={setDest} counts={{ duplicates: app.groups.length }} automation={automation.status} onTogglePause={automation.togglePause} rail={nav.rail} />
     <main className="shell-scroll" id="workspace"><div className="shell-width workspace">
-      {ops && <FolderPickerBar app={app} scanControls={module !== "naming" && module !== "dateGroup"}>{scoped && <WorkspaceSettings app={app} embedded />}</FolderPickerBar>}
+      {ops && <FolderPickerBar app={app} scanControls={module !== "naming" && module !== "dateGroup" && module !== "ruleEngine"}>{scoped && <WorkspaceSettings app={app} embedded />}</FolderPickerBar>}
       {dest !== "today" && <ScreenHeader dest={def} module={module} onPick={go} title={title} sub={sub} stats={SCAN_STATS.has(module) ? stats : null}
         scan={!SCAN_STATS.has(module) ? null : app.isScanning ? "busy" : app.scanResult ? "done" : "idle"} />}
       {!ops && scoped && <WorkspaceSettings app={app} />}
@@ -133,6 +136,7 @@ export default function App() {
       <div hidden={module !== "quarantine"}>{on("quarantine") && <QuarantineView app={app} active={dest === "duplicates" && module === "quarantine"} />}</div>
       <div hidden={module !== "naming"}>{on("naming") && <NamingView app={app} active={module === "naming"} />}</div>
       <div hidden={module !== "dateGroup"}>{on("dateGroup") && <DateGroupView app={app} active={module === "dateGroup"} />}</div>
+      <div hidden={module !== "ruleEngine"}>{on("ruleEngine") && <RuleEngineView app={app} active={module === "ruleEngine"} />}</div>
       <div hidden={module !== "evening"}><EveningPanel app={app} active={dest === "today"} onOpenSettings={() => go("settings")} /></div>
       <div hidden={module !== "automation"}>{on("automation") && <AutomationView app={app} />}</div>
       <div hidden={module !== "settings"}>{on("settings") && <RulesView app={app} />}</div>

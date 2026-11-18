@@ -6,6 +6,7 @@
 // Moduller konuya gore klasorlere ayrilir; `crate::<modul>` yollari asagidaki yeniden disa aktarimlarla korunur.
 pub mod auto;
 pub mod by_date;
+pub mod engine;
 pub mod fileops;
 pub mod inbox;
 pub mod models;
@@ -16,8 +17,9 @@ pub mod winshell;
 
 pub use auto::{automation, notifier, settings, settings_cmds, startup, watcher, watcher_core};
 use auto::{single_instance, tray};
+pub use engine::{rule_apply, rule_model, rule_plan};
 pub use by_date::{date_group, date_group_index, date_group_layout, date_group_plan};
-pub use fileops::{file_ops, group_moves, history, history_cmds, mover, path_guard, quarantine_cmds, quarantine_manage, selection_move, selection_paths, subfolders};
+pub use fileops::{batch_move, file_ops, group_moves, history, history_cmds, mover, path_guard, quarantine_cmds, quarantine_manage, selection_move, selection_paths, subfolders};
 pub use inbox::{inbox_dupes, inbox_list, inbox_path, inbox_rename, inbox_sources, inbox_suggest, inspector, operations, trash_ops};
 pub use organizer::{organize, organize_apply, organize_cleanup, organize_models, organize_names, organize_plan, organize_report, organize_rules, organize_walk, reporter};
 pub use renaming::{name_rules, name_rules_apply, name_rules_plan, naming, rename, rename_template, selection_rename};
@@ -121,6 +123,7 @@ pub fn run() {
         .manage(selection_move::SelectionMoveState::default())
         .manage(organize::OrganizeState::default())
         .manage(date_group::DateGroupState::default())
+        .manage(rule_apply::RuleEngineState::default())
         .manage(automation::AutomationState::default())
         .manage(watcher::WatcherState::default())
         .plugin(tauri_plugin_dialog::init())
@@ -180,7 +183,7 @@ pub fn run() {
             trash_ops::delete_files_to_trash,
             reporter::export_groups_csv, reporter::export_history_csv,
             shell::reveal_in_explorer, shell::open_file_default,
-            date_group::preview_date_group, date_group::apply_date_group, date_group::rebuild_date_index,
+            date_group::preview_date_group, date_group::apply_date_group, date_group::rebuild_date_index, rule_apply::preview_rules, rule_apply::apply_rules,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

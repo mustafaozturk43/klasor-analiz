@@ -3,7 +3,10 @@
 use super::*;
 use crate::by_date::date_group_plan::{plan_date_group, DateGroupOptions};
 use crate::hash_cache::HashCache;
+use std::fs;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::AtomicBool;
+use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
 /// 2026-01-15 12:00 UTC.

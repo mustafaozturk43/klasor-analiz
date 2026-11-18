@@ -4,83 +4,31 @@
 
 use crate::date_group_index::{rebuild_index, write_index};
 use crate::date_group_plan::{collect, plan_date_group, DateGroupOptions, DateGroupPlan};
-use crate::models::{ScanProgress, UndoRecord};
+use crate::batch_move::{ensure_unchanged, run_batches};
+use crate::models::ScanProgress;
 use crate::operations::MoveOutcome;
-use crate::organize_cleanup::prune_empty_dirs;
-use crate::organize_models::FailedMove;
 use crate::rename::FileStamps;
-use crate::{file_ops, history, AppState};
-use std::fs;
-use std::path::{Path, PathBuf};
+use crate::AppState;
+use std::path::Path;
 use std::sync::Mutex;
 use tauri::ipc::Channel;
 use tauri::State;
-
-const CHANGED: &str = "Dosyalar ön izlemeden sonra değişti; yeniden ön izleyin.";
 
 #[derive(Default)]
 pub struct DateGroupState {
     pending: Mutex<Option<(DateGroupPlan, FileStamps)>>,
 }
 
-/// Gecmis dosyasi parti basina bir kez yazilir; buyuk islerde yazim sayisi ~40 ile sinirlanir (25..250 dosya).
-fn batch_size(total: usize) -> usize {
-    (total / 40).clamp(25, 250)
-}
-
 pub(crate) fn apply_core(app: &AppState, plan: &DateGroupPlan, stamps: &FileStamps, progress: &dyn Fn(u64, u64)) -> Result<MoveOutcome, String> {
     if plan.entries.is_empty() {
         return Err("Taşınacak dosya yok.".into());
     }
-    for (entry, st) in plan.entries.iter().zip(stamps) {
-        let meta = fs::metadata(&entry.from).map_err(|_| CHANGED.to_string())?;
-        if (meta.len(), meta.modified().ok()) != *st || Path::new(&entry.to).exists() {
-            return Err(CHANGED.into());
-        }
-    }
+    ensure_unchanged(&plan.entries, stamps)?;
+    let root = Path::new(&plan.root);
     // Dizin dosyasi tasimadan once kok klasore yazilir.
-    write_index(Path::new(&plan.root), &plan.entries)?;
-    let label =Path::new(&plan.root).file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_else(|| plan.root.clone());
-    let mut guard = app.history.lock().map_err(|e| e.to_string())?;
-    history::push(&mut guard, UndoRecord { id: plan.id.clone(), timestamp: crate::now_ms(), tag: format!("Tarihe göre gruplama · {label}"), moves: Vec::new() });
-    history::save(&app.dir, &guard)?;
-    let mut out = MoveOutcome { moved: Vec::new(), failed: Vec::new(), removed_dirs: 0 };
-    let total = plan.entries.len() as u64;
-    progress(0, total);
-    for chunk in plan.entries.chunks(batch_size(plan.entries.len())) {
-        let mut ready = Vec::with_capacity(chunk.len());
-        for entry in chunk {
-            match Path::new(&entry.to).parent().map(fs::create_dir_all).transpose() {
-                Ok(_) => ready.push(entry),
-                Err(e) => out.failed.push(FailedMove { path: entry.from.clone(), error: e.to_string() }),
-            }
-        }
-        // Once gecmise yaz (parti basina tek dosya yazimi), sonra tasi: islem yarida kesilse de geri alinabilir.
-        guard[0].moves.extend(ready.iter().map(|e| (*e).clone()));
-        history::save(&app.dir, &guard)?;
-        let mut failed_from = Vec::new();
-        for entry in ready {
-            match file_ops::transfer(Path::new(&entry.from), Path::new(&entry.to)) {
-                Ok(()) => out.moved.push(entry.clone()),
-                Err(error) => {
-                    failed_from.push(entry.from.clone());
-                    out.failed.push(FailedMove { path: entry.from.clone(), error });
-                }
-            }
-        }
-        if !failed_from.is_empty() {
-            guard[0].moves.retain(|m| !failed_from.contains(&m.from));
-            history::save(&app.dir, &guard)?;
-        }
-        progress((out.moved.len() + out.failed.len()) as u64, total);
-    }
-    if guard[0].moves.is_empty() {
-        guard.remove(0);
-    }
-    history::save(&app.dir, &guard)?;
-    // Basarisiz tasimalardan bos kalan yeni Yıl\Ay klasorleri.
-    out.removed_dirs = prune_empty_dirs(Path::new(&plan.root), plan.created_dirs.iter().map(PathBuf::from), &|_| false);
-    Ok(out)
+    write_index(root, &plan.entries)?;
+    let label = root.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_else(|| plan.root.clone());
+    run_batches(app, &plan.id, format!("Tarihe göre gruplama · {label}"), &plan.entries, root, &plan.created_dirs, progress)
 }
 
 #[tauri::command(async)]

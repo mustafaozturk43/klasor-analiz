@@ -1,20 +1,13 @@
 import { CalendarDays, ExternalLink, Folder, RefreshCw, Undo2 } from "lucide-react";
 import { UNDATED } from "./dateGroupCommands";
 import { formatCount } from "../../lib/format";
+import MoveProgress from "../../components/MoveProgress";
 import type { DateGroupState } from "./useDateGroup";
 
 interface Props { dg: DateGroupState; rootPath: string; locked: boolean }
 
 const MONTHS = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
 const monthName = (folder: string) => (folder === UNDATED ? "" : MONTHS[Number(folder.split("\\")[1]) - 1] ?? "");
-
-function MoveProgress({ done, total }: { done: number; total: number }) {
-  const pct = total ? Math.min(100, Math.round(done / total * 100)) : 0;
-  return <div role="status" className="rules-organize-progress">
-    <span>Taşınıyor · {formatCount(done)} / {formatCount(total)} (%{pct})</span>
-    <div className="organize-progress"><span style={{ transform: `scaleX(${pct / 100})` }} /></div>
-  </div>;
-}
 
 /** Onizleme: Yıl\Ay klasoru, dosya sayisi ve ornek adlar; altta uygulama ve geri alma. */
 export default function DateGroupPreview({ dg, rootPath, locked }: Props) {

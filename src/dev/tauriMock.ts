@@ -74,6 +74,13 @@ const handlers: Record<string, (a: Args) => unknown> = {
   },
   apply_date_group: () => ({ moved: [], failed: [], removedDirs: 0 }),
   rebuild_date_index: () => 12,
+  preview_rules: a => {
+    const rules = (a.rules as { name: string; action: string; enabled: boolean }[]).filter(r => r.enabled);
+    const counts = rules.map((r, i) => ({ rule: r.name, action: r.action, count: 3 + i, samples: ["rapor.pdf", "fatura_ocak.pdf", "notlar.txt"] }));
+    const entries = counts.flatMap(c => c.samples.map(n => ({ from: `${String(a.root)}\\${n}`, to: c.action === "trash" ? "" : `${String(a.root)}\\Hedef\\${n}`, rule: c.rule, action: c.action })));
+    return { id: "RE-mock", root: String(a.root), entries, counts, scanned: 40, unmatched: 31, inPlace: 0, trashCount: entries.filter(e => !e.to).length, createdDirs: [] };
+  },
+  apply_rules: () => ({ moved: [], trashed: 0, failed: [], removedDirs: 0 }),
   apply_name_rules: () => 9,
   list_subfolders: a => ({ paths: ["Arsiv", "Faturalar", "Faturalar\\Nisan", "Fotograflar", "Notlar", "Projeler"].map(n => `${String(a.root)}\\${n}`), truncated: false }),
   get_shell_thumbnails: a => paths(a).map(() => null),

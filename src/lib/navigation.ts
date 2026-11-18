@@ -22,6 +22,7 @@ export const DESTINATIONS: DestinationDef[] = [
   ] },
   { id: "rename", label: "Adlandırma", group: "ops", views: [{ id: "naming", label: "Adlandırma" }] },
   { id: "dates", label: "Tarihe Göre", group: "ops", views: [{ id: "dateGroup", label: "Yıl\\Ay gruplama" }] },
+  { id: "engine", label: "Kural motoru", group: "ops", views: [{ id: "ruleEngine", label: "Kural motoru" }] },
   { id: "rules", label: "Kurallar", views: [
     { id: "settings", label: "Kurallar" }, { id: "automation", label: "Otomasyon durumu" },
   ] },

@@ -1,0 +1,20 @@
+/* Kural motoru: kural kartlari ve onizleme satirlari (naming.css yerlesimini kullanir). */
+.rule-engine-options { max-width: 520px; }
+.rule-list { list-style: none; margin: 0 0 var(--space-md); padding: 0; display: flex; flex-direction: column; gap: var(--space-sm); }
+.rule-card { border: 1px solid var(--color-rule); border-radius: var(--radius-control); padding: var(--space-sm) var(--space-md); background: var(--color-paper-2, transparent); }
+.rule-card[data-off] { opacity: 0.6; }
+.rule-card-head { display: flex; align-items: center; gap: var(--space-xs); margin-bottom: var(--space-sm); }
+.rule-card-head input[type="text"] { flex: 1 1 auto; min-width: 0; }
+.rule-card-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-sm); }
+.rule-card-grid label { display: flex; flex-direction: column; gap: 2px; font-size: var(--text-xs); color: var(--color-muted); }
+.rule-card-grid .rule-target { grid-column: 1 / -1; }
+.rule-warn { color: var(--color-danger, #b42318); margin: var(--space-xs) 0 0; }
+.rule-empty { margin: 0 0 var(--space-sm); }
+.rule-count-row { display: grid; grid-template-columns: 9rem 11rem minmax(0, 1fr) auto; align-items: center; gap: var(--space-sm); min-height: 41px; border-bottom: 1px solid var(--color-rule); padding: 0 var(--space-lg); }
+.rule-count-row .hint { margin: 0; }
+.rule-count-row[data-trash] .naming-name { color: var(--color-danger, #b42318); }
+@media (max-width: 60rem) {
+  .rule-engine-options { max-width: none; }
+  .rule-count-row { grid-template-columns: 1fr auto; padding-inline: var(--space-md); }
+  .rule-count-row .hint, .rule-count-row .date-group-samples { display: none; }
+}

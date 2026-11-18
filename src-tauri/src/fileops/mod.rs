@@ -1,3 +1,4 @@
+pub mod batch_move;
 pub mod file_ops;
 pub mod mover;
 pub mod group_moves;
