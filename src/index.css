@@ -26,6 +26,7 @@
 @import "./styles/map.css";
 @import "./styles/rules.css";
 @import "./styles/browser.css";
+@import "./styles/menus.css";
 
 /* Koyu mod sinif tabanli: html.dark (tema secimi: acik/koyu/otomatik). */
 @custom-variant dark (&:where(.dark, .dark *));

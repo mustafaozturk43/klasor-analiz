@@ -11,7 +11,7 @@ interface BannedExtEditorProps {
 
 /**
  * Yasakli uzanti listesi duzenleyici: chip listesi + ekleme kutusu.
- * Bu uzantilar taranmaz (kategoriye girse bile).
+ * Bu uzantilar taranmaz (kategoriye girse bile). Renkler menus.css token'larindan.
  */
 export default function BannedExtEditor({
   extensions,
@@ -29,46 +29,36 @@ export default function BannedExtEditor({
 
   return (
     <div>
-      <div className="mb-1.5 flex items-center justify-between">
-        <p className="flex items-center gap-1.5 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-          <Ban className="h-3.5 w-3.5" />
+      <div className="flex items-center justify-between gap-2">
+        <p className="menu-label" id="banned-label">
+          <Ban size={14} aria-hidden />
           Yasaklı Uzantılar
         </p>
-        <button
-          type="button"
-          onClick={onReset}
-          title="Varsayılan listeye dön"
-          className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] text-zinc-400 transition-colors hover:text-blue-600 dark:text-zinc-500 dark:hover:text-blue-400"
-        >
-          <RotateCcw className="h-3 w-3" />
+        <button type="button" onClick={onReset} title="Varsayılan listeye dön" className="menu-link">
+          <RotateCcw size={12} aria-hidden />
           Sıfırla
         </button>
       </div>
 
-      <p className="mb-2 text-[10px] leading-relaxed text-zinc-400 dark:text-zinc-500">
+      <p className="menu-note mb-2">
         Sistem/çalıştırılabilir dosyalar taranmaz. Varsayılan:{" "}
         {DEFAULT_BANNED_EXTENSIONS.slice(0, 6).join(", ")}…
       </p>
 
-      <div className="flex flex-wrap gap-1">
+      <div className="ban-chips" role="list" aria-labelledby="banned-label">
         {extensions.length === 0 ? (
-          <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
-            Liste boş: hiçbir uzantı engellenmiyor.
-          </span>
+          <span className="menu-note">Liste boş: hiçbir uzantı engellenmiyor.</span>
         ) : (
           extensions.map((ext) => (
-            <span
-              key={ext}
-              className="inline-flex items-center gap-1 rounded-md bg-rose-50 px-1.5 py-0.5 text-[11px] font-medium text-rose-700 dark:bg-rose-500/10 dark:text-rose-400"
-            >
+            <span key={ext} className="ban-chip" role="listitem">
               .{ext}
               <button
                 type="button"
                 onClick={() => onRemove(ext)}
                 title={`${ext} listesinden çıkar`}
-                className="rounded-sm p-0.5 transition-colors hover:bg-rose-100 dark:hover:bg-rose-500/20"
+                aria-label={`.${ext} uzantısını listeden çıkar`}
               >
-                <X className="h-2.5 w-2.5" />
+                <X size={12} aria-hidden />
               </button>
             </span>
           ))
@@ -87,18 +77,18 @@ export default function BannedExtEditor({
             }
           }}
           placeholder="örn: tmp veya .log"
+          aria-label="Yasaklanacak uzantı"
           spellCheck={false}
-          className="min-w-0 flex-1 rounded-lg border border-zinc-300 bg-white px-2 py-1 text-xs outline-none transition-colors placeholder:text-zinc-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:placeholder:text-zinc-500"
+          className="menu-input"
         />
         <button
           type="button"
           onClick={commit}
           disabled={!draft.trim()}
           title="Uzantıyı yasaklı listeye ekle"
-          className={"inline-flex shrink-0 items-center gap-1 rounded-lg border border-zinc-300 bg-white px-2 py-1 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40 " +
-            "dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"}
+          className="btn"
         >
-          <Plus className="h-3 w-3" />
+          <Plus size={14} aria-hidden />
           Ekle
         </button>
       </div>

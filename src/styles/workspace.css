@@ -124,7 +124,7 @@ select, input[type=text], input[type=search], input[type=number] { border-color:
 .compact-header { display: flex; align-items: center; gap: var(--space-sm); flex-wrap: wrap; padding-block: var(--space-sm); }
 .compact-header .brand { flex: 1; min-width: 120px; }
 .compact-header h1 { font-size: var(--text-sm); color: var(--color-ink-2); font-weight: 700; }
-.compact-header p { font-family: var(--font-code); font-size: var(--text-xs); color: var(--color-muted); max-width: 520px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.compact-header .brand p { font-family: var(--font-code); font-size: var(--text-xs); color: var(--color-muted); max-width: 520px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
 .header-tools { display: flex; gap: var(--space-xs); align-items: center; flex-wrap: wrap; min-width: 0; }
 .header-folder-controls { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-xs); min-width: 0; border: 0; margin: 0; padding: 0; }

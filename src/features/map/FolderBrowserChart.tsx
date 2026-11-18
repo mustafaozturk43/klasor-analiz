@@ -14,7 +14,7 @@ export default function FolderBrowserChart({ folders, loading, enter }: {
   const max = folders.reduce((max, entry) => Math.max(max, entry.folder.totalBytes), 1);
   if (loading) return <div className="empty-state" role="status">Alt klasör boyutları hesaplanıyor…</div>;
   if (!folders.length) return null;
-  return <section aria-label="Alt klasör grafikleri" className="border-y border-zinc-200 dark:border-zinc-700">
+  return <section aria-label="Alt klasör grafikleri" className="border-y border-[var(--color-rule)]">
     <div className="panel-head"><div><h3><ChartBar size={16} /> Alt klasörler</h3><p>İçeriğini listelemek için klasöre tıklayın. Grafikler tüm dosya türlerinin toplam boyutunu gösterir.</p></div><span className="badge">{folders.length} klasör</span></div>
     <VirtualRows items={pagination.items} itemKey={e => `${e.source}:${e.folder.path}`} estimate={64} maxHeight={320} render={({ folder, source }) =>
       <button type="button" className="folder-chart-row" onClick={() => enter(folder.path, source)} title={folder.path}>
