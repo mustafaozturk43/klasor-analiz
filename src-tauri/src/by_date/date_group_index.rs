@@ -6,7 +6,7 @@ use crate::models::MoveRecord;
 use chrono::Local;
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 pub const INDEX_FILE: &str = "Tarih_Dizini.html";
 /// Eski surumun duz metin dizini; gruplamaya girmesin diye atlanir.
@@ -76,15 +76,37 @@ pub fn render_section(root: &Path, entries: &[MoveRecord], when: &str) -> String
     out
 }
 
-pub fn write_index(root: &Path, entries: &[MoveRecord]) -> Result<(), String> {
+fn now_text() -> String {
+    Local::now().format("%Y-%m-%d %H:%M").to_string()
+}
+
+fn save_page(root: &Path, page: String) -> Result<(), String> {
     let path = root.join(INDEX_FILE);
-    let section = render_section(root, entries, &Local::now().format("%Y-%m-%d %H:%M").to_string());
-    let page = match fs::read_to_string(&path) {
-        Ok(old) if old.contains(MARKER) => old.replacen(MARKER, &format!("{MARKER}\n{section}"), 1),
-        _ => format!("{HEAD}\n{MARKER}\n{section}{TAIL}"),
-    };
     let tmp = root.join(format!("{INDEX_FILE}.tmp"));
     let fail = |e: std::io::Error| format!("Dizin dosyası yazılamadı: {e}");
     fs::write(&tmp, page).map_err(fail)?;
     fs::rename(&tmp, &path).map_err(fail)
+}
+
+/// Gruplamadan once cagrilir: mevcut dizinin en ustune yeni bolum ekler (dosya yoksa olusturur).
+pub fn write_index(root: &Path, entries: &[MoveRecord]) -> Result<(), String> {
+    let section = render_section(root, entries, &now_text());
+    let page = match fs::read_to_string(root.join(INDEX_FILE)) {
+        Ok(old) if old.contains(MARKER) => old.replacen(MARKER, &format!("{MARKER}
+{section}"), 1),
+        _ => format!("{HEAD}
+{MARKER}
+{section}{TAIL}"),
+    };
+    save_page(root, page)
+}
+
+/// Dizini diskteki gercek duruma gore bastan yazar (eski bolumler atilir). `files`: dosya yollari.
+pub fn rebuild_index(root: &Path, files: &[PathBuf]) -> Result<usize, String> {
+    let entries: Vec<MoveRecord> = files.iter().map(|p| MoveRecord { from: p.to_string_lossy().into_owned(), to: p.to_string_lossy().into_owned() }).collect();
+    let section = render_section(root, &entries, &format!("Yeniden üretildi {}", now_text()));
+    save_page(root, format!("{HEAD}
+{MARKER}
+{section}{TAIL}"))?;
+    Ok(entries.len())
 }

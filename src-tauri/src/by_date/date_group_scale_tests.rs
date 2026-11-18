@@ -100,3 +100,27 @@ fn history_is_written_before_files_move() {
     assert!(seen.lock().unwrap().iter().any(|(done, recorded)| *done == 1 && *recorded), "{:?}", seen.lock().unwrap());
     let _ = fs::remove_dir_all(&root);
 }
+
+#[test]
+fn rebuild_index_reflects_disk_and_drops_stale_sections() {
+    let root = scratch("rebuild");
+    fs::write(root.join("a.jpg"), b"a").unwrap();
+    // Gecmis klasoru kokun disinda olmali; yoksa "alt klasor" sayilir.
+    let app = app(std::env::temp_dir().join(format!("sfo_dgscale_rebuild_h_{}", std::process::id())));
+    let (plan, stamps) = plan_date_group(&root, &DateGroupOptions::default(), &|_| Some(JAN), &no_progress).unwrap();
+    apply_core(&app, &plan, &stamps, &no_progress).unwrap();
+    let id = app.history.lock().unwrap()[0].id.clone();
+    crate::history_cmds::undo_entry_core(&app, &id).unwrap();
+    let stale = fs::read_to_string(root.join(crate::date_group_index::INDEX_FILE)).unwrap();
+    assert!(stale.contains(">a.jpg<"), "geri alma dizini guncellemez");
+
+    assert!(rebuild_date_index(root.to_string_lossy().into_owned()).is_err(), "alt klasorde dosya yok");
+    fs::create_dir_all(root.join("2024").join("05")).unwrap();
+    fs::write(root.join("2024").join("05").join("b.jpg"), b"b").unwrap();
+    fs::write(root.join("kok.jpg"), b"k").unwrap();
+    assert_eq!(rebuild_date_index(root.to_string_lossy().into_owned()).unwrap(), 1, "kok dosyalari dizine girmez");
+    let fresh = fs::read_to_string(root.join(crate::date_group_index::INDEX_FILE)).unwrap();
+    assert!(fresh.contains(">b.jpg<") && !fresh.contains(">a.jpg<") && !fresh.contains(">kok.jpg<"), "{fresh}");
+    assert_eq!(fresh.matches("<!doctype").count(), 1);
+    let _ = fs::remove_dir_all(&root);
+}

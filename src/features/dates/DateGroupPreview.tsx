@@ -1,4 +1,4 @@
-import { CalendarDays, Folder, Undo2 } from "lucide-react";
+import { CalendarDays, ExternalLink, Folder, RefreshCw, Undo2 } from "lucide-react";
 import { UNDATED } from "./dateGroupCommands";
 import { formatCount } from "../../lib/format";
 import type { DateGroupState } from "./useDateGroup";
@@ -39,6 +39,10 @@ export default function DateGroupPreview({ dg, rootPath, locked }: Props) {
       <span role="status">{plan && n ? `${formatCount(n)} dosya, ${formatCount(plan.buckets.length)} klasör · ${formatCount(plan.fromTaken)} çekim tarihinden`
         + `${plan.renamed ? ` · ${formatCount(plan.renamed)} ad dolu olduğu için numaralandı` : ""}${plan.inPlace ? ` · ${formatCount(plan.inPlace)} zaten yerinde` : ""}.` : ""}
         {progress && plan ? " Güncelleniyor…" : ""}</span>
+      {rootPath && <>
+        <button type="button" className="btn" onClick={() => void dg.openIndex()} disabled={locked} title="Tarayıcıda açar: hangi dosya hangi klasörde"><ExternalLink size={14} /> Dizini aç</button>
+        <button type="button" className="btn" onClick={() => void dg.rebuildIndex()} disabled={locked} title="Dosya taşımaz; dizini klasörün şimdiki durumundan baştan yazar"><RefreshCw size={14} /> Dizini yenile</button>
+      </>}
       {dg.canUndo && <button type="button" className="btn" onClick={() => void dg.undo()} disabled={locked}><Undo2 size={14} /> Geri al</button>}
       <button type="button" className="btn primary naming-go" onClick={() => void dg.apply()} disabled={locked || !!progress || !n}>
         {n ? `${formatCount(n)} dosyayı grupla` : "Gruplanacak dosya yok"}</button>

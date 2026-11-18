@@ -57,7 +57,7 @@ Kenar çubuğunda 7 hedef var; birkaçının içinde alt sekmeler bulunur (`src/
 - **Kopyalar:** Dosya grupları (solda süzülebilir liste, sağda ana dosya ve kopyaların karşılaştırması, saklama politikası, "Bu grubu taşı"; kutularla toplu seçim alt çubuktan), İki klasör karşılaştırma ve Karantina.
 - **Harita:** Klasör analizi (boyutla orantılı kutu haritası, türe göre alan, Temizlenecekler özeti), Klasördeki dosyalar (arama, sayfalama, ön izleme) ve Klasör sağlığı.
 - **Adlandırma:** klasör ve dosya adlarını kurallarla (harf biçimi, boşluk, Türkçe harf, sıra numarası, tarih) toplu düzenler; önce önizleme, geri alınabilir.
-- **Tarihe Göre:** dosyaları çekim (yoksa oluşturma) tarihine göre `Yıl\Ay`, `Yıl-Ay` veya sıra numaralı yıl klasörlerine toplar. Taşımadan önce kök klasöre `Tarih_Dizini.html` yazar: klasör ve dosya adları, arama kutusu, dosya adına tıklayınca klasör açılır. Taşıma sırasında yüzde ilerleme gösterilir; Geçmiş'ten geri alınır.
+- **Tarihe Göre:** dosyaları çekim (yoksa oluşturma) tarihine göre `Yıl\Ay`, `Yıl-Ay` veya sıra numaralı yıl klasörlerine toplar. Taşımadan önce kök klasöre `Tarih_Dizini.html` yazar: klasör ve dosya adları, arama kutusu, dosya adına tıklayınca klasör açılır. Taşıma sırasında yüzde ilerleme gösterilir; Geçmiş'ten geri alınır. "Dizini aç" ve "Dizini yenile" düğmeleri dizini tarayıcıda açar veya alt klasörlerin şimdiki durumundan baştan yazar.
 - **Kurallar:** Kurallar (otomasyon, kaynak ve yedek klasörleri, 5 uzantı grubu ve sağda "Türüne göre düzenle": seçenekler, profiller, önizleme ve uygulama) ve Otomasyon durumu (izleme durumu, şablonla adlandırma).
 - **Geçmiş:** taşıma ve yeniden adlandırmaları geri alma.
 

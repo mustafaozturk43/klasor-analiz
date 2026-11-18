@@ -73,6 +73,7 @@ const handlers: Record<string, (a: Args) => unknown> = {
     return { id: "DG-mock", root: r, entries, buckets, inPlace: 3, fromTaken: 6, renamed: 0, createdDirs: [] };
   },
   apply_date_group: () => ({ moved: [], failed: [], removedDirs: 0 }),
+  rebuild_date_index: () => 12,
   apply_name_rules: () => 9,
   list_subfolders: a => ({ paths: ["Arsiv", "Faturalar", "Faturalar\\Nisan", "Fotograflar", "Notlar", "Projeler"].map(n => `${String(a.root)}\\${n}`), truncated: false }),
   get_shell_thumbnails: a => paths(a).map(() => null),

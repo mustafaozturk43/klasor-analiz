@@ -70,7 +70,7 @@ fn skip_dir(name: &str) -> bool {
     name.starts_with('.') || name.eq_ignore_ascii_case(INBOX_DIR) || name.eq_ignore_ascii_case(QUARANTINE_DIR)
 }
 
-fn collect(dir: &Path, recursive: bool, exts: &[String], out: &mut Vec<PathBuf>) {
+pub(crate) fn collect(dir: &Path, recursive: bool, exts: &[String], out: &mut Vec<PathBuf>) {
     let Ok(rd) = fs::read_dir(dir) else { return };
     let mut entries: Vec<PathBuf> = rd.flatten().map(|e| e.path()).collect();
     entries.sort();

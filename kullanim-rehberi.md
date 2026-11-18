@@ -82,7 +82,7 @@ Seçili klasördeki dosyaları tarihlerine göre klasörlere toplar. Fotoğraf v
 - **Klasör düzeni:** `Yıl\Ay` (`2026\01`), yalnız `Aya göre` (`2026-01`) veya `Yıl (sıra no)` (`01_2025`, `02_2026`).
 - **Hangi dosyalar** ve **alt klasörlerdeki dosyalar da** seçenekleriyle kapsam belirlenir.
 - Önizleme klasörleri, dosya sayılarını ve örnek adları gösterir. "Grupla"ya basınca taşıma sırasında yüzdeli ilerleme çubuğu görünür.
-- **Dizin dosyası:** Taşımadan önce kök klasöre `Tarih_Dizini.html` yazılır. Tarayıcıda açınca hangi dosyanın hangi klasörde olduğunu görür, arama kutusuyla bulabilir ve dosya adına tıklayarak o klasörü açabilirsiniz. Her gruplama dosyanın en üstüne yeni bir bölüm ekler. Geri alma bu dosyayı güncellemez.
+- **Dizin dosyası:** Taşımadan önce kök klasöre `Tarih_Dizini.html` yazılır. Tarayıcıda açınca hangi dosyanın hangi klasörde olduğunu görür, arama kutusuyla bulabilir ve dosya adına tıklayarak o klasörü açabilirsiniz. Her gruplama dosyanın en üstüne yeni bir bölüm ekler. Geri alma bu dosyayı güncellemez. Önizlemenin altındaki **Dizini aç** dosyayı tarayıcıda açar; **Dizini yenile** hiçbir dosya taşımadan dizini alt klasörlerin şimdiki durumundan baştan yazar (geri alma sonrası bayat kalan bölümleri temizler; kökteki dosyalar dizine girmez).
 - Hiçbir dosyanın üzerine yazılmaz; aynı ad varsa `ad (1).uzantı` olur. İşlem Geçmiş'ten geri alınır.
 
 ### 3.6 Kurallar

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { confirmDialog } from "../../lib/commands";
-import { applyDateGroup, DATE_INDEX_FILE, previewDateGroup, type DateGroupOptions, type DateGroupPlan } from "./dateGroupCommands";
+import { confirmDialog, openFileDefault } from "../../lib/commands";
+import { applyDateGroup, DATE_INDEX_FILE, dateIndexPath, previewDateGroup, rebuildDateIndex, type DateGroupOptions, type DateGroupPlan } from "./dateGroupCommands";
 import { formatCount } from "../../lib/format";
 import { getPref, setPref } from "../../lib/prefs";
 import { getSettings } from "../rules/settingsCommands";
@@ -80,7 +80,28 @@ export function useDateGroup(app: OrganizerState, active: boolean) {
     await app.undoEntry(lastId);
   }, [lastId, app]);
 
-  return { options, setOptions, defaults: DEFAULTS, plan, error, progress, moving, busy, groups, apply, canUndo, undo };
+  /** Dizini tarayicida acar; dosya yoksa ne yapilacagini soyler. */
+  const openIndex = useCallback(async () => {
+    if (!rootPath) return;
+    try {
+      await openFileDefault(dateIndexPath(rootPath));
+    } catch {
+      setStatus({ type: "error", text: `${DATE_INDEX_FILE} bulunamadı. Önce gruplayın ya da “Dizini yenile”ye basın.` });
+    }
+  }, [rootPath, setStatus]);
+
+  /** Eski bolumleri atip dizini klasorun gercek durumundan yeniden uretir (dosya tasimaz). */
+  const rebuildIndex = useCallback(async () => {
+    if (!rootPath || busy) return;
+    try {
+      const n = await rebuildDateIndex(rootPath);
+      setStatus({ type: "success", text: `${DATE_INDEX_FILE} yenilendi · ${formatCount(n)} dosya.` });
+    } catch (e) {
+      setStatus({ type: "error", text: String(e) });
+    }
+  }, [rootPath, busy, setStatus]);
+
+  return { options, setOptions, defaults: DEFAULTS, plan, error, progress, moving, busy, groups, apply, canUndo, undo, openIndex, rebuildIndex };
 }
 
 export type DateGroupState = ReturnType<typeof useDateGroup>;

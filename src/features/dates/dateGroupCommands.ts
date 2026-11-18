@@ -41,3 +41,8 @@ export async function applyDateGroup(planId: string, onProgress: (p: ScanProgres
   channel.onmessage = onProgress;
   return invoke<MoveOutcome>("apply_date_group", { planId, onProgress: channel });
 }
+
+/** Dizini (`Tarih_Dizini.html`) alt klasorlerdeki gercek dosyalara gore bastan yazar; dizine giren dosya sayisini doner. */
+export const rebuildDateIndex = (root: string) => invoke<number>("rebuild_date_index", { root });
+
+export const dateIndexPath = (root: string) => `${root.replace(/[\\/]+$/, "")}\\${DATE_INDEX_FILE}`;

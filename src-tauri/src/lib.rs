@@ -180,7 +180,7 @@ pub fn run() {
             trash_ops::delete_files_to_trash,
             reporter::export_groups_csv, reporter::export_history_csv,
             shell::reveal_in_explorer, shell::open_file_default,
-            date_group::preview_date_group, date_group::apply_date_group,
+            date_group::preview_date_group, date_group::apply_date_group, date_group::rebuild_date_index,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -2,8 +2,8 @@
 //! uygulamada dosya damgalari yeniden dogrulanir, her tasima once Gecmis'e yazilir.
 //! Geri alma, genel `history_cmds` yoluyla yapilir (bosalan Yıl\Ay klasorleri de kalkar).
 
-use crate::date_group_index::write_index;
-use crate::date_group_plan::{plan_date_group, DateGroupOptions, DateGroupPlan};
+use crate::date_group_index::{rebuild_index, write_index};
+use crate::date_group_plan::{collect, plan_date_group, DateGroupOptions, DateGroupPlan};
 use crate::models::{ScanProgress, UndoRecord};
 use crate::operations::MoveOutcome;
 use crate::organize_cleanup::prune_empty_dirs;
@@ -109,6 +109,23 @@ pub(crate) fn apply_date_group(state: State<'_, DateGroupState>, app: State<'_, 
         let _ = on_progress.send(ScanProgress { phase: "moving".into(), files_done: done, total_files: total });
     };
     apply_core(&app, &plan, &stamps, &send)
+}
+
+/// `Tarih_Dizini.html` dosyasini kok klasorun alt klasorlerindeki gercek dosyalara gore bastan yazar.
+/// Dosya tasimaz; geri alma sonrasi bayat kalan bolumleri temizler.
+#[tauri::command(async)]
+pub(crate) fn rebuild_date_index(root: String) -> Result<usize, String> {
+    let root = Path::new(&root);
+    if !root.is_dir() {
+        return Err("Önce var olan bir klasör seçin.".into());
+    }
+    let mut files = Vec::new();
+    collect(root, true, &[], &mut files);
+    files.retain(|p| p.parent() != Some(root));
+    if files.is_empty() {
+        return Err("Alt klasörlerde dizine eklenecek dosya yok.".into());
+    }
+    rebuild_index(root, &files)
 }
 
 #[cfg(test)]
