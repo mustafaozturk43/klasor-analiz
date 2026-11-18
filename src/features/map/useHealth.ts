@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { confirmDialog } from "../../lib/commands";
-import { folderHealth, quarantineFiles, removeEmptyFolders } from "./healthCommands";
-import { formatCount } from "../../lib/format";
+import { folderHealth, quarantineFiles, removeEmptyFolders, trashHealthFiles } from "./healthCommands";
+import { selectedBytes } from "./healthSuggest";
+import { formatBytes, formatCount } from "../../lib/format";
 import type { OrganizerState } from "../../types/app";
 import type { HealthReport } from "../../types/health";
 
@@ -84,7 +85,23 @@ export function useHealth(app: OrganizerState) {
       });
   }, [selected, tab, rootPath, runAction]);
 
-  return { report, loading, tab, setTab, rows, selected, toggle, toggleAll, run, act };
+  /** Bir oneriye uyan satirlari secer (mevcut secimin yerine). */
+  const selectPaths = useCallback((paths: string[]) => setSelected(new Set(paths)), []);
+  const bytes = useMemo(() => selectedBytes(rows, selected), [rows, selected]);
+
+  /** Secili dosyalari Geri Donusum Kutusu'na gonderir; Gecmis'ten geri alinamaz, bu yuzden net onay metni gosterilir. */
+  const trash = useCallback(async () => {
+    if (tab === "emptyDirs") return;
+    const items = rows.filter(r => selected.has(r.path)).map(r => ({ path: r.path, size: r.size, mtime: r.mtime }));
+    await runAction("Geri Dönüşüm Kutusu'na gönder",
+      `${formatCount(items.length)} dosya (${formatBytes(bytes)}) Windows Geri Dönüşüm Kutusu'na gönderilecek. Bu işlem İşlem Geçmişi'nden geri alınamaz; dosyaları Geri Dönüşüm Kutusu'ndan geri yükleyebilirsin. Rapordan sonra değişen bir dosya varsa hiçbir şey gönderilmez.`,
+      "Gönder", async () => {
+        const out = await trashHealthFiles(rootPath, items);
+        return `${formatCount(out.done)} dosya Geri Dönüşüm Kutusu'na gönderildi.${out.failed.length ? ` ${out.failed.length} dosya gönderilemedi: ${out.failed[0].error}` : ""}`;
+      });
+  }, [tab, rows, selected, bytes, rootPath, runAction]);
+
+  return { report, loading, tab, setTab, rows, selected, selectedBytes: bytes, selectPaths, toggle, toggleAll, run, act, trash };
 }
 
 export type HealthState = ReturnType<typeof useHealth>;

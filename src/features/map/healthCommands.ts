@@ -12,6 +12,10 @@ export const removeEmptyFolders = (rootPath: string, paths: string[]) =>
 export const quarantineFiles = (rootPath: string, paths: string[], label: string) =>
   invoke<BatchOutcome>("quarantine_files", { rootPath, paths, label });
 
+/** Secili dosyalari Windows Geri Donusum Kutusu'na gonderir (Gecmis'ten geri alinamaz). `size` ve `mtime` rapordaki degerlerdir; degismisse hicbir dosya gonderilmez. */
+export const trashHealthFiles = (rootPath: string, items: { path: string; size: number; mtime: number }[]) =>
+  invoke<BatchOutcome>("trash_health_files", { rootPath, items });
+
 export const listQuarantine = (rootPath: string) =>
   invoke<QuarantineListing>("list_quarantine", { rootPath });
 

@@ -72,6 +72,9 @@ Klasörleri anlamak ve temizlik yapmak için kullanılır.
 - **Klasör analizi:** Klasörün boyutunu, dosyaların türe göre dağılımını ve **Temizlenecekler** özetini gösterir. Boyuta göre orantılı bir kutu haritası sunar.
 - **Klasördeki dosyalar:** Seçili klasörün dosyalarını arama, sayfalama ve ön izleme ile listeler. Buradan seçtiğiniz dosyaları bir hedef klasöre ve grup adına taşıyabilir ya da şablonla yeniden adlandırabilirsiniz.
 - **Klasör sağlığı:** En büyük dosyaları ve uzun süredir değişmemiş dosyaları raporlar. **CSV'ye aktar** dört bölümü (en büyük, en eski, 0 baytlık, boş klasörler) tek tabloda kaydeder.
+  - **Seçim önerileri:** *En büyük* sekmesinde "100 MB üstü" / "1 GB üstü", *En eski* sekmesinde "1 yıldan eski" / "3 yıldan eski" düğmeleri uyan dosyaları tek tıkla seçer; seçili sayı ve toplam boyut yanında görünür.
+  - **Seçilenleri karantinaya al:** dosyalar silinmez, Geçmiş'ten geri alınır (önerilen yol).
+  - **Geri Dönüşüm Kutusu'na gönder:** seçili dosyalar Windows Geri Dönüşüm Kutusu'na gider; net onay metni gösterilir, İşlem Geçmişi'nden geri alınamaz (Geri Dönüşüm Kutusu'ndan geri yüklenir). Dosya rapordan sonra değişmişse hiçbir şey gönderilmez. Boş klasör sekmesinde bu düğme yoktur.
 
 ### 3.4 Adlandırma
 

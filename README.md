@@ -99,7 +99,7 @@ Arka uç (`src-tauri/src/`): modüller konuya göre klasörlere ayrılır; `lib.
 
 | Klasör | İçerik |
 | --- | --- |
-| `scan/` | tarama, hash, gruplama, benzerlik, karşılaştırma, dosya listesi, klasör istatistikleri, sağlık, bulut yer tutucuları |
+| `scan/` | tarama, hash, gruplama, benzerlik, benzer görseller, karşılaştırma, dosya listesi, klasör istatistikleri, sağlık (+ seçili dosyaları Geri Dönüşüm Kutusu'na gönderme), bulut yer tutucuları |
 | `inbox/` | gelen kutusu: kopya/öneri/ad, ayrıntı, Akşam Kontrolü işlemleri, Geri Dönüşüm |
 | `auto/` | otomasyon, watcher, bildirim, başlangıç, tepsi, tek kopya, `settings.json` |
 | `organizer/` | "Türüne göre düzenle" ve CSV rapor |

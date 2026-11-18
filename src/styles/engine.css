@@ -8,13 +8,17 @@
 .rule-card-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-sm); }
 .rule-card-grid label { display: flex; flex-direction: column; gap: 2px; font-size: var(--text-xs); color: var(--color-muted); }
 .rule-card-grid .rule-target { grid-column: 1 / -1; }
-.rule-warn { color: var(--color-danger, #b42318); margin: var(--space-xs) 0 0; }
+.rule-warn { color: var(--color-bin); margin: var(--space-xs) 0 0; }
 .rule-empty { margin: 0 0 var(--space-sm); }
 .rule-count-row { display: grid; grid-template-columns: 9rem 11rem minmax(0, 1fr) auto; align-items: center; gap: var(--space-sm); min-height: 41px; border-bottom: 1px solid var(--color-rule); padding: 0 var(--space-lg); }
 .rule-count-row .hint { margin: 0; }
-.rule-count-row[data-trash] .naming-name { color: var(--color-danger, #b42318); }
+.rule-count-row[data-trash] .naming-name { color: var(--color-bin); }
 @media (max-width: 60rem) {
   .rule-engine-options { max-width: none; }
   .rule-count-row { grid-template-columns: 1fr auto; padding-inline: var(--space-md); }
   .rule-count-row .hint, .rule-count-row .date-group-samples { display: none; }
 }
+
+/* Geri alinamayan (Geri Donusum Kutusu) eylem dugmesi: koyu ve acik temada ayni "bin" tonu. */
+.btn.danger { color: var(--color-bin); border-color: var(--color-bin); }
+.btn.danger:hover:not(:disabled) { background: var(--color-bin-tint); border-color: var(--color-bin); }

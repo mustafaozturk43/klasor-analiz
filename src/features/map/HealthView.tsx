@@ -1,4 +1,4 @@
-import { ExternalLink, FolderX, HeartPulse, Play, ShieldAlert } from "lucide-react";
+import { ExternalLink, FolderX, HeartPulse, Play, ShieldAlert, Trash2 } from "lucide-react";
 import type { OrganizerState } from "../../types/app";
 import type { HealthState, HealthTab } from "./useHealth";
 import { baseName, formatAge, formatBytes, formatCount, formatDate } from "../../lib/format";
@@ -6,6 +6,7 @@ import { relative } from "../rules/organizeView";
 import VirtualRows from "../../components/VirtualRows";
 import ExportButton from "../../components/ExportButton";
 import { HEALTH_HEADER, healthRows } from "./healthReport";
+import { SUGGESTIONS, pickPaths } from "./healthSuggest";
 
 const TABS: { id: HealthTab; label: string; hint: string }[] = [
   { id: "largest", label: "En büyük dosyalar", hint: "En çok yer kaplayan ilk 200 dosya" },
@@ -21,6 +22,7 @@ export default function HealthView({ app, health: h }: { app: OrganizerState; he
   const counts: Record<HealthTab, number> = { largest: r?.largest.length ?? 0, oldest: r?.oldest.length ?? 0, emptyFiles: r?.emptyFiles.length ?? 0, emptyDirs: r?.emptyDirs.length ?? 0 };
   const current = TABS.find(t => t.id === h.tab)!;
   const isDirs = h.tab === "emptyDirs";
+  const suggestions = h.tab === "largest" || h.tab === "oldest" ? SUGGESTIONS[h.tab] ?? [] : [];
   return <div className="organize-stack">
     <section className="panel">
       <div className="panel-head">
@@ -42,8 +44,10 @@ export default function HealthView({ app, health: h }: { app: OrganizerState; he
         </button>)}</nav>
       <div className="panel-body inline-actions">
         <label className="inline-actions text-xs"><input type="checkbox" checked={!!h.rows.length && h.selected.size === h.rows.length} onChange={h.toggleAll} disabled={!h.rows.length || busy} /> Tümünü seç</label>
-        <span className="hint mr-auto">{current.hint} · {formatCount(h.selected.size)} seçili</span>
+        {suggestions.map(s => <button key={s.id} type="button" className="btn" disabled={busy} onClick={() => h.selectPaths(pickPaths(h.rows, s))} title="Uyan dosyaları seçer; sonra karantinaya alabilir ya da Geri Dönüşüm Kutusu'na gönderebilirsin">{s.label}</button>)}
+        <span className="hint mr-auto">{current.hint} · {formatCount(h.selected.size)} seçili{h.selected.size && !isDirs ? ` · ${formatBytes(h.selectedBytes)}` : ""}</span>
         <button className="btn" disabled={!h.selected.size || busy} onClick={() => void h.act()}>{isDirs ? <><FolderX size={14} /> Seçili klasörleri kaldır</> : <><ShieldAlert size={14} /> Seçilenleri karantinaya al</>}</button>
+        {!isDirs && <button className="btn danger" disabled={!h.selected.size || busy} onClick={() => void h.trash()} title="Windows Geri Dönüşüm Kutusu'na gönderir; İşlem Geçmişi'nden geri alınamaz"><Trash2 size={14} /> Geri Dönüşüm Kutusu'na gönder</button>}
       </div>
       {h.rows.length ? <VirtualRows items={h.rows} estimate={56} itemKey={f => f.path} render={f => <div className={`organize-row health-row ${h.selected.has(f.path) ? "selected" : ""}`}>
         <input type="checkbox" checked={h.selected.has(f.path)} onChange={() => h.toggle(f.path)} aria-label={`${baseName(f.path)} seç`} disabled={busy} />
