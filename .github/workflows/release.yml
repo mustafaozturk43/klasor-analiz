@@ -1,0 +1,51 @@
+name: release
+
+# Yayin: `git tag v0.2.0 && git push origin v0.2.0` bu akisi baslatir. Kurulum (NSIS) ve portable ZIP
+# derlenir, SHA256 dosyalariyla birlikte GitHub Releases'e TASLAK olarak yuklenir; yayimlamak icin
+# taslagi GitHub'da gozden gecirip "Publish release" demek gerekir.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: npm ci
+
+      - name: Etiket package.json surumuyle ayni mi?
+        shell: bash
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "Etiket ($GITHUB_REF_NAME) package.json surumuyle (v$version) eslesmiyor. 'npm run version:set -- X.Y.Z' calistirip commit edin, sonra etiketleyin."
+            exit 1
+          fi
+
+      # Surum uyumu, derleme, vitest, kaynak denetimi ve Rust testleri.
+      - run: npm run check
+
+      # Kurulum (NSIS) + portable ZIP; artifacts/ altina SHA256 ile yazar.
+      - run: npm run release
+
+      - name: GitHub taslak surumu olustur
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            artifacts/*-setup-*.exe artifacts/*-setup-*.exe.sha256 \
+            artifacts/*-portable-*.zip artifacts/*-portable-*.zip.sha256 \
+            --draft --generate-notes --title "Smart File Organizer $GITHUB_REF_NAME"

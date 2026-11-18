@@ -41,6 +41,20 @@ Kaynak bağlantılarını, 250 satır ve 300 karakterlik satır sınırını den
 GitHub Actions (`.github/workflows/check.yml`) her push ve pull request'te `npm run check` çalıştırır. `artifacts/` altındaki eski sürüm paketlerini listelemek için `npm run prune:artifacts` (en yeni 3 sürüm tutulur; `-- --keep=5` ile değişir), silmek için `npm run prune:artifacts -- --yes`.
 Açık Windows uygulaması debug `.exe` dosyasını kilitliyorsa uygulamayı kapatmadan alternatif test: `src-tauri` içinde `cargo test --release` (ayrı release çıktısı kullanılır).
 
+## Yayın (GitHub Releases)
+
+Sürüm numarasının tek kaynağı `package.json`'dur. `npm run version:set -- 0.2.0` Cargo.toml, Cargo.lock, tauri.conf.json ve package-lock.json'u ona eşitler; `npm run version:check` uyumsuzluğu yakalar ve `npm run check` (CI dahil) içinde çalışır.
+
+1. `npm run version:set -- X.Y.Z`, değişiklikleri commit edin ve push edin.
+2. `git tag vX.Y.Z` ve `git push origin vX.Y.Z`.
+3. `.github/workflows/release.yml` etiketin `package.json` sürümüyle aynı olduğunu doğrular, `npm run check` ve `npm run release` çalıştırır; kurulum (NSIS) ve portable ZIP'i SHA256 dosyalarıyla **taslak** GitHub sürümü olarak yükler.
+4. Taslağı GitHub'da gözden geçirip "Publish release" ile yayımlayın.
+
+Paketler henüz **dijital olarak imzalı değildir** (Windows SmartScreen yayıncı uyarısı gösterebilir) ve uygulama kendini **güncellemez**; ikisi de sizin sağlayacağınız gizli anahtarlar gerektirir:
+
+- *Kod imzalama:* bir kod imzalama sertifikası (PFX veya bulut HSM) ve parolası; GitHub deposuna gizli anahtar olarak eklenir.
+- *Otomatik güncelleme* (`tauri-plugin-updater`): `npm run tauri signer generate` ile üretilen minisign anahtar çifti; genel anahtar `tauri.conf.json`'a, özel anahtar ve parolası GitHub gizli anahtarlarına konur; derleme `latest.json` ve `.sig` dosyalarını üretir.
+
 ## Windows paketleri (setup + portable)
 
 `npm run release` uygulamayı tek sefer derler ve `artifacts/` altına hem kurulum dosyasını (`…-setup-<tarih>.exe`, NSIS, yönetici izni istemeden kullanıcıya kurulur, Türkçe/İngilizce) hem de portable ZIP paketini SHA256 dosyalarıyla birlikte koyar. Yalnızca kurulum dosyası için `npm run setup`, yalnızca portable için `npm run portable` kullanılır. Uygulama tek kopya çalışır: zaten açıkken yeniden başlatılırsa açık pencere öne gelir.
