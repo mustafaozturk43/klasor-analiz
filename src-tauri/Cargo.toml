@@ -21,6 +21,8 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 tauri = { version = "2", features = ["protocol-asset", "tray-icon"] }
 tauri-plugin-dialog = "2"
+# Uygulama ici guncelleme (GitHub Releases'taki imzali latest.json); genel anahtar tauri.conf.json'da.
+tauri-plugin-updater = "2"
 tauri-plugin-single-instance = "2"
 # Windows ile baslatma (HKCU Run kaydi) ve otomatik tasima bildirimleri; ikisi de yalnizca Rust tarafindan kullanilir.
 tauri-plugin-autostart = "2"

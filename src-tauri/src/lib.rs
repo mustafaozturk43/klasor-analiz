@@ -128,6 +128,7 @@ pub fn run() {
         .manage(automation::AutomationState::default())
         .manage(watcher::WatcherState::default())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(startup::plugin())
         .plugin(tauri_plugin_notification::init())
         .on_window_event(tray::on_window_event)

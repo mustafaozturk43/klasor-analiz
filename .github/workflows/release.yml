@@ -37,8 +37,28 @@ jobs:
       # Surum uyumu, derleme, vitest, kaynak denetimi ve Rust testleri.
       - run: npm run check
 
-      # Kurulum (NSIS) + portable ZIP; artifacts/ altina SHA256 ile yazar.
+      # Kurulum (NSIS) + portable ZIP; artifacts/ altina SHA256 ile yazar. Guncelleme imzasi icin
+      # TAURI_SIGNING_PRIVATE_KEY (ve parolasi) depo gizli anahtari olarak tanimli olmali.
+      - name: Guncelleme anahtari tanimli mi?
+        shell: bash
+        env:
+          KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "TAURI_SIGNING_PRIVATE_KEY gizli anahtari tanimli degil (Settings > Secrets and variables > Actions)."
+            exit 1
+          fi
       - run: npm run release
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+      # Guncelleyicinin okudugu latest.json (kurulum imzasi + indirme adresi).
+      - name: latest.json uret
+        shell: bash
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node scripts/make-latest-json.mjs "$GITHUB_REF_NAME"
 
       - name: GitHub taslak surumu olustur
         shell: bash
@@ -46,6 +66,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create "$GITHUB_REF_NAME" \
-            artifacts/*-setup-*.exe artifacts/*-setup-*.exe.sha256 \
+            artifacts/*-setup-*.exe artifacts/*-setup-*.exe.sig artifacts/*-setup-*.exe.sha256 artifacts/latest.json \
             artifacts/*-portable-*.zip artifacts/*-portable-*.zip.sha256 \
             --draft --generate-notes --title "Smart File Organizer $GITHUB_REF_NAME"

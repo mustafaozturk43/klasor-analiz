@@ -35,6 +35,7 @@ import CleanupTable from "./features/map/CleanupTable";
 import AppNav from "./components/AppNav";
 import CommandPalette from "./components/CommandPalette";
 import { usePaletteItems } from "./hooks/usePaletteItems";
+import { useUpdater } from "./hooks/useUpdater";
 
 // Ust bilgiler yalnizca ilgili ekranlarda: tarama kapsami onu kullananlarda,
 // sayi seridi ve tarama rozeti tarama sonucu gosterenlerde.
@@ -57,7 +58,8 @@ export default function App() {
   const module: Module = views[dest];
   /** Bir ekrana git: hedefi ve o hedefin alt sekmesini birlikte ayarlar. */
   const go = useCallback((m: Module) => { const d = destinationOf(m); setViews(v => ({ ...v, [d]: m })); setDest(d); }, []);
-  const paletteItems = usePaletteItems({ app, go, setTheme, open: paletteOpen });
+  const checkUpdate = useUpdater(app.setStatus, app.isScanning || app.isMoving);
+  const paletteItems = usePaletteItems({ app, go, setTheme, open: paletteOpen, checkUpdate });
   useEffect(() => { void app.refreshHistory(); }, [app.refreshHistory]);
   // Durum bildirimleri (basari, bilgi, hata) sag ustte SweetAlert bildirimi olarak gosterilir.
   useEffect(() => { if (app.status) void statusAlert(app.status, () => app.setStatus(null)); }, [app.status, app.setStatus]);
@@ -113,7 +115,7 @@ export default function App() {
     } catch (e) { app.setStatus({ type: "error", text: String(e) }); }
   };
   return <div className="app-shell" data-rail={nav.rail || undefined}>
-    <WorkspaceHeader app={app} theme={theme} setTheme={setTheme} setModule={go} nav={nav} onPalette={() => setPaletteOpen(true)} />
+    <WorkspaceHeader app={app} theme={theme} setTheme={setTheme} setModule={go} nav={nav} onPalette={() => setPaletteOpen(true)} onCheckUpdate={() => void checkUpdate()} />
     <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} items={paletteItems} />
     <div className="app-body">
     <AppNav dest={dest} setDest={setDest} counts={{ duplicates: app.groups.length }} automation={automation.status} onTogglePause={automation.togglePause} rail={nav.rail} />

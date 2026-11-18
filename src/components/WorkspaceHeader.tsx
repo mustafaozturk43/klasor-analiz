@@ -1,4 +1,4 @@
-import { Download, History, PanelLeft, Search, Undo2 } from "lucide-react";
+import { Download, History, PanelLeft, RefreshCw, Search, Undo2 } from "lucide-react";
 import type { OrganizerState, Module } from "../types/app";
 import type { Theme } from "../hooks/useTheme";
 import SettingsMenu from "./SettingsMenu";
@@ -11,10 +11,11 @@ interface Props {
   /** Kenar cubugu daraltma dugmesi; dar ekranda serit zaten zorunlu oldugundan gizlenir. */
   nav: { narrow: boolean; collapsed: boolean; toggle: () => void };
   onPalette: () => void;
+  onCheckUpdate: () => void;
 }
 
 /** Ust cubuk: yalnizca genel araclar. Klasor secimi sayfa basindadir (`FolderPickerBar`). */
-export default function WorkspaceHeader({ app, theme, setTheme, setModule, nav, onPalette }: Props) {
+export default function WorkspaceHeader({ app, theme, setTheme, setModule, nav, onPalette, onCheckUpdate }: Props) {
   return <div className="shell-top"><header className="shell-width compact-header">
     {!nav.narrow && <button className="btn" aria-pressed={nav.collapsed} onClick={nav.toggle}
       title={nav.collapsed ? "Kenar çubuğunu genişlet" : "Kenar çubuğunu daralt"} aria-label="Kenar çubuğunu daralt veya genişlet"><PanelLeft size={16} /></button>}
@@ -25,6 +26,7 @@ export default function WorkspaceHeader({ app, theme, setTheme, setModule, nav, 
       <details className="relative"><summary className="btn" aria-label="Diğer işlemler">•••</summary>
         <div className="panel absolute right-0 top-full z-30 mt-2 flex min-w-52 flex-col gap-2 p-3">
           <button className="btn" onClick={() => setModule("history")}><History size={16} /> İşlem geçmişi</button>
+          <button className="btn" disabled={app.isScanning || app.isMoving} onClick={onCheckUpdate}><RefreshCw size={16} /> Güncellemeleri denetle</button>
           <button className="btn" disabled={!app.groups.length} onClick={() => void app.exportCsv(app.groups)}><Download size={16} /> CSV dışa aktar</button>
           <button className="btn" disabled={!app.rootPath || app.isScanning || app.isMoving} onClick={app.clearQuarantineFolder}>Karantinayı temizle…</button>
         </div>

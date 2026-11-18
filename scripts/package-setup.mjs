@@ -20,6 +20,10 @@ const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "
 fs.mkdirSync("artifacts", { recursive: true });
 const target = path.resolve("artifacts", `SmartFileOrganizer-${version}-windows-x64-setup-${stamp}.exe`);
 fs.copyFileSync(source, target, fs.constants.COPYFILE_EXCL);
+// Guncelleyici imzasi (`createUpdaterArtifacts`): TAURI_SIGNING_PRIVATE_KEY olmadan uretilmez.
+const sigSource = `${source}.sig`;
+if (!fs.existsSync(sigSource)) throw new Error(`Güncelleme imzası yok (${sigSource}). TAURI_SIGNING_PRIVATE_KEY ve TAURI_SIGNING_PRIVATE_KEY_PASSWORD ortam değişkenlerini ayarlayıp derleyin.`);
+fs.copyFileSync(sigSource, `${target}.sig`, fs.constants.COPYFILE_EXCL);
 const hash = createHash("sha256").update(bytes).digest("hex");
 fs.writeFileSync(`${target}.sha256`, `${hash}  ${path.basename(target)}\n`, "utf8");
 console.log(JSON.stringify({ setup: target, bytes: bytes.length, sha256: hash }, null, 2));

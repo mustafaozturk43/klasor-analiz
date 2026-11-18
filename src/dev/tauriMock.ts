@@ -37,6 +37,7 @@ const mockMovePlan = (a: Args) => {
 
 const handlers: Record<string, (a: Args) => unknown> = {
   "plugin:dialog|open": () => data.ROOT,
+  "plugin:updater|check": () => null,
   "plugin:dialog|save": () => `${data.ROOT}\\rapor.csv`,
   scan_and_group: a => data.scanResult(root(a)),
   compare_folders: a => data.scanResult(root(a)),

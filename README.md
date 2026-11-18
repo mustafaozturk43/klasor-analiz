@@ -50,10 +50,22 @@ Sürüm numarasının tek kaynağı `package.json`'dur. `npm run version:set -- 
 3. `.github/workflows/release.yml` etiketin `package.json` sürümüyle aynı olduğunu doğrular, `npm run check` ve `npm run release` çalıştırır; kurulum (NSIS) ve portable ZIP'i SHA256 dosyalarıyla **taslak** GitHub sürümü olarak yükler.
 4. Taslağı GitHub'da gözden geçirip "Publish release" ile yayımlayın.
 
-Paketler henüz **dijital olarak imzalı değildir** (Windows SmartScreen yayıncı uyarısı gösterebilir) ve uygulama kendini **güncellemez**; ikisi de sizin sağlayacağınız gizli anahtarlar gerektirir:
+### Uygulama içi güncelleme
 
-- *Kod imzalama:* bir kod imzalama sertifikası (PFX veya bulut HSM) ve parolası; GitHub deposuna gizli anahtar olarak eklenir.
-- *Otomatik güncelleme* (`tauri-plugin-updater`): `npm run tauri signer generate` ile üretilen minisign anahtar çifti; genel anahtar `tauri.conf.json`'a, özel anahtar ve parolası GitHub gizli anahtarlarına konur; derleme `latest.json` ve `.sig` dosyalarını üretir.
+Uygulama `tauri-plugin-updater` ile güncellenir: üst çubuk "•••" menüsü ya da komut paleti (Ctrl+K) > **Güncellemeleri denetle**. Güncelleyici, yayımlanmış en son sürümün `latest.json` dosyasını okur (`https://github.com/mustafaozturk43/klasor-analiz/releases/latest/download/latest.json`), kurulum dosyasının minisign imzasını `tauri.conf.json` içindeki **genel anahtarla** doğrular, onayınızdan sonra indirip kurar. Taslak (yayımlanmamış) sürümler görünmez.
+
+Tek seferlik kurulum: `npm run tauri signer generate -- -w C:\Users\<siz>\.tauri\smart-file-organizer.key` ile anahtar çifti üretilir (parolayı parola yöneticisinde saklayın; kaybederseniz güncelleme imzalanamaz). **Özel anahtar asla depoya konmaz.** GitHub deposunda Settings > Secrets and variables > Actions altına iki gizli anahtar eklenir:
+
+- `TAURI_SIGNING_PRIVATE_KEY`: `smart-file-organizer.key` dosyasının içeriği.
+- `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`: anahtarın parolası.
+
+`createUpdaterArtifacts` açık olduğundan imzasız derleme **başarısız olur**: yerelde `npm run release` / `npm run setup` için aynı iki değişkeni ortamda tanımlayın (`$env:TAURI_SIGNING_PRIVATE_KEY = Get-Content -Raw C:\Users\<siz>\.tauri\smart-file-organizer.key` ve `$env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = '...'`). `npm run tauri dev` etkilenmez. Sürüm akışı kurulum dosyasının `.sig` imzasını ve `latest.json` dosyasını da taslak sürüme yükler (`scripts/make-latest-json.mjs`).
+
+Genel anahtar değişirse eski sürümler yeni imzayı doğrulayamaz; anahtarı yalnızca gerçekten sızdığında yenileyin, bu durumda kullanıcıların elle yeniden kurması gerekir.
+
+### Henüz yapılmayan: kod imzalama
+
+Paketler **Windows kod imzalama sertifikasıyla imzalı değildir** (SmartScreen yayıncı uyarısı gösterebilir). Bu, güncelleme imzasından ayrıdır ve bir kod imzalama sertifikası (PFX veya bulut HSM) ile parolası gerektirir.
 
 ## Windows paketleri (setup + portable)
 

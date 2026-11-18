@@ -12,12 +12,13 @@ interface Deps {
   setTheme: (theme: Theme) => void;
   /** Palet her acildiginda son klasorler yeniden okunur. */
   open: boolean;
+  checkUpdate: () => Promise<void>;
 }
 
 const THEMES: [Theme, string][] = [["light", "Açık"], ["dark", "Koyu"], ["auto", "Otomatik"]];
 
 /** Palet satirlari: tum ekranlar (alt sekmeleriyle), son klasorler ve sik kullanilan islemler. */
-export function usePaletteItems({ app, go, setTheme, open }: Deps): PaletteItem[] {
+export function usePaletteItems({ app, go, setTheme, open, checkUpdate }: Deps): PaletteItem[] {
   const { rootPath, openRecent, scan, undoLast, history, isScanning, isMoving } = app;
   return useMemo(() => {
     const busy = isScanning || isMoving;
@@ -30,8 +31,9 @@ export function usePaletteItems({ app, go, setTheme, open }: Deps): PaletteItem[
     const actions: PaletteItem[] = [
       { id: "act:scan", group: "İşlem", label: "Taramayı başlat", hint: "F5", keywords: "yeniden tara", disabled: busy || !rootPath, run: () => scan() },
       { id: "act:undo", group: "İşlem", label: "Son işlemi geri al", hint: "Ctrl+Z", disabled: busy || !history.length, run: () => void undoLast() },
+      { id: "act:update", group: "İşlem", label: "Güncellemeleri denetle", keywords: "yeni sürüm yükselt", disabled: busy, run: () => void checkUpdate() },
       ...THEMES.map(([t, name]): PaletteItem => ({ id: `theme:${t}`, group: "İşlem", label: `Tema: ${name}`, keywords: "görünüm renk", run: () => setTheme(t) })),
     ];
     return [...screens, ...folders, ...actions];
-  }, [open, rootPath, openRecent, scan, undoLast, history.length, isScanning, isMoving, go, setTheme]);
+  }, [open, rootPath, openRecent, scan, undoLast, history.length, isScanning, isMoving, go, setTheme, checkUpdate]);
 }

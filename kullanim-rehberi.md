@@ -120,7 +120,11 @@ Uygulamanın ayarlarının bulunduğu yerdir.
   - **Otomatik taşımaları bildir:** Pencere önde değilken her yerleştirmede bir Windows bildirimi gösterir. Varsayılan olarak kapalıdır.
 - **Otomasyon durumu:** İzlemenin açık mı, duraklatılmış mı olduğunu, izlenen kaynakları ve şablonla adlandırma ayarlarını gösterir.
 
-### 3.8 Geçmiş
+### 3.8 Güncelleme
+
+Üst çubuktaki **•••** menüsünden ya da `Ctrl+K` komut paletinden **Güncellemeleri denetle**'yi seçin. Yeni sürüm varsa sürüm notlarıyla birlikte sorulur; onaylarsanız güncelleme imzası doğrulanır, indirilir ve kurulur, uygulama yeniden açılır. Dosyalarınıza ve ayarlarınıza dokunulmaz. Güncelleme yoksa "Uygulama güncel." yazar. Bağlantı yoksa ya da imza doğrulanamazsa hata gösterilir ve hiçbir şey kurulmaz.
+
+### 3.9 Geçmiş
 
 - **İşlem geçmişi:** Yapılan taşıma ve yeniden adlandırmaların listesidir. Geri alma buradan yapılır.
   - Son 200 işlem tutulur.
